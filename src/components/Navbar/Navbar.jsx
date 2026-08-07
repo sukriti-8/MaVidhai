@@ -26,44 +26,48 @@ export default function Navbar() {
           >
             Home
           </Link>
+
           <Link
             href="/"
             className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
           >
-            Shop 
+            Shop
           </Link>
+
           <Link
             href="/"
             className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
           >
-            Categories 
+            Categories
           </Link>
+
           <Link
             href="/"
             className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
           >
-            Deals 
+            Deals
           </Link>
-         <Link
-          href="/"
-          className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
-        >
-          About 
-        </Link>
+
+          <Link
+            href="/"
+            className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
+          >
+            About
+          </Link>
         </div>
 
         {/* Desktop Buttons */}
-        <div className="hidden md:flex gap-4">
+        <div className="hidden md:flex items-center gap-4">
           <Link
             href="/login"
-            className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
+            className="flex items-center justify-center h-10 px-4 rounded-lg text-gray-700 font-medium hover:bg-gray-100 hover:text-[#C9A227] transition-all duration-300"
           >
             Login
           </Link>
 
           <Link
             href="/signup"
-            className="bg-[#C9A227] text-white px-5 py-2 rounded-xl hover:bg-[#B8860B] transition-all duration-300 hover:scale-105"
+            className="flex items-center justify-center h-10 px-5 rounded-xl bg-[#C9A227] text-white font-medium hover:bg-[#B8860B] transition-all duration-300 hover:scale-105"
           >
             Sign Up
           </Link>
@@ -125,7 +129,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
-            Shop 
+            Shop
           </Link>
 
           <Link
@@ -133,7 +137,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
-            Categories 
+            Categories
           </Link>
 
           <Link
@@ -141,7 +145,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
-            Deals 
+            Deals
           </Link>
 
           <Link
@@ -149,7 +153,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
-            About 
+            About
           </Link>
 
           <hr />
