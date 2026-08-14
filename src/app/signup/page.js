@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -90,7 +91,7 @@ export default function SignupPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter your full name"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-[#C9A227] focus:outline-none"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
           />
 
           {nameError && (
@@ -115,7 +116,7 @@ export default function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-[#C9A227] focus:outline-none"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
           />
 
           {emailError && (
@@ -141,15 +142,16 @@ export default function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Create a password"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:border-[#C9A227] focus:outline-none"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
             />
 
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#C9A227]"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#C9A227] transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? "🙈" : "👁️"}
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 
@@ -176,7 +178,7 @@ export default function SignupPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm your password"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:border-[#C9A227] focus:outline-none"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
             />
 
             <button
@@ -184,9 +186,18 @@ export default function SignupPage() {
               onClick={() =>
                 setShowConfirmPassword(!showConfirmPassword)
               }
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#C9A227]"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#C9A227] transition-colors"
+              aria-label={
+                showConfirmPassword
+                  ? "Hide confirm password"
+                  : "Show confirm password"
+              }
             >
-              {showConfirmPassword ? "🙈" : "👁️"}
+              {showConfirmPassword ? (
+                <EyeOff size={20} />
+              ) : (
+                <Eye size={20} />
+              )}
             </button>
           </div>
 
@@ -197,14 +208,15 @@ export default function SignupPage() {
           )}
         </div>
 
-        {/* Button */}
+        {/* Create Account Button */}
         <button
           onClick={handleSignup}
-          className="mt-8 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] transition-all duration-300"
+          className="mt-8 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] hover:scale-105 hover:shadow-lg transition-all duration-300"
         >
           Create Account
         </button>
 
+        {/* Login */}
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{" "}
           <Link

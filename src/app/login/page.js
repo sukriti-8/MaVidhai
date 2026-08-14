@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -18,7 +18,6 @@ export default function LoginPage() {
     setEmailError("");
     setPasswordError("");
 
-    // Email Validation
     if (!email) {
       setEmailError("Email is required");
       valid = false;
@@ -27,7 +26,6 @@ export default function LoginPage() {
       valid = false;
     }
 
-    // Password Validation
     if (!password) {
       setPasswordError("Password is required");
       valid = false;
@@ -48,21 +46,19 @@ export default function LoginPage() {
     <main className="min-h-screen flex items-center justify-center bg-[#FAF8F3] px-4 py-10">
       <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8">
 
-        <h1 className="text-4xl font-bold text-center">
+        <h1 className="text-4xl font-bold text-center text-[#2B2B2B]">
           Welcome Back
         </h1>
 
-        <p className="mt-3 text-center text-gray-600">
+        <p className="mt-3 text-center text-[#6B6B6B]">
           Sign in to continue to MaVidhai
         </p>
 
         {/* Email */}
-
         <div className="mt-8">
-
           <label
             htmlFor="email"
-            className="block text-sm font-medium mb-2"
+            className="block text-sm font-medium text-[#2B2B2B] mb-2"
           >
             Email Address
           </label>
@@ -73,92 +69,79 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-[#C9A227] focus:outline-none"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
           />
 
           {emailError && (
-            <p className="text-red-600 text-sm mt-2">
+            <p className="mt-2 text-sm text-red-600">
               {emailError}
             </p>
           )}
-
         </div>
 
         {/* Password */}
-
         <div className="mt-6">
-
           <label
             htmlFor="password"
-            className="block text-sm font-medium mb-2"
+            className="block text-sm font-medium text-[#2B2B2B] mb-2"
           >
             Password
           </label>
 
           <div className="relative">
-
             <input
               id="password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:border-[#C9A227] focus:outline-none"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
             />
 
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#C9A227] transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
-              {showPassword ? "🙈" : "👁️"}
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
-
           </div>
 
           {passwordError && (
-            <p className="text-red-600 text-sm mt-2">
+            <p className="mt-2 text-sm text-red-600">
               {passwordError}
             </p>
           )}
-
         </div>
 
         {/* Forgot Password */}
-
         <div className="mt-3 text-right">
-
           <Link
             href="/forgot-password"
-            className="text-[#C9A227] hover:underline"
+            className="text-sm text-[#C9A227] hover:underline"
           >
             Forgot Password?
           </Link>
-
         </div>
 
-        {/* Login */}
-
+        {/* Login Button */}
         <button
           onClick={handleLogin}
-          className="mt-6 w-full bg-[#C9A227] hover:bg-[#B8860B] text-white font-semibold py-3 rounded-lg transition"
+          className="mt-6 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] hover:scale-105 hover:shadow-lg transition-all duration-300"
         >
           Login
         </button>
 
-        {/* Signup */}
-
-        <p className="mt-6 text-center text-gray-600">
-
+        {/* Sign Up */}
+        <p className="mt-6 text-center text-sm text-gray-600">
           Don't have an account?{" "}
-
           <Link
             href="/signup"
-            className="text-[#C9A227] font-semibold hover:underline"
+            className="font-semibold text-[#C9A227] hover:underline"
           >
             Sign Up
           </Link>
-
         </p>
 
       </div>
