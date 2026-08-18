@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-[#fffdf8]">
@@ -28,13 +30,21 @@ export default function Home() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
-              <button className="rounded-lg bg-[#d1a11c] px-7 py-3.5 text-sm font-medium text-white transition-all hover:bg-[#bd8d0f] hover:shadow-lg">
-                Explore Collection
-              </button>
 
-              <button className="rounded-lg border border-[#d1a11c] bg-white px-7 py-3.5 text-sm font-medium text-[#a9780d] transition-all hover:bg-[#fff8e8]">
+              <Link
+                href="/shop"
+                className="rounded-lg bg-[#d1a11c] px-7 py-3.5 text-sm font-medium text-white transition-all duration-300 hover:bg-[#bd8d0f] hover:shadow-lg"
+              >
+                Explore Collection
+              </Link>
+
+              <Link
+                href="/about"
+                className="rounded-lg border border-[#d1a11c] bg-white px-7 py-3.5 text-sm font-medium text-[#a9780d] transition-all duration-300 hover:bg-[#fff8e8]"
+              >
                 Learn Our Story
-              </button>
+              </Link>
+
             </div>
           </div>
 
@@ -42,6 +52,7 @@ export default function Home() {
           {/* HERO IMAGE PLACEHOLDER */}
 
           <div className="flex min-h-[380px] items-center justify-center rounded-2xl border border-[#ead9b5] bg-[#f3ead8]">
+
             <div className="text-center">
 
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-[#d1a11c] text-2xl text-[#d1a11c]">
@@ -57,6 +68,7 @@ export default function Home() {
               </p>
 
             </div>
+
           </div>
 
         </div>
@@ -89,36 +101,44 @@ export default function Home() {
           </div>
 
 
+          {/* CATEGORY CARDS */}
+
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
 
             <CategoryCard
               title="Living"
               description="Thoughtful pieces for your home"
+              href="/categories/living"
             />
 
             <CategoryCard
               title="Kitchen"
               description="Beautiful everyday essentials"
+              href="/categories/kitchen"
             />
 
             <CategoryCard
               title="Decor"
               description="Details that bring spaces alive"
+              href="/categories/decor"
             />
 
             <CategoryCard
               title="Personal Care"
               description="Simple and mindful essentials"
+              href="/categories/personal-care"
             />
 
             <CategoryCard
               title="Gifting"
               description="Meaningful gifts for every occasion"
+              href="/categories/gifting"
             />
 
             <CategoryCard
               title="Clothing"
               description="Traditional pieces for today"
+              href="/categories/clothing"
             />
 
           </div>
@@ -137,6 +157,7 @@ export default function Home() {
         <div className="mb-10 flex items-end justify-between">
 
           <div>
+
             <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
               Curated for you
             </p>
@@ -144,11 +165,15 @@ export default function Home() {
             <h2 className="mt-2 text-3xl font-semibold text-[#29251f]">
               Featured Products
             </h2>
+
           </div>
 
-          <button className="hidden text-sm font-medium text-[#b27d0d] sm:block">
+          <Link
+            href="/shop"
+            className="hidden text-sm font-medium text-[#b27d0d] transition-colors hover:text-[#8e650b] sm:block"
+          >
             View All →
-          </button>
+          </Link>
 
         </div>
 
@@ -158,22 +183,98 @@ export default function Home() {
           <ProductCard
             title="Handcrafted Product"
             price="₹1,250"
+            href="/shop/handcrafted-product"
           />
 
           <ProductCard
             title="Heritage Collection"
             price="₹1,890"
+            href="/shop/heritage-collection"
           />
 
           <ProductCard
             title="Everyday Essential"
             price="₹750"
+            href="/shop/everyday-essential"
           />
 
           <ProductCard
             title="Artisan Crafted Piece"
             price="₹2,450"
+            href="/shop/artisan-crafted-piece"
           />
+
+        </div>
+
+      </section>
+
+
+      {/* =====================================================
+          CUSTOMER REVIEWS
+      ====================================================== */}
+
+      <section className="border-y border-[#eee5d2] bg-[#f8f2e6] px-6 py-16 lg:px-10">
+
+        <div className="mx-auto max-w-[1300px]">
+
+          {/* REVIEW HEADING */}
+
+          <div className="mb-10 text-center">
+
+            <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
+              Loved by our customers
+            </p>
+
+            <h2 className="mt-2 text-3xl font-semibold text-[#29251f]">
+              What Our Customers Say
+            </h2>
+
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#756d63]">
+              Real experiences from people who have welcomed MaVidhai
+              into their everyday lives.
+            </p>
+
+          </div>
+
+
+          {/* REVIEW CARDS */}
+
+          <div className="grid gap-5 md:grid-cols-3">
+
+            <ReviewCard
+              review="The craftsmanship is beautiful. Everything feels thoughtfully made and the quality is even better in person."
+              name="Ananya R."
+              location="Hyderabad"
+            />
+
+            <ReviewCard
+              review="I loved how easy the whole shopping experience was. The products feel unique without being difficult to use every day."
+              name="Meera S."
+              location="Bengaluru"
+            />
+
+            <ReviewCard
+              review="Finally found a place where traditional inspiration and modern design come together so naturally."
+              name="Riya K."
+              location="Mumbai"
+            />
+
+          </div>
+
+
+          {/* ALL REVIEWS */}
+
+          <div className="mt-8 text-center">
+
+            <Link
+              href="/reviews"
+              className="inline-flex items-center gap-2 text-sm font-medium text-[#a9780d] transition-colors hover:text-[#7f5c08]"
+            >
+              Read all reviews
+              <span>→</span>
+            </Link>
+
+          </div>
 
         </div>
 
@@ -184,11 +285,11 @@ export default function Home() {
           STORY SECTION
       ====================================================== */}
 
-      <section className="border-y border-[#eee5d2] bg-[#f8f2e6] px-6 py-16 lg:px-10">
+      <section className="bg-white px-6 py-16 lg:px-10">
 
         <div className="mx-auto grid max-w-[1300px] items-center gap-10 lg:grid-cols-2">
 
-          {/* IMAGE PLACEHOLDER */}
+          {/* STORY IMAGE PLACEHOLDER */}
 
           <div className="flex min-h-[330px] items-center justify-center rounded-2xl border border-[#e3d4b5] bg-[#eee3cf]">
 
@@ -235,9 +336,12 @@ export default function Home() {
               fitting naturally into modern living.
             </p>
 
-            <button className="mt-7 rounded-lg border border-[#c99716] px-6 py-3 text-sm font-medium text-[#a9780d] hover:bg-white">
+            <Link
+              href="/about"
+              className="mt-7 inline-block rounded-lg border border-[#c99716] px-6 py-3 text-sm font-medium text-[#a9780d] transition-all hover:bg-[#fff8e8]"
+            >
               Discover Our Story →
-            </button>
+            </Link>
 
           </div>
 
@@ -250,7 +354,7 @@ export default function Home() {
           WHY MAVIDHAI
       ====================================================== */}
 
-      <section className="bg-white px-6 py-16 lg:px-10">
+      <section className="bg-[#fffdf8] px-6 py-16 lg:px-10">
 
         <div className="mx-auto max-w-[1300px]">
 
@@ -309,6 +413,7 @@ export default function Home() {
         <div className="mx-auto flex max-w-[1100px] flex-col items-center justify-between gap-6 text-center md:flex-row md:text-left">
 
           <div>
+
             <p className="text-lg font-semibold text-[#29251f]">
               Stay connected with MaVidhai
             </p>
@@ -316,6 +421,7 @@ export default function Home() {
             <p className="mt-1 text-sm text-[#756d63]">
               Be the first to know about new collections and stories.
             </p>
+
           </div>
 
 
@@ -327,7 +433,10 @@ export default function Home() {
               className="min-w-0 flex-1 rounded-lg border border-[#dfd2bb] bg-white px-4 py-3 text-sm outline-none placeholder:text-[#aaa092] focus:border-[#c99716]"
             />
 
-            <button className="rounded-lg bg-[#d1a11c] px-5 py-3 text-sm font-medium text-white hover:bg-[#bd8d0f]">
+            <button
+              type="button"
+              className="rounded-lg bg-[#d1a11c] px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-[#bd8d0f]"
+            >
               Subscribe
             </button>
 
@@ -346,9 +455,12 @@ export default function Home() {
    CATEGORY CARD
 ========================================================= */
 
-function CategoryCard({ title, description }) {
+function CategoryCard({ title, description, href }) {
   return (
-    <div className="group cursor-pointer overflow-hidden rounded-xl border border-[#eadfca] bg-[#fffdf8] transition-all duration-300 hover:-translate-y-1 hover:border-[#d5ae50] hover:shadow-lg">
+    <Link
+      href={href}
+      className="group block overflow-hidden rounded-xl border border-[#eadfca] bg-[#fffdf8] transition-all duration-300 hover:-translate-y-1 hover:border-[#d5ae50] hover:shadow-lg"
+    >
 
       <div className="flex aspect-square items-center justify-center bg-[#f1e8d7]">
 
@@ -379,7 +491,7 @@ function CategoryCard({ title, description }) {
 
       </div>
 
-    </div>
+    </Link>
   );
 }
 
@@ -388,28 +500,59 @@ function CategoryCard({ title, description }) {
    PRODUCT CARD
 ========================================================= */
 
-function ProductCard({ title, price }) {
+function ProductCard({ title, price, href }) {
   return (
     <div className="group overflow-hidden rounded-xl border border-[#eadfca] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
 
-      <div className="relative flex aspect-square items-center justify-center bg-[#f1e8d7]">
+      {/* PRODUCT IMAGE + LINK */}
 
-        <div className="text-center">
+      <div className="relative">
 
-          <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full border border-[#d1a11c] text-[#c99716] transition-transform duration-300 group-hover:scale-110">
-            ✦
+        <Link
+          href={href}
+          className="block"
+        >
+
+          <div className="flex aspect-square items-center justify-center bg-[#f1e8d7]">
+
+            <div className="text-center">
+
+              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full border border-[#d1a11c] text-[#c99716] transition-transform duration-300 group-hover:scale-110">
+                ✦
+              </div>
+
+              <p className="text-[10px] uppercase tracking-[1.5px] text-[#9b8a70]">
+                Product Image
+              </p>
+
+            </div>
+
           </div>
 
-          <p className="text-[10px] uppercase tracking-[1.5px] text-[#9b8a70]">
-            Product Image
-          </p>
 
-        </div>
+          {/* PRODUCT INFORMATION */}
 
+          <div className="p-4">
+
+            <h3 className="text-sm font-medium text-[#3b342b]">
+              {title}
+            </h3>
+
+            <p className="mt-2 text-sm font-semibold text-[#b27d0d]">
+              {price}
+            </p>
+
+          </div>
+
+        </Link>
+
+
+        {/* WISHLIST BUTTON */}
 
         <button
+          type="button"
           aria-label="Add to wishlist"
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-lg text-[#8d8377] shadow-sm hover:text-[#c99716]"
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-lg text-[#8d8377] shadow-sm transition-colors hover:text-[#c99716]"
         >
           ♡
         </button>
@@ -417,19 +560,72 @@ function ProductCard({ title, price }) {
       </div>
 
 
-      <div className="p-4">
+      {/* ADD TO CART BUTTON */}
 
-        <h3 className="text-sm font-medium text-[#3b342b]">
-          {title}
-        </h3>
+      <div className="px-4 pb-4">
 
-        <p className="mt-2 text-sm font-semibold text-[#b27d0d]">
-          {price}
-        </p>
-
-        <button className="mt-3 w-full rounded-lg border border-[#d9bf7c] py-2 text-xs font-medium text-[#9b6d0d] hover:bg-[#fff8e8]">
+        <button
+          type="button"
+          className="w-full rounded-lg border border-[#d9bf7c] py-2 text-xs font-medium text-[#9b6d0d] transition-colors hover:bg-[#fff8e8]"
+        >
           Add to Cart
         </button>
+
+      </div>
+
+    </div>
+  );
+}
+
+
+/* =========================================================
+   CUSTOMER REVIEW CARD
+========================================================= */
+
+function ReviewCard({ review, name, location }) {
+  return (
+    <div className="group rounded-2xl border border-[#eadfca] bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+
+      {/* STARS */}
+
+      <div
+        className="flex gap-1 text-[#d1a11c]"
+        aria-label="5 out of 5 stars"
+      >
+        <span>★</span>
+        <span>★</span>
+        <span>★</span>
+        <span>★</span>
+        <span>★</span>
+      </div>
+
+
+      {/* REVIEW TEXT */}
+
+      <p className="mt-5 text-sm leading-7 text-[#5f584f]">
+        “{review}”
+      </p>
+
+
+      {/* CUSTOMER DETAILS */}
+
+      <div className="mt-6 flex items-center gap-3 border-t border-[#eee5d2] pt-5">
+
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f1e8d7] text-sm font-semibold text-[#b27d0d]">
+          {name.charAt(0)}
+        </div>
+
+        <div>
+
+          <p className="text-sm font-semibold text-[#3b342b]">
+            {name}
+          </p>
+
+          <p className="text-xs text-[#91887c]">
+            Verified Customer · {location}
+          </p>
+
+        </div>
 
       </div>
 
@@ -444,7 +640,7 @@ function ProductCard({ title, price }) {
 
 function FeatureCard({ icon, title, description }) {
   return (
-    <div className="rounded-xl border border-[#eadfca] bg-[#fffdf8] p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+    <div className="rounded-xl border border-[#eadfca] bg-white p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
 
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-[#d9bf7c] text-xl text-[#c99716]">
         {icon}
