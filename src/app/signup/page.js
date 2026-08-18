@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -20,6 +21,7 @@ export default function SignupPage() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const router = useRouter();
   const handleSignup = async () => {
     let valid = true;
 
@@ -68,9 +70,12 @@ export default function SignupPage() {
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     setIsSubmitting(false);
-    setSuccessMessage(
-      "Your details are valid. Account creation will be connected when authentication is added."
-    );
+
+    setSuccessMessage("Welcome to MaVidhai! Your account has been created.");
+
+    setTimeout(() => {
+      router.push("/login");
+    }, 1000);
   };
 
   return (

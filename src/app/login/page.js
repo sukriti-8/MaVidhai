@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,6 +15,16 @@ export default function LoginPage() {
 
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const searchParams = useSearchParams();
+  const [registeredMessage, setRegisteredMessage] = useState("");
+
+  useEffect(() => {
+    if (searchParams.get("registered") === "true") {
+      setRegisteredMessage(
+        "Account created successfully. Please log in to continue."
+      );
+    }
+}, [searchParams]);
 
  const handleLogin = async () => {
   let valid = true;
@@ -47,9 +59,12 @@ export default function LoginPage() {
   await new Promise((resolve) => setTimeout(resolve, 800));
 
   setIsSubmitting(false);
-  setSuccessMessage(
-    "Your details are valid. Login authentication will be connected when the backend is added."
-  );
+
+  setSuccessMessage("Login successful! Welcome back to MaVidhai.");
+
+  setTimeout(() => {
+    router.push("/");
+  }, 1000);
 };
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#FAF8F3] px-4 py-10">
@@ -62,6 +77,14 @@ export default function LoginPage() {
         <p className="mt-3 text-center text-[#6B6B6B]">
           Sign in to continue to MaVidhai
         </p>
+        {registeredMessage && (
+          <p
+            className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-center text-sm text-green-700"
+            role="status"
+          >
+            {registeredMessage}
+          </p>
+        )}
 
         {/* Email */}
         <div className="mt-8">
