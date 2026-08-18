@@ -39,7 +39,7 @@ export default function Home() {
               </Link>
 
               <Link
-                href="/about"
+                href="/#about"
                 className="rounded-lg border border-[#d1a11c] bg-white px-7 py-3.5 text-sm font-medium text-[#a9780d] transition-all duration-300 hover:bg-[#fff8e8]"
               >
                 Learn Our Story
@@ -79,7 +79,10 @@ export default function Home() {
           CATEGORY SECTION
       ====================================================== */}
 
-      <section className="border-y border-[#eee5d2] bg-white px-6 py-16 lg:px-10">
+      <section
+        id="categories"
+        className="scroll-mt-24 border-y border-[#eee5d2] bg-white px-6 py-16 lg:px-10"
+      >
 
         <div className="mx-auto max-w-[1300px]">
 
@@ -103,7 +106,7 @@ export default function Home() {
 
           {/* CATEGORY CARDS */}
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <div className="grid min-w-0 grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
 
             <CategoryCard
               title="Living"
@@ -285,8 +288,10 @@ export default function Home() {
           STORY SECTION
       ====================================================== */}
 
-      <section className="bg-white px-6 py-16 lg:px-10">
-
+      <section
+        id="about"
+        className="scroll-mt-24 bg-white px-6 py-16 lg:px-10"
+      >
         <div className="mx-auto grid max-w-[1300px] items-center gap-10 lg:grid-cols-2">
 
           {/* STORY IMAGE PLACEHOLDER */}
@@ -337,7 +342,7 @@ export default function Home() {
             </p>
 
             <Link
-              href="/about"
+              href="/#about"
               className="mt-7 inline-block rounded-lg border border-[#c99716] px-6 py-3 text-sm font-medium text-[#a9780d] transition-all hover:bg-[#fff8e8]"
             >
               Discover Our Story →
@@ -459,7 +464,7 @@ function CategoryCard({ title, description, href }) {
   return (
     <Link
       href={href}
-      className="group block overflow-hidden rounded-xl border border-[#eadfca] bg-[#fffdf8] transition-all duration-300 hover:-translate-y-1 hover:border-[#d5ae50] hover:shadow-lg"
+      className="group block mi-w-0 overflow-hidden rounded-xl border border-[#eadfca] bg-[#fffdf8] transition-all duration-300 hover:-translate-y-1 hover:border-[#d5ae50] hover:shadow-lg"
     >
 
       <div className="flex aspect-square items-center justify-center bg-[#f1e8d7]">

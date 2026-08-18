@@ -28,28 +28,21 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/"
+            href="/shop"
             className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
           >
             Shop
           </Link>
 
           <Link
-            href="/"
+            href="/#categories"
             className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
           >
             Categories
           </Link>
 
           <Link
-            href="/"
-            className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
-          >
-            Deals
-          </Link>
-
-          <Link
-            href="/"
+            href="/#about"
             className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
           >
             About
@@ -125,7 +118,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/"
+            href="/shop"
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
@@ -133,7 +126,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/"
+            href="/#categories"
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
@@ -141,15 +134,7 @@ export default function Navbar() {
           </Link>
 
           <Link
-            href="/"
-            onClick={() => setMenuOpen(false)}
-            className="text-gray-800 hover:text-[#C9A227] transition-colors"
-          >
-            Deals
-          </Link>
-
-          <Link
-            href="/"
+            href="/#about"
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
