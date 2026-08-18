@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,14 +18,16 @@ export default function SignupPage() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
-
-  const handleSignup = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const handleSignup = async () => {
     let valid = true;
 
     setNameError("");
     setEmailError("");
     setPasswordError("");
     setConfirmPasswordError("");
+    setSuccessMessage("");
 
     if (!name.trim()) {
       setNameError("Full name is required");
@@ -59,11 +62,15 @@ export default function SignupPage() {
       return;
     }
 
-    console.log("Name:", name);
-    console.log("Email:", email);
-    console.log("Password:", password);
+    setIsSubmitting(true);
 
-    alert("Account created successfully!");
+    // Backend authentication will be connected here later.
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    setIsSubmitting(false);
+    setSuccessMessage(
+      "Your details are valid. Account creation will be connected when authentication is added."
+    );
   };
 
   return (
@@ -218,12 +225,21 @@ export default function SignupPage() {
 
         {/* Create Account Button */}
         <button
-          type="button"
-          onClick={handleSignup}
+            type="button"
+            onClick={handleSignup}
+            disabled={isSubmitting}
           className="mt-8 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] hover:scale-105 hover:shadow-lg transition-all duration-300"
+       >
+        {isSubmitting ? "Creating Account..." : "Create Account"}
+      </button>
+      {successMessage && (
+        <p
+          className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700"
+          role="status"
         >
-          Create Account
-        </button>
+          {successMessage}
+        </p>
+      )}
 
         {/* Login */}
         <p className="mt-6 text-center text-sm text-gray-600">

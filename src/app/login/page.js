@@ -8,42 +8,49 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
-  const handleLogin = () => {
-    let valid = true;
+ const handleLogin = async () => {
+  let valid = true;
 
-    setEmailError("");
-    setPasswordError("");
+  setEmailError("");
+  setPasswordError("");
+  setSuccessMessage("");
 
-    if (!email.trim()) {
-      setEmailError("Email is required");
-      valid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setEmailError("Please enter a valid email address");
-      valid = false;
-    }
+  if (!email.trim()) {
+    setEmailError("Email is required");
+    valid = false;
+  } else if (!/\S+@\S+\.\S+/.test(email)) {
+    setEmailError("Please enter a valid email address");
+    valid = false;
+  }
 
-    if (!password) {
-      setPasswordError("Password is required");
-      valid = false;
-    } else if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
-      valid = false;
-    }
+  if (!password) {
+    setPasswordError("Password is required");
+    valid = false;
+  } else if (password.length < 8) {
+    setPasswordError("Password must be at least 8 characters");
+    valid = false;
+  }
 
-    if (!valid) {
-      return;
-    }
+  if (!valid) {
+    return;
+  }
 
-    console.log("Email:", email);
-    console.log("Password:", password);
+  setIsSubmitting(true);
 
-    alert("Login Successful!");
-  };
+  // Backend authentication will be connected here later.
+  await new Promise((resolve) => setTimeout(resolve, 800));
 
+  setIsSubmitting(false);
+  setSuccessMessage(
+    "Your details are valid. Login authentication will be connected when the backend is added."
+  );
+};
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#FAF8F3] px-4 py-10">
       <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8">
@@ -134,10 +141,19 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={handleLogin}
+          disabled={isSubmitting}
           className="mt-6 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] hover:scale-105 hover:shadow-lg transition-all duration-300"
         >
-          Login
+          {isSubmitting ? "Signing In..." : "Login"}
         </button>
+        {successMessage && (
+          <p
+            className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700"
+            role="status"
+          >
+            {successMessage}
+          </p>
+        )}
 
         {/* Sign Up */}
         <p className="mt-6 text-center text-sm text-gray-600">
