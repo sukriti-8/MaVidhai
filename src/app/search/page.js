@@ -8,7 +8,6 @@ export default async function SearchPage({ searchParams }) {
   const results = query
     ? products.filter((product) => {
         const searchText = `${product.name} ${product.category}`.toLowerCase();
-
         return searchText.includes(query.toLowerCase());
       })
     : [];
@@ -16,7 +15,6 @@ export default async function SearchPage({ searchParams }) {
   return (
     <main className="min-h-screen bg-[#fffdf8] px-6 py-12">
       <div className="mx-auto max-w-7xl">
-
         {/* Heading */}
         <div className="mb-10">
           <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
@@ -78,20 +76,16 @@ export default async function SearchPage({ searchParams }) {
             {results.map((product) => (
               <Link
                 key={product.id}
-                href={`/product/${product.slug}`}
+                href={`/product/${product.id}`}
                 className="group overflow-hidden rounded-xl border border-[#eadfca] bg-white transition-all duration-300 hover:-translate-y-1 hover:border-[#d5ae50] hover:shadow-lg"
               >
-                {/* Image placeholder */}
-                <div className="flex aspect-square items-center justify-center bg-[#f1e8d7]">
-                  <div className="text-center">
-                    <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-[#d1a11c] text-xl text-[#c99716] transition-transform duration-300 group-hover:scale-110">
-                      ✦
-                    </div>
-
-                    <p className="text-[10px] uppercase tracking-[1.5px] text-[#9b8a70]">
-                      Product Image
-                    </p>
-                  </div>
+                {/* Updated: Real product image */}
+                <div className="relative aspect-square overflow-hidden bg-[#f1e8d7]">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
                 </div>
 
                 {/* Product info */}
