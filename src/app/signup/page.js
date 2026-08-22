@@ -71,6 +71,16 @@ export default function SignupPage() {
 
     setIsSubmitting(false);
 
+    localStorage.setItem(
+      "mavidhai_user",
+      JSON.stringify({
+        name: name.trim(),
+        email: email.trim(),
+        phone: "",
+        age: "",
+      })
+    );
+
     setSuccessMessage("Welcome to MaVidhai! Your account has been created.");
 
     setTimeout(() => {

@@ -1,29 +1,7 @@
 "use client";
 
 import Link from "next/link";
-
-const products = [
-  {
-    id: 1,
-    name: "Pink Floral Saree",
-    category: "Sarees",
-    price: 1499,
-    rating: 4.8,
-    reviews: 42,
-    badge: "Featured",
-    image: "/sarees/saree-1.png",
-  },
-  {
-    id: 2,
-    name: "White Floral Saree",
-    category: "Sarees",
-    price: 1599,
-    rating: 4.7,
-    reviews: 28,
-    badge: "New",
-    image: "/sarees/saree-2.png",
-  },
-];
+import { products } from "@/data/product"; 
 
 const categories = ["All", "Sarees"];
 
