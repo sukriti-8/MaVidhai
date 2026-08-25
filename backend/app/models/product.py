@@ -1,3 +1,4 @@
+from decimal import Decimal
 from datetime import datetime, timezone
 from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -10,10 +11,14 @@ class Product(Base):
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     slug: Mapped[str] = mapped_column(String(200), unique=True, index=True, nullable=False)
-    description: Mapped[str | None] = mapped_column(Text)
-    price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
-    material: Mapped[str | None] = mapped_column(String(100))
-    dimensions: Mapped[str | None] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    details: Mapped[str | None] = mapped_column(Text, nullable=True)
+    material: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    dimensions: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    colour: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    care: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    badge: Mapped[str | None] = mapped_column(String(100), nullable=True)
     availability: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     image_url: Mapped[str | None] = mapped_column(String(500))
     

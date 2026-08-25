@@ -29,14 +29,19 @@ PRODUCTS = [
     "category": "Living",
     "price": 2499,
     "description": "A thoughtfully crafted brass lamp that brings warmth, character and a touch of heritage into your space.",
+    "details": "Designed with traditional craftsmanship and a contemporary sensibility, this piece is made to become part of your everyday surroundings.",
     "material": "Brass",
     "dimensions": "12 × 8 inches",
+    "colour": "Antique Gold",
+    "care": "Wipe gently with a soft, dry cloth.",
+    "badge": "Bestseller",
   },
   {
     "slug": "handwoven-table-runner",
     "name": "Handwoven Table Runner",
     "category": "Decor",
     "price": 1299,
+    "badge": "New",
   },
   {
     "slug": "artisan-ceramic-mug",
@@ -55,12 +60,14 @@ PRODUCTS = [
     "name": "Natural Body Care Set",
     "category": "Personal Care",
     "price": 1599,
+    "badge": "Popular",
   },
   {
     "slug": "artisan-gift-box",
     "name": "Artisan Gift Box",
     "category": "Gifting",
     "price": 1899,
+    "badge": "Gift Pick",
   },
   {
     "slug": "handcrafted-cotton-kurta",
@@ -85,6 +92,7 @@ PRODUCTS = [
     "name": "Hand-Painted Ceramic Vase",
     "category": "Decor",
     "price": 1799,
+    "badge": "Artisan Pick",
   },
   {
     "slug": "wellness-gifting-set",
@@ -120,34 +128,56 @@ def seed_database():
         print(f"Categories: {len(category_by_slug)}")
         
         # 2. Seed Products
-        products_seeded = 0
+        products_updated = 0
+        products_created = 0
         for p_data in PRODUCTS:
             product = db.execute(select(Product).where(Product.slug == p_data["slug"])).scalar_one_or_none()
-            if not product:
-                cat = category_by_slug.get(p_data["category"])
-                if not cat:
-                    print(f"Warning: Category {p_data['category']} not found for product {p_data['name']}")
-                    continue
-                
+            cat = category_by_slug.get(p_data["category"])
+            if not cat:
+                print(f"Warning: Category {p_data['category']} not found for product {p_data['name']}")
+                continue
+
+            if product:
+                # Update existing
+                product.category_id = cat.id
+                product.name = p_data["name"]
+                product.price = p_data["price"]
+                product.description = p_data.get("description")
+                product.details = p_data.get("details")
+                product.material = p_data.get("material")
+                product.dimensions = p_data.get("dimensions")
+                product.colour = p_data.get("colour")
+                product.care = p_data.get("care")
+                product.badge = p_data.get("badge")
+                product.availability = True
+                products_updated += 1
+            else:
+                # Create new
                 product = Product(
                     category_id=cat.id,
                     name=p_data["name"],
                     slug=p_data["slug"],
                     price=p_data["price"],
                     description=p_data.get("description"),
+                    details=p_data.get("details"),
                     material=p_data.get("material"),
                     dimensions=p_data.get("dimensions"),
+                    colour=p_data.get("colour"),
+                    care=p_data.get("care"),
+                    badge=p_data.get("badge"),
                     availability=True,
                     image_url=None
                 )
                 db.add(product)
-                products_seeded += 1
+                products_created += 1
                 
-        if products_seeded > 0:
+        if products_created > 0 or products_updated > 0:
             db.commit()
             
         total_products = db.execute(select(Product)).scalars().all()
-        print(f"Products: {len(total_products)}")
+        print(f"Products created: {products_created}")
+        print(f"Products updated: {products_updated}")
+        print(f"Total Products in DB: {len(total_products)}")
         print("\nCatalog seeding completed successfully.")
 
     finally:

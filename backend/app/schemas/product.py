@@ -6,13 +6,16 @@ class ProductResponse(BaseModel):
     id: int
     category_id: int
     name: str
-    slug: str
-    description: str | None
     price: Decimal
-    material: str | None
-    dimensions: str | None
+    description: str | None = None
+    details: str | None = None
+    material: str | None = None
+    dimensions: str | None = None
+    colour: str | None = None
+    care: str | None = None
+    badge: str | None = None
     availability: bool
-    image_url: str | None
+    image_url: str | None = None
     created_at: datetime
     updated_at: datetime
 
