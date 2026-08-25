@@ -138,41 +138,61 @@ const categories = [
 
 export default function ShopPage() {
   const [products, setProducts] = useState([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 0 });
+  const [filters, setFilters] = useState({
+    category: "",
+    minPrice: "",
+    maxPrice: "",
+    available: false,
+  });
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+    
     async function loadProducts() {
       try {
         setLoading(true);
-        const data = await getProducts();
+        const data = await getProducts({ ...filters, page: pagination.page, limit: pagination.limit }, controller.signal);
         setProducts(data.items);
+        setPagination(prev => ({ ...prev, page: data.page, limit: data.limit, total: data.total, pages: data.pages }));
       } catch (err) {
-        console.error(err);
-        setError("Unable to load products. Please try again.");
+        if (err.name !== 'AbortError') {
+          console.error(err);
+          setError("Unable to load products. Please try again.");
+        }
       } finally {
         setLoading(false);
       }
     }
     loadProducts();
-  }, []);
+    
+    return () => controller.abort();
+  }, [filters, pagination.page]);
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-[#fffdf8] flex items-center justify-center">
-        <p className="text-[#a48d69]">Loading products...</p>
-      </main>
-    );
-  }
+  const handleCategoryChange = (categoryName) => {
+    const slug = categoryName === "All" ? "" : categoryName.toLowerCase().replace(" ", "-");
+    setFilters(prev => ({ ...prev, category: slug }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
 
-  if (error) {
-    return (
-      <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center gap-4">
-        <p className="text-red-500">{error}</p>
-        <button onClick={() => window.location.reload()} className="text-[#a48d69] underline">Try again</button>
-      </main>
-    );
-  }
+  const handlePriceChange = (min, max) => {
+    setFilters(prev => ({ ...prev, minPrice: min, maxPrice: max }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleAvailabilityChange = (checked) => {
+    setFilters(prev => ({ ...prev, available: checked }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+  
+  const handlePageChange = (newPage) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  const isPriceSelected = (min, max) => filters.minPrice === min && filters.maxPrice === max;
 
   return (
     <main className="min-h-screen bg-[#fffdf8]">
@@ -235,23 +255,24 @@ export default function ShopPage() {
 
               <div className="mt-5 space-y-1">
 
-                {categories.map((category, index) => (
-                  <button
-                    key={category}
-                    type="button"
-                    className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
-                      index === 0
-                        ? "bg-[#fff6df] font-medium text-[#a9780d]"
-                        : "text-[#686159] hover:bg-[#fffaf0] hover:text-[#a9780d]"
-                    }`}
-                  >
-                    <span>{category}</span>
-
-                    <span className="text-xs text-[#a99d8b]">
-                      {index === 0 ? products.length : ""}
-                    </span>
-                  </button>
-                ))}
+                {categories.map((categoryName, index) => {
+                  const slug = categoryName === "All" ? "" : categoryName.toLowerCase().replace(" ", "-");
+                  const isActive = filters.category === slug;
+                  return (
+                    <button
+                      key={categoryName}
+                      type="button"
+                      onClick={() => handleCategoryChange(categoryName)}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
+                        isActive
+                          ? "bg-[#fff6df] font-medium text-[#a9780d]"
+                          : "text-[#686159] hover:bg-[#fffaf0] hover:text-[#a9780d]"
+                      }`}
+                    >
+                      <span>{categoryName}</span>
+                    </button>
+                  );
+                })}
 
               </div>
 
@@ -266,31 +287,46 @@ export default function ShopPage() {
               </h3>
 
               <div className="mt-4 space-y-3">
-
                 <label className="flex items-center gap-3 text-sm text-[#686159]">
                   <input
-                    type="checkbox"
+                    type="radio"
+                    name="price"
+                    checked={isPriceSelected("", "")}
+                    onChange={() => handlePriceChange("", "")}
+                    className="h-4 w-4 accent-[#d1a11c]"
+                  />
+                  All Prices
+                </label>
+                <label className="flex items-center gap-3 text-sm text-[#686159]">
+                  <input
+                    type="radio"
+                    name="price"
+                    checked={isPriceSelected(0, 1000)}
+                    onChange={() => handlePriceChange(0, 1000)}
                     className="h-4 w-4 accent-[#d1a11c]"
                   />
                   Under ₹1,000
                 </label>
-
                 <label className="flex items-center gap-3 text-sm text-[#686159]">
                   <input
-                    type="checkbox"
+                    type="radio"
+                    name="price"
+                    checked={isPriceSelected(1000, 2000)}
+                    onChange={() => handlePriceChange(1000, 2000)}
                     className="h-4 w-4 accent-[#d1a11c]"
                   />
                   ₹1,000 – ₹2,000
                 </label>
-
                 <label className="flex items-center gap-3 text-sm text-[#686159]">
                   <input
-                    type="checkbox"
+                    type="radio"
+                    name="price"
+                    checked={isPriceSelected(2000, "")}
+                    onChange={() => handlePriceChange(2000, "")}
                     className="h-4 w-4 accent-[#d1a11c]"
                   />
                   Above ₹2,000
                 </label>
-
               </div>
 
 
@@ -306,6 +342,8 @@ export default function ShopPage() {
               <label className="mt-4 flex items-center gap-3 text-sm text-[#686159]">
                 <input
                   type="checkbox"
+                  checked={filters.available}
+                  onChange={(e) => handleAvailabilityChange(e.target.checked)}
                   className="h-4 w-4 accent-[#d1a11c]"
                 />
                 In Stock
@@ -325,15 +363,13 @@ export default function ShopPage() {
             {/* TOOLBAR */}
 
             <div className="mb-6 flex flex-col justify-between gap-4 border-b border-[#eee5d2] pb-5 sm:flex-row sm:items-center">
-
               <p className="text-sm text-[#756d63]">
                 Showing{" "}
                 <span className="font-medium text-[#29251f]">
-                  {products.length}
+                  {pagination.total}
                 </span>{" "}
                 products
               </p>
-
 
               <button
                 type="button"
@@ -341,22 +377,68 @@ export default function ShopPage() {
               >
                 Sort by: Featured ▾
               </button>
-
             </div>
-
 
             {/* PRODUCT GRID */}
 
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-
-              {products.map((product) => (
-                <ShopProductCard
-                  key={product.id}
-                  product={product}
-                />
-              ))}
-
-            </div>
+            {loading ? (
+              <div className="flex h-64 items-center justify-center">
+                <p className="text-[#a48d69]">Loading products...</p>
+              </div>
+            ) : error ? (
+              <div className="flex h-64 flex-col items-center justify-center gap-4">
+                <p className="text-red-500">{error}</p>
+                <button onClick={() => window.location.reload()} className="text-[#a48d69] underline">Try again</button>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="flex h-64 flex-col items-center justify-center text-center">
+                <p className="text-[#29251f] font-medium mb-2">No products found.</p>
+                <p className="text-[#756d63] text-sm">Try adjusting your filters.</p>
+                <button
+                  onClick={() => {
+                    setFilters({ category: "", minPrice: "", maxPrice: "", available: false });
+                    setPagination(prev => ({ ...prev, page: 1 }));
+                  }}
+                  className="mt-4 text-[#a9780d] text-sm hover:underline"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+                {products.map((product) => (
+                  <ShopProductCard
+                    key={product.id}
+                    product={product}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {/* PAGINATION */}
+            {!loading && !error && pagination.pages > 1 && (
+              <div className="mt-10 flex items-center justify-between border-t border-[#eee5d2] pt-6">
+                <button
+                  type="button"
+                  disabled={pagination.page <= 1}
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  className="rounded-lg border border-[#dfd2bb] bg-white px-4 py-2.5 text-sm text-[#5f584f] hover:border-[#d1a11c] disabled:opacity-50 disabled:hover:border-[#dfd2bb]"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-[#686159]">
+                  Page {pagination.page} of {pagination.pages}
+                </span>
+                <button
+                  type="button"
+                  disabled={pagination.page >= pagination.pages}
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  className="rounded-lg border border-[#dfd2bb] bg-white px-4 py-2.5 text-sm text-[#5f584f] hover:border-[#d1a11c] disabled:opacity-50 disabled:hover:border-[#dfd2bb]"
+                >
+                  Next
+                </button>
+              </div>
+            )}
 
           </div>
 
