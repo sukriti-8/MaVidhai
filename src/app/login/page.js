@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import { login as loginAPI } from "@/lib/api";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -55,16 +56,17 @@ export default function LoginPage() {
 
   setIsSubmitting(true);
 
-  // Backend authentication will be connected here later.
-  await new Promise((resolve) => setTimeout(resolve, 800));
-
-  setIsSubmitting(false);
-
-  setSuccessMessage("Login successful! Welcome back to MaVidhai.");
-
-  setTimeout(() => {
-    router.push("/");
-  }, 1000);
+  try {
+    await loginAPI(email, password);
+    setSuccessMessage("Login successful! Welcome back to MaVidhai.");
+    setTimeout(() => {
+      router.push("/");
+    }, 1000);
+  } catch (err) {
+    setPasswordError(err.message || "Failed to log in");
+  } finally {
+    setIsSubmitting(false);
+  }
 };
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#FAF8F3] px-4 py-10">
@@ -190,5 +192,13 @@ export default function LoginPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

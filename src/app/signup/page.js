@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import { signup as signupAPI } from "@/lib/api";
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -66,16 +67,17 @@ export default function SignupPage() {
 
     setIsSubmitting(true);
 
-    // Backend authentication will be connected here later.
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    setIsSubmitting(false);
-
-    setSuccessMessage("Welcome to MaVidhai! Your account has been created.");
-
-    setTimeout(() => {
-      router.push("/login");
-    }, 1000);
+    try {
+      await signupAPI(name, email, password);
+      setSuccessMessage("Welcome to MaVidhai! Your account has been created.");
+      setTimeout(() => {
+        router.push("/login?registered=true");
+      }, 1000);
+    } catch (err) {
+      setConfirmPasswordError(err.message || "Failed to create account");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

@@ -1,14 +1,56 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getProductBySlug } from "@/lib/api";
+import { getProductBySlug, addToCart, addToWishlist } from "@/lib/api";
 
 export default function ProductPage() {
   const { slug } = useParams();
+  const router = useRouter();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [cartAdded, setCartAdded] = useState(false);
+  const [isWishlisting, setIsWishlisting] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  const handleAddToCart = async () => {
+    setIsAddingToCart(true);
+    try {
+      await addToCart(product.id, quantity);
+      setCartAdded(true);
+      setTimeout(() => setCartAdded(false), 3000);
+    } catch (err) {
+      if (err.message === "Unauthorized") {
+        alert("Please log in to add items to your cart.");
+        router.push("/login");
+      } else {
+        alert("Unable to add to cart");
+      }
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleWishlist = async () => {
+    setIsWishlisting(true);
+    try {
+      await addToWishlist(product.id);
+      setIsWishlisted(true);
+    } catch (err) {
+      if (err.message === "Unauthorized") {
+        alert("Please log in to add items to your wishlist.");
+        router.push("/login");
+      } else {
+        alert("Unable to add to wishlist");
+      }
+    } finally {
+      setIsWishlisting(false);
+    }
+  };
 
   useEffect(() => {
     async function loadProduct() {
@@ -173,10 +215,11 @@ export default function ProductPage() {
 
               <button
                 type="button"
+                onClick={handleWishlist}
                 aria-label="Add to wishlist"
-                className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl text-[#81786d] shadow-md transition-colors hover:text-[#c99716]"
+                className={`absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-md transition-colors hover:text-[#c99716] ${isWishlisted ? "text-[#c99716]" : "text-[#81786d]"}`}
               >
-                ♡
+                {isWishlisted ? "♥" : "♡"}
               </button>
 
             </div>
@@ -294,17 +337,19 @@ export default function ProductPage() {
 
                 <button
                   type="button"
+                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
                   className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d]"
                 >
                   −
                 </button>
 
                 <span className="w-10 text-center text-sm">
-                  1
+                  {quantity}
                 </span>
 
                 <button
                   type="button"
+                  onClick={() => setQuantity(q => q + 1)}
                   className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d]"
                 >
                   +
@@ -321,17 +366,21 @@ export default function ProductPage() {
 
               <button
                 type="button"
-                className="flex-1 rounded-lg bg-[#d1a11c] px-6 py-3.5 text-sm font-medium text-white transition-all hover:bg-[#bd8d0f] hover:shadow-lg"
+                onClick={handleAddToCart}
+                disabled={isAddingToCart}
+                className="flex-1 rounded-lg bg-[#d1a11c] px-6 py-3.5 text-sm font-medium text-white transition-all hover:bg-[#bd8d0f] hover:shadow-lg disabled:opacity-75"
               >
-                Add to Cart
+                {isAddingToCart ? "Adding..." : cartAdded ? "Added ✓" : "Add to Cart"}
               </button>
 
               <button
                 type="button"
-                className="flex h-12 w-12 items-center justify-center rounded-lg border border-[#d9bf7c] bg-white text-xl text-[#81786d] transition-colors hover:text-[#c99716]"
+                onClick={handleWishlist}
+                disabled={isWishlisting}
+                className={`flex h-12 w-12 items-center justify-center rounded-lg border border-[#d9bf7c] bg-white text-xl transition-colors hover:text-[#c99716] ${isWishlisted ? "text-[#c99716]" : "text-[#81786d]"}`}
                 aria-label="Add to wishlist"
               >
-                ♡
+                {isWishlisted ? "♥" : "♡"}
               </button>
 
             </div>
