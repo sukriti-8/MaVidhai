@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# MaVidhai — Production Readiness & Engineering Report
 
-## Getting Started
+MaVidhai is a full-stack, transactional e-commerce platform built as an internship project demonstrating secure, server-authoritative commerce flows, robust payment state machines, and API-driven design.
 
-First, run the development server:
+## Architecture
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```text
+                         ┌─────────────────────┐
+                         │      Next.js        │
+                         │                     │
+                         │ Shop                │
+                         │ Product Details     │
+                         │ Cart                │
+                         │ Wishlist            │
+                         │ Checkout            │
+                         │ Orders              │
+                         └──────────┬──────────┘
+                                    │
+                              REST API / JWT
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │      FastAPI        │
+                         │                     │
+                         │ Auth                │
+                         │ Catalog             │
+                         │ Cart                │
+                         │ Wishlist            │
+                         │ Orders              │
+                         │ Payments            │
+                         │ Webhooks            │
+                         └──────┬────────┬─────┘
+                                │        │
+                         SQLAlchemy      │ Razorpay
+                                │        │
+                                ▼        ▼
+                         ┌──────────┐  ┌──────────┐
+                         │PostgreSQL│  │ Razorpay │
+                         └──────────┘  └──────────┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Technical Decisions
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+1. **Server-authoritative pricing:** The frontend never determines the final payable amount. The backend calculates order totals from the trusted database catalog during the checkout transaction.
+2. **Immutable order snapshots:** Historical orders remain accurate and readable even if products are deleted or change in price later.
+3. **Payment attempts are separate from orders (1:N):** Failed payments can be safely retried without creating duplicate orders or duplicate database state.
+4. **Webhook idempotency:** Duplicate Razorpay provider events are safely ignored and don't cause duplicate state transitions or application crashes.
+5. **Transaction-safe checkout:** Cart-to-order conversion is atomic and will completely roll back if any step fails.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Production Readiness
 
-## Learn More
+**P0 production-readiness audit passed; live Razorpay E2E and deployment verification pending.**
 
-To learn more about Next.js, take a look at the following resources:
+```text
+Production Readiness
+────────────────────────────────
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Core application:         ✅ Verified
+Backend tests:            ✅ 50/50 passing
+Frontend build:           ✅ Passing
+Database migrations:      ✅ Synchronized
+Authentication:           ✅ Verified
+Authorization:            ✅ Verified
+Payments:                 ✅ Automated tests verified
+Webhooks:                 ✅ Local boundary verified
+Payment retry:            ✅ Verified
+Real Razorpay E2E:        ⚠ Pending
+Production deployment:    ⚠ Pending
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Setup & Local Development
 
-## Deploy on Vercel
+### 1. Backend (FastAPI)
+```bash
+cd backend
+python -m venv venv
+source venv/Scripts/activate # Windows
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 2. Frontend (Next.js)
+```bash
+npm install
+npm run dev
+```
