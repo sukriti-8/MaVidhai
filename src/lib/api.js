@@ -30,3 +30,19 @@ export async function getProducts(params = {}, signal) {
 
   return response.json();
 }
+
+export async function getProductBySlug(slug, signal) {
+  const response = await fetch(
+    `${API_URL}/api/products/${encodeURIComponent(slug)}`,
+    { signal }
+  );
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null;
+    }
+    throw new Error("Failed to fetch product");
+  }
+
+  return response.json();
+}

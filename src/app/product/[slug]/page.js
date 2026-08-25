@@ -1,23 +1,64 @@
+"use client";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
+import { getProductBySlug } from "@/lib/api";
 
-const product = {
-  name: "Handcrafted Brass Lamp",
-  category: "Living",
-  price: 2499,
-  rating: 4.8,
-  reviews: 42,
-  description:
-    "A thoughtfully crafted brass lamp that brings warmth, character and a touch of heritage into your space.",
-  details:
-    "Designed with traditional craftsmanship and a contemporary sensibility, this piece is made to become part of your everyday surroundings.",
-  material: "Brass",
-  dimensions: "12 × 8 inches",
-  colour: "Antique Gold",
-  care: "Wipe gently with a soft, dry cloth.",
-};
+export default function ProductPage() {
+  const { slug } = useParams();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-export default async function ProductPage({ params }) {
-  const { slug } = await params;
+  useEffect(() => {
+    async function loadProduct() {
+      try {
+        setLoading(true);
+        const data = await getProductBySlug(slug);
+        if (!data) {
+          setError(404);
+        } else {
+          setProduct(data);
+        }
+      } catch (err) {
+        console.error(err);
+        setError(500);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (slug) {
+      loadProduct();
+    }
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#fffdf8] flex items-center justify-center">
+        <p className="text-[#a48d69]">Loading product...</p>
+      </main>
+    );
+  }
+
+  if (error === 404) {
+    return (
+      <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center gap-4">
+        <p className="text-[#29251f] font-medium text-lg">Product not found</p>
+        <p className="text-[#756d63] text-sm">The product you're looking for doesn't exist or may have been removed.</p>
+        <Link href="/shop" className="text-[#a48d69] underline">Back to Shop</Link>
+      </main>
+    );
+  }
+
+  if (error === 500) {
+    return (
+      <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center gap-4">
+        <p className="text-red-500">Failed to fetch product</p>
+        <button onClick={() => window.location.reload()} className="text-[#a48d69] underline">Try again</button>
+      </main>
+    );
+  }
+
 
   return (
     <main className="min-h-screen bg-[#fffdf8]">
@@ -176,14 +217,14 @@ export default async function ProductPage({ params }) {
               </div>
 
               <span className="text-sm font-medium text-[#5f584f]">
-                {product.rating}
+                4.8
               </span>
 
               <Link
                 href="#reviews"
                 className="text-sm text-[#91887c] underline-offset-4 hover:underline"
               >
-                {product.reviews} reviews
+                42 reviews
               </Link>
 
             </div>
@@ -216,27 +257,29 @@ export default async function ProductPage({ params }) {
 
             {/* COLOUR */}
 
-            <div className="mt-7">
+            {product.colour && (
+              <div className="mt-7">
 
-              <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
 
-                <p className="text-sm font-semibold text-[#29251f]">
-                  Colour
-                </p>
+                  <p className="text-sm font-semibold text-[#29251f]">
+                    Colour
+                  </p>
 
-                <span className="text-sm text-[#756d63]">
-                  {product.colour}
-                </span>
+                  <span className="text-sm text-[#756d63]">
+                    {product.colour}
+                  </span>
+
+                </div>
+
+                <div className="mt-3 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#d1a11c] bg-[#d8ae46]">
+                  <span className="sr-only">
+                    {product.colour}
+                  </span>
+                </div>
 
               </div>
-
-              <div className="mt-3 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#d1a11c] bg-[#d8ae46]">
-                <span className="sr-only">
-                  {product.colour}
-                </span>
-              </div>
-
-            </div>
+            )}
 
 
             {/* QUANTITY */}
@@ -339,58 +382,70 @@ export default async function ProductPage({ params }) {
           PRODUCT DETAILS
       ====================================================== */}
 
-      <section className="border-y border-[#eee5d2] bg-white px-6 py-14 lg:px-10">
+      { (product.details || product.material || product.dimensions || product.colour || product.care) && (
+        <section className="border-y border-[#eee5d2] bg-white px-6 py-14 lg:px-10">
 
-        <div className="mx-auto max-w-[1100px]">
+          <div className="mx-auto max-w-[1100px]">
 
-          <div className="grid gap-10 md:grid-cols-2">
+            <div className="grid gap-10 md:grid-cols-2">
 
-            <div>
+              <div>
 
-              <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
-                Details
-              </p>
+                <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
+                  Details
+                </p>
 
-              <h2 className="mt-2 text-2xl font-semibold text-[#29251f]">
-                Made with intention
-              </h2>
+                <h2 className="mt-2 text-2xl font-semibold text-[#29251f]">
+                  Made with intention
+                </h2>
+                
+                {product.details && (
+                  <p className="mt-5 text-sm leading-7 text-[#686159]">
+                    {product.details}
+                  </p>
+                )}
 
-              <p className="mt-5 text-sm leading-7 text-[#686159]">
-                {product.details}
-              </p>
-
-            </div>
+              </div>
 
 
-            <div className="rounded-2xl border border-[#eadfca] bg-[#fffdf8] p-6">
+              <div className="rounded-2xl border border-[#eadfca] bg-[#fffdf8] p-6">
 
-              <DetailRow
-                label="Material"
-                value={product.material}
-              />
+                {product.material && (
+                  <DetailRow
+                    label="Material"
+                    value={product.material}
+                  />
+                )}
 
-              <DetailRow
-                label="Dimensions"
-                value={product.dimensions}
-              />
+                {product.dimensions && (
+                  <DetailRow
+                    label="Dimensions"
+                    value={product.dimensions}
+                  />
+                )}
 
-              <DetailRow
-                label="Colour"
-                value={product.colour}
-              />
+                {product.colour && (
+                  <DetailRow
+                    label="Colour"
+                    value={product.colour}
+                  />
+                )}
 
-              <DetailRow
-                label="Care"
-                value={product.care}
-              />
+                {product.care && (
+                  <DetailRow
+                    label="Care"
+                    value={product.care}
+                  />
+                )}
+
+              </div>
 
             </div>
 
           </div>
 
-        </div>
-
-      </section>
+        </section>
+      )}
 
 
       {/* =====================================================
