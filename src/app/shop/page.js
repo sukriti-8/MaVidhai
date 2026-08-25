@@ -1,6 +1,9 @@
+"use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { getProducts } from "@/lib/api";
 
-const products = [
+/* const products = [
   {
     id: 1,
     slug: "handcrafted-brass-lamp",
@@ -121,7 +124,7 @@ const products = [
     reviews: 29,
     badge: null,
   },
-];
+]; */
 
 const categories = [
   "All",
@@ -134,6 +137,43 @@ const categories = [
 ];
 
 export default function ShopPage() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        setLoading(true);
+        const data = await getProducts();
+        setProducts(data.items);
+      } catch (err) {
+        console.error(err);
+        setError("Unable to load products. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#fffdf8] flex items-center justify-center">
+        <p className="text-[#a48d69]">Loading products...</p>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center gap-4">
+        <p className="text-red-500">{error}</p>
+        <button onClick={() => window.location.reload()} className="text-[#a48d69] underline">Try again</button>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#fffdf8]">
 

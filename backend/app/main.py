@@ -3,7 +3,7 @@ from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database.connection import engine
-
+import os
 
 from app.routes import auth, categories, products
 
@@ -12,10 +12,12 @@ app = FastAPI(
     version="1.0.0",
 )
 
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
 # Add CORS middleware to allow frontend requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
