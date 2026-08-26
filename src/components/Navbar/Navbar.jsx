@@ -2,10 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Search, User } from "lucide-react";
+import {
+  Search,
+  User,
+  Globe,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 const AUTH_STORAGE_KEY = "mavidhai_user";
+const AUTH_EVENT = "mavidhai-auth-changed";
 
 const BRAND = {
   name: "MaVidhai",
@@ -26,13 +34,18 @@ const SEARCH_CONFIG = {
   placeholder: "Search products...",
 };
 
-const AUTH_EVENT = "mavidhai-auth-changed";
-
 export default function Navbar() {
   const router = useRouter();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [languageOpen, setLanguageOpen] = useState(false);
+
+  const {
+    language,
+    changeLanguage,
+    languages,
+  } = useLanguage();
 
   /*
    * Read the logged-in user from localStorage.
@@ -57,7 +70,7 @@ export default function Navbar() {
   };
 
   /*
-   * Load the user when Navbar first appears
+   * Load user when Navbar first appears
    * and listen for login/logout changes.
    */
   useEffect(() => {
@@ -75,7 +88,7 @@ export default function Navbar() {
   }, []);
 
   /*
-   * Logout
+   * Logout.
    */
   const handleLogout = () => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -124,6 +137,15 @@ export default function Navbar() {
 
           {/* Desktop Search */}
           <SearchForm desktop />
+
+          {/* Desktop Language Selector */}
+          <LanguageSelector
+            language={language}
+            languages={languages}
+            languageOpen={languageOpen}
+            setLanguageOpen={setLanguageOpen}
+            changeLanguage={changeLanguage}
+          />
         </div>
 
         {/* ================= DESKTOP AUTH ================= */}
@@ -257,6 +279,86 @@ function SearchForm({ desktop = false }) {
         <Search size={18} />
       </button>
     </form>
+  );
+}
+
+
+/* ============================================================
+   LANGUAGE SELECTOR
+   ============================================================ */
+
+function LanguageSelector({
+  language,
+  languages,
+  languageOpen,
+  setLanguageOpen,
+  changeLanguage,
+}) {
+  const handleLanguageChange = (newLanguage) => {
+    changeLanguage(newLanguage);
+    setLanguageOpen(false);
+  };
+
+  return (
+    <div className="relative">
+
+      {/* Language Button */}
+      <button
+        type="button"
+        onClick={() => setLanguageOpen((previous) => !previous)}
+        className="flex items-center gap-2 h-10 px-3 rounded-lg text-gray-700 hover:text-[#C9A227] hover:bg-[#fffdf8] transition-all duration-300"
+        aria-label="Select language"
+        aria-haspopup="listbox"
+        aria-expanded={languageOpen}
+      >
+        <Globe size={19} />
+
+        <span className="text-sm font-medium">
+          {languages[language]}
+        </span>
+
+        <ChevronDown
+          size={16}
+          className={`transition-transform duration-200 ${
+            languageOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* Language Dropdown */}
+      {languageOpen && (
+        <div
+          className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-[#e3d4b5] bg-white shadow-lg py-2 z-50"
+          role="listbox"
+          aria-label="Select language"
+        >
+          <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Select Language
+          </div>
+
+          {Object.entries(languages).map(([code, name]) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => handleLanguageChange(code)}
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-[#fffdf8] hover:text-[#C9A227] transition-colors"
+              role="option"
+              aria-selected={language === code}
+            >
+              <span>{name}</span>
+
+              {language === code && (
+                <Check
+                  size={17}
+                  className="text-[#C9A227]"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+    </div>
   );
 }
 
