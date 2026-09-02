@@ -5,8 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database.connection import engine
 import os
 
-from app.routes import auth, categories, products, cart, wishlist
-from app.routes import auth, categories, products, cart, wishlist, orders, payments
+from app.routes import auth, categories, products, cart, wishlist, orders, payments, translation
 
 app = FastAPI(
     title="MaVidhai API",
@@ -31,6 +30,7 @@ app.include_router(cart.router)
 app.include_router(wishlist.router)
 app.include_router(orders.router)
 app.include_router(payments.router)
+app.include_router(translation.router)
 
 
 @app.get("/api/health")
