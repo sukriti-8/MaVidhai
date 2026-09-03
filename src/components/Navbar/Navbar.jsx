@@ -2,10 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Search, User } from "lucide-react";
+import {
+  Search,
+  User,
+  Globe,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const AUTH_STORAGE_KEY = "mavidhai_user";
+const AUTH_EVENT = "mavidhai-auth-changed";
 
 const BRAND = {
   name: "MaVidhai",
@@ -26,13 +35,24 @@ const SEARCH_CONFIG = {
   placeholder: "Search products...",
 };
 
-const AUTH_EVENT = "mavidhai-auth-changed";
-
 export default function Navbar() {
   const router = useRouter();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [languageOpen, setLanguageOpen] = useState(false);
+
+  const {
+    language,
+    changeLanguage,
+    languages,
+  } = useLanguage();
+  const { t } = useTranslation([
+    "Home",
+    "Shop",
+    "Categories",
+    "About",
+  ]);
 
   /*
    * Read the logged-in user from localStorage.
@@ -57,7 +77,7 @@ export default function Navbar() {
   };
 
   /*
-   * Load the user when Navbar first appears
+   * Load user when Navbar first appears
    * and listen for login/logout changes.
    */
   useEffect(() => {
@@ -75,7 +95,7 @@ export default function Navbar() {
   }, []);
 
   /*
-   * Logout
+   * Logout.
    */
   const handleLogout = () => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -92,6 +112,7 @@ export default function Navbar() {
    */
   const closeMobileMenu = () => {
     setMenuOpen(false);
+    setLanguageOpen(false);
   };
 
   return (
@@ -118,12 +139,21 @@ export default function Navbar() {
               href={link.href}
               className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
             >
-              {link.label}
+              {t(link.label)}
             </Link>
           ))}
 
           {/* Desktop Search */}
           <SearchForm desktop />
+
+          {/* Desktop Language Selector */}
+          <LanguageSelector
+            language={language}
+            languages={languages}
+            languageOpen={languageOpen}
+            setLanguageOpen={setLanguageOpen}
+            changeLanguage={changeLanguage}
+          />
         </div>
 
         {/* ================= DESKTOP AUTH ================= */}
@@ -205,6 +235,15 @@ export default function Navbar() {
             </Link>
           ))}
 
+          {/* Mobile Language Selector */}
+          <MobileLanguageSelector
+            language={language}
+            languages={languages}
+            languageOpen={languageOpen}
+            setLanguageOpen={setLanguageOpen}
+            changeLanguage={changeLanguage}
+          />
+
           <hr />
 
           {/* Mobile Authentication */}
@@ -257,6 +296,165 @@ function SearchForm({ desktop = false }) {
         <Search size={18} />
       </button>
     </form>
+  );
+}
+
+
+/* ============================================================
+   DESKTOP - LANGUAGE SELECTOR
+   ============================================================ */
+
+function LanguageSelector({
+  language,
+  languages,
+  languageOpen,
+  setLanguageOpen,
+  changeLanguage,
+}) {
+  const handleLanguageChange = (newLanguage) => {
+    changeLanguage(newLanguage);
+    setLanguageOpen(false);
+  };
+
+  return (
+    <div className="relative">
+
+      {/* Language Button */}
+      <button
+        type="button"
+        onClick={() => setLanguageOpen((previous) => !previous)}
+        className="flex items-center gap-2 h-10 px-3 rounded-lg text-gray-700 hover:text-[#C9A227] hover:bg-[#fffdf8] transition-all duration-300"
+        aria-label="Select language"
+        aria-haspopup="listbox"
+        aria-expanded={languageOpen}
+      >
+        <Globe size={19} />
+
+        <span className="text-sm font-medium">
+          {languages[language]}
+        </span>
+
+        <ChevronDown
+          size={16}
+          className={`transition-transform duration-200 ${
+            languageOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* Language Dropdown */}
+      {languageOpen && (
+        <div
+          className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-[#e3d4b5] bg-white shadow-lg py-2 z-50"
+          role="listbox"
+          aria-label="Select language"
+        >
+          <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Select Language
+          </div>
+
+          {Object.entries(languages).map(([code, name]) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => handleLanguageChange(code)}
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-[#fffdf8] hover:text-[#C9A227] transition-colors"
+              role="option"
+              aria-selected={language === code}
+            >
+              <span>{name}</span>
+
+              {language === code && (
+                <Check
+                  size={17}
+                  className="text-[#C9A227]"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+
+/* ============================================================
+   MOBILE - LANGUAGE SELECTOR
+   ============================================================ */
+
+function MobileLanguageSelector({
+  language,
+  languages,
+  languageOpen,
+  setLanguageOpen,
+  changeLanguage,
+}) {
+  const handleLanguageChange = (newLanguage) => {
+    changeLanguage(newLanguage);
+    setLanguageOpen(false);
+  };
+
+  return (
+    <div className="w-full">
+
+      {/* Mobile Language Button */}
+      <button
+        type="button"
+        onClick={() => setLanguageOpen((previous) => !previous)}
+        className="w-full flex items-center justify-between py-2 text-gray-800 hover:text-[#C9A227] transition-colors"
+        aria-label="Select language"
+        aria-haspopup="listbox"
+        aria-expanded={languageOpen}
+      >
+        <span className="flex items-center gap-3">
+          <Globe size={20} />
+          <span>Language</span>
+        </span>
+
+        <span className="flex items-center gap-2 text-sm text-gray-500">
+          {languages[language]}
+
+          <ChevronDown
+            size={16}
+            className={`transition-transform duration-200 ${
+              languageOpen ? "rotate-180" : ""
+            }`}
+          />
+        </span>
+      </button>
+
+      {/* Mobile Language Options */}
+      {languageOpen && (
+        <div
+          className="mt-2 ml-8 rounded-lg border border-[#e3d4b5] bg-[#fffdf8] py-1"
+          role="listbox"
+          aria-label="Select language"
+        >
+          {Object.entries(languages).map(([code, name]) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => handleLanguageChange(code)}
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:text-[#C9A227] hover:bg-white transition-colors"
+              role="option"
+              aria-selected={language === code}
+            >
+              <span>{name}</span>
+
+              {language === code && (
+                <Check
+                  size={17}
+                  className="text-[#C9A227]"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+    </div>
   );
 }
 
