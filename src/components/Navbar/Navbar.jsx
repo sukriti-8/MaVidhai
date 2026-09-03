@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const AUTH_STORAGE_KEY = "mavidhai_user";
 const AUTH_EVENT = "mavidhai-auth-changed";
@@ -46,6 +47,12 @@ export default function Navbar() {
     changeLanguage,
     languages,
   } = useLanguage();
+  const { t } = useTranslation([
+    "Home",
+    "Shop",
+    "Categories",
+    "About",
+  ]);
 
   /*
    * Read the logged-in user from localStorage.
@@ -132,7 +139,7 @@ export default function Navbar() {
               href={link.href}
               className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
             >
-              {link.label}
+              {t(link.label)}
             </Link>
           ))}
 
