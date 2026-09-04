@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
+import { LanguageProvider } from "@/context/LanguageContext";
 import Chatbot from "@/components/chatbot/Chatbot";
 import { LanguageProvider } from "@/context/LanguageProvider"; // ⚠️ VERIFY this import path
 
@@ -29,8 +30,11 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col">
         <LanguageProvider>
           <Navbar />
+
           {children}
+
           <Footer />
+
           <Chatbot />
         </LanguageProvider>
       </body>
