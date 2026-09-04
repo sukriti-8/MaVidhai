@@ -12,7 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getAuthToken, setAuthToken, getCart, getWishlist } from "@/lib/api";
+import { getAuthToken, setAuthToken, getCart, getWishlist } from "@/services/cartWishlist";
 
 const AUTH_STORAGE_KEY = "mavidhai_user";
 const AUTH_EVENT = "mavidhai-auth-changed";
