@@ -446,7 +446,7 @@ function MobileLanguageSelector({
 }
 
 /* ============================================================
-   DESKTOP - LOGGED IN (with cart & wishlist counts)
+   DESKTOP - LOGGED IN (with counts)
    ============================================================ */
 function LoggedInDesktop({ user, onLogout, cartCount, wishlistCount }) {
   return (
