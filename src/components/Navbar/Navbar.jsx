@@ -1,12 +1,21 @@
 "use client";
 
 import Link from "next/link";
-<<<<<<< HEAD
 import { useEffect, useState } from "react";
-import { Search, User } from "lucide-react";
+import {
+  Search,
+  User,
+  Globe,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
+import { getAuthToken, setAuthToken, getCart, getWishlist } from "@/lib/api";
 
 const AUTH_STORAGE_KEY = "mavidhai_user";
+const AUTH_EVENT = "mavidhai-auth-changed";
 
 const BRAND = {
   name: "MaVidhai",
@@ -27,16 +36,20 @@ const SEARCH_CONFIG = {
   placeholder: "Search products...",
 };
 
-const AUTH_EVENT = "mavidhai-auth-changed";
-
 export default function Navbar() {
   const router = useRouter();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(null);
+  const [wishlistCount, setWishlistCount] = useState(null);
+
+  const { language, changeLanguage, languages } = useLanguage();
+  const { t } = useTranslation(["Home", "Shop", "Categories", "About"]);
 
   /*
-   * Read the logged-in user from localStorage.
+   * Read the logged‑in user from localStorage.
    */
   const loadUser = () => {
     const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
@@ -51,74 +64,29 @@ export default function Navbar() {
       setUser(parsedUser);
     } catch (error) {
       console.error("Invalid stored user data:", error);
-
       localStorage.removeItem(AUTH_STORAGE_KEY);
       setUser(null);
     }
   };
 
   /*
-   * Load the user when Navbar first appears
-   * and listen for login/logout changes.
+   * Load cart & wishlist counts using the backend API.
    */
-  useEffect(() => {
-    loadUser();
-
-    const handleAuthChange = () => {
-      loadUser();
-    };
-
-    window.addEventListener(AUTH_EVENT, handleAuthChange);
-
-    return () => {
-      window.removeEventListener(AUTH_EVENT, handleAuthChange);
-    };
-  }, []);
-
-  /*
-   * Logout
-   */
-  const handleLogout = () => {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-
-    window.dispatchEvent(new Event(AUTH_EVENT));
-
-    setMenuOpen(false);
-
-    router.push("/");
-  };
-
-  /*
-   * Close mobile menu.
-   */
-  const closeMobileMenu = () => {
-    setMenuOpen(false);
-=======
-import { useState, useEffect } from "react";
-import { getAuthToken, setAuthToken, getCart, getWishlist } from "@/lib/api";
-
-export default function Navbar() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(null);
-  const [wishlistCount, setWishlistCount] = useState(null);
-  const [isAuth, setIsAuth] = useState(false);
-
-  const loadData = async () => {
-    if (!getAuthToken()) {
-      setIsAuth(false);
+  const loadCounts = async () => {
+    const token = getAuthToken();
+    if (!token) {
       setCartCount(null);
       setWishlistCount(null);
       return;
     }
-    setIsAuth(true);
-    
+
     try {
       const cart = await getCart();
       setCartCount(cart.item_count);
     } catch (err) {
       if (err.message === "Unauthorized") setAuthToken(null);
     }
-    
+
     try {
       const wishlist = await getWishlist();
       setWishlistCount(wishlist.count);
@@ -127,55 +95,61 @@ export default function Navbar() {
     }
   };
 
+  /*
+   * Load user and counts when Navbar mounts.
+   * Listen for auth, cart, and wishlist changes.
+   */
   useEffect(() => {
-    loadData();
+    loadUser();
+    loadCounts();
+
+    const handleAuthChange = () => {
+      loadUser();
+      loadCounts();
+    };
 
     const handleCartUpdate = () => {
-      if (getAuthToken()) {
-        getCart()
-          .then(cart => setCartCount(cart.item_count))
-          .catch(e => {
-            if (e.message === "Unauthorized") setAuthToken(null);
-          });
-      }
-    };
-    
-    const handleWishlistUpdate = () => {
-      if (getAuthToken()) {
-        getWishlist()
-          .then(wishlist => setWishlistCount(wishlist.count))
-          .catch(e => {
-            if (e.message === "Unauthorized") setAuthToken(null);
-          });
-      }
-    };
-    
-    const handleAuthChanged = () => {
-      loadData();
+      loadCounts();
     };
 
+    const handleWishlistUpdate = () => {
+      loadCounts();
+    };
+
+    window.addEventListener(AUTH_EVENT, handleAuthChange);
     window.addEventListener("cart-updated", handleCartUpdate);
     window.addEventListener("wishlist-updated", handleWishlistUpdate);
-    window.addEventListener("auth-changed", handleAuthChanged);
-    
+
     return () => {
+      window.removeEventListener(AUTH_EVENT, handleAuthChange);
       window.removeEventListener("cart-updated", handleCartUpdate);
       window.removeEventListener("wishlist-updated", handleWishlistUpdate);
-      window.removeEventListener("auth-changed", handleAuthChanged);
     };
   }, []);
 
+  /*
+   * Logout.
+   */
   const handleLogout = () => {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
     setAuthToken(null);
->>>>>>> origin/backend-development
+    window.dispatchEvent(new Event(AUTH_EVENT));
+    setMenuOpen(false);
+    router.push("/");
+  };
+
+  /*
+   * Close mobile menu.
+   */
+  const closeMobileMenu = () => {
+    setMenuOpen(false);
+    setLanguageOpen(false);
   };
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm px-8 py-4">
-<<<<<<< HEAD
       {/* Navbar Container */}
       <div className="max-w-7xl mx-auto flex items-center justify-between h-16">
-
         {/* Logo */}
         <Link
           href="/"
@@ -186,133 +160,51 @@ export default function Navbar() {
         </Link>
 
         {/* ================= DESKTOP NAVIGATION ================= */}
-
         <div className="hidden md:flex items-center gap-6">
-
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
             >
-              {link.label}
+              {t(link.label)}
             </Link>
           ))}
 
           {/* Desktop Search */}
           <SearchForm desktop />
+
+          {/* Desktop Language Selector */}
+          <LanguageSelector
+            language={language}
+            languages={languages}
+            languageOpen={languageOpen}
+            setLanguageOpen={setLanguageOpen}
+            changeLanguage={changeLanguage}
+          />
         </div>
 
-        {/* ================= DESKTOP AUTH ================= */}
-
+        {/* ================= DESKTOP AUTH & COUNTS ================= */}
         <div className="hidden md:flex items-center gap-3">
-
           {user ? (
             <LoggedInDesktop
               user={user}
               onLogout={handleLogout}
+              cartCount={cartCount}
+              wishlistCount={wishlistCount}
             />
           ) : (
             <LoggedOutDesktop />
           )}
-
         </div>
 
         {/* ================= MOBILE MENU BUTTON ================= */}
-
         <button
           type="button"
           className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          onClick={() => setMenuOpen((previous) => !previous)}
+          onClick={() => setMenuOpen((prev) => !prev)}
           aria-label="Toggle navigation menu"
           aria-expanded={menuOpen}
-=======
-      {/* Desktop Navbar */}
-      <div className="max-w-7xl mx-auto flex items-center justify-between h-16">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="text-2xl font-bold text-[#C9A227] hover:scale-105 transition-all duration-300"
-        >
-          MaVidhai
-        </Link>
-
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
-          <Link
-            href="/"
-            className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
-          >
-            Home
-          </Link>
-
-          <Link
-            href="/shop"
-            className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
-          >
-            Shop
-          </Link>
-
-          <Link
-            href="/#categories"
-            className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
-          >
-            Categories
-          </Link>
-
-          <Link
-            href="/#about"
-            className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
-          >
-            About
-          </Link>
-        </div>
-
-        {/* Desktop Buttons */}
-        <div className="hidden md:flex items-center gap-4">
-          {isAuth ? (
-            <>
-              <Link href="/orders" className="text-gray-700 hover:text-[#C9A227] font-medium transition-colors">
-                Orders
-              </Link>
-              <Link href="/wishlist" className="text-gray-700 hover:text-[#C9A227] font-medium transition-colors">
-                ♡ Wishlist {wishlistCount !== null && `(${wishlistCount})`}
-              </Link>
-              <Link href="/cart" className="text-gray-700 hover:text-[#C9A227] font-medium transition-colors">
-                🛒 Cart {cartCount !== null && `(${cartCount})`}
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="flex items-center justify-center h-10 px-4 rounded-lg text-gray-700 font-medium hover:bg-gray-100 hover:text-red-500 transition-all duration-300 ml-2"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="flex items-center justify-center h-10 px-4 rounded-lg text-gray-700 font-medium hover:bg-gray-100 hover:text-[#C9A227] transition-all duration-300"
-              >
-                Login
-              </Link>
-
-              <Link
-                href="/signup"
-                className="flex items-center justify-center h-10 px-5 rounded-xl bg-[#C9A227] text-white font-medium hover:bg-[#B8860B] transition-all duration-300 hover:scale-105"
-              >
-                Sign Up
-              </Link>
-            </>
-          )}
-        </div>
-
-        {/* Mobile Hamburger */}
-        <button
-          className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle navigation menu"
->>>>>>> origin/backend-development
         >
           {menuOpen ? (
             <svg
@@ -346,15 +238,11 @@ export default function Navbar() {
             </svg>
           )}
         </button>
-<<<<<<< HEAD
-
       </div>
 
       {/* ================= MOBILE MENU ================= */}
-
       {menuOpen && (
         <div className="md:hidden flex flex-col gap-4 px-8 py-4 bg-white border-t border-gray-200 text-gray-800">
-
           {/* Mobile Search */}
           <SearchForm />
 
@@ -366,130 +254,41 @@ export default function Navbar() {
               onClick={closeMobileMenu}
               className="text-gray-800 hover:text-[#C9A227] transition-colors"
             >
-              {link.label}
+              {t(link.label)}
             </Link>
           ))}
+
+          {/* Mobile Language Selector */}
+          <MobileLanguageSelector
+            language={language}
+            languages={languages}
+            languageOpen={languageOpen}
+            setLanguageOpen={setLanguageOpen}
+            changeLanguage={changeLanguage}
+          />
 
           <hr />
 
           {/* Mobile Authentication */}
-
           {user ? (
             <LoggedInMobile
               onLogout={handleLogout}
               onClose={closeMobileMenu}
+              cartCount={cartCount}
+              wishlistCount={wishlistCount}
             />
           ) : (
-            <LoggedOutMobile
-              onClose={closeMobileMenu}
-            />
+            <LoggedOutMobile onClose={closeMobileMenu} />
           )}
-
-=======
-      </div>
-
-      {/* Mobile Menu */}
-      {menuOpen && (
-        <div className="md:hidden flex flex-col gap-4 px-8 py-4 bg-white border-t border-gray-200 text-gray-800">
-          <Link
-            href="/"
-            onClick={() => setMenuOpen(false)}
-            className="text-gray-800 hover:text-[#C9A227] transition-colors"
-          >
-            Home
-          </Link>
-
-          <Link
-            href="/shop"
-            onClick={() => setMenuOpen(false)}
-            className="text-gray-800 hover:text-[#C9A227] transition-colors"
-          >
-            Shop
-          </Link>
-
-          <Link
-            href="/#categories"
-            onClick={() => setMenuOpen(false)}
-            className="text-gray-800 hover:text-[#C9A227] transition-colors"
-          >
-            Categories
-          </Link>
-
-          <Link
-            href="/#about"
-            onClick={() => setMenuOpen(false)}
-            className="text-gray-800 hover:text-[#C9A227] transition-colors"
-          >
-            About
-          </Link>
-
-          <hr />
-
-          {isAuth ? (
-            <>
-              <Link
-                href="/orders"
-                onClick={() => setMenuOpen(false)}
-                className="text-gray-800 hover:text-[#C9A227] transition-colors"
-              >
-                Orders
-              </Link>
-
-              <Link
-                href="/wishlist"
-                onClick={() => setMenuOpen(false)}
-                className="text-gray-800 hover:text-[#C9A227] transition-colors"
-              >
-                ♡ Wishlist {wishlistCount !== null && `(${wishlistCount})`}
-              </Link>
-
-              <Link
-                href="/cart"
-                onClick={() => setMenuOpen(false)}
-                className="text-gray-800 hover:text-[#C9A227] transition-colors"
-              >
-                🛒 Cart {cartCount !== null && `(${cartCount})`}
-              </Link>
-
-              <button
-                onClick={() => { setMenuOpen(false); handleLogout(); }}
-                className="text-left text-gray-800 hover:text-red-500 transition-colors"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                onClick={() => setMenuOpen(false)}
-                className="text-gray-800 hover:text-[#C9A227] transition-colors"
-              >
-                Login
-              </Link>
-
-              <Link
-                href="/signup"
-                onClick={() => setMenuOpen(false)}
-                className="bg-[#C9A227] text-white py-2 rounded-lg text-center hover:bg-[#B8860B] transition-colors"
-              >
-                Sign Up
-              </Link>
-            </>
-          )}
->>>>>>> origin/backend-development
         </div>
       )}
     </nav>
   );
-<<<<<<< HEAD
 }
-
 
 /* ============================================================
    SEARCH
    ============================================================ */
-
 function SearchForm({ desktop = false }) {
   return (
     <form
@@ -507,7 +306,6 @@ function SearchForm({ desktop = false }) {
             : "w-full rounded-lg border border-[#e3d4b5] bg-[#fffdf8] py-3 pl-4 pr-12 text-sm text-[#3b342b] outline-none placeholder:text-[#9b8a70] focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20"
         }
       />
-
       <button
         type="submit"
         aria-label="Search products"
@@ -519,15 +317,152 @@ function SearchForm({ desktop = false }) {
   );
 }
 
+/* ============================================================
+   DESKTOP - LANGUAGE SELECTOR
+   ============================================================ */
+function LanguageSelector({
+  language,
+  languages,
+  languageOpen,
+  setLanguageOpen,
+  changeLanguage,
+}) {
+  const handleLanguageChange = (newLanguage) => {
+    changeLanguage(newLanguage);
+    setLanguageOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setLanguageOpen((prev) => !prev)}
+        className="flex items-center gap-2 h-10 px-3 rounded-lg text-gray-700 hover:text-[#C9A227] hover:bg-[#fffdf8] transition-all duration-300"
+        aria-label="Select language"
+        aria-haspopup="listbox"
+        aria-expanded={languageOpen}
+      >
+        <Globe size={19} />
+        <span className="text-sm font-medium">{languages[language]}</span>
+        <ChevronDown
+          size={16}
+          className={`transition-transform duration-200 ${
+            languageOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {languageOpen && (
+        <div
+          className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-[#e3d4b5] bg-white shadow-lg py-2 z-50"
+          role="listbox"
+          aria-label="Select language"
+        >
+          <div className="px-4 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Select Language
+          </div>
+          {Object.entries(languages).map(([code, name]) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => handleLanguageChange(code)}
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-[#fffdf8] hover:text-[#C9A227] transition-colors"
+              role="option"
+              aria-selected={language === code}
+            >
+              <span>{name}</span>
+              {language === code && <Check size={17} className="text-[#C9A227]" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ============================================================
-   DESKTOP - LOGGED IN
+   MOBILE - LANGUAGE SELECTOR
    ============================================================ */
+function MobileLanguageSelector({
+  language,
+  languages,
+  languageOpen,
+  setLanguageOpen,
+  changeLanguage,
+}) {
+  const handleLanguageChange = (newLanguage) => {
+    changeLanguage(newLanguage);
+    setLanguageOpen(false);
+  };
 
-function LoggedInDesktop({ user, onLogout }) {
+  return (
+    <div className="w-full">
+      <button
+        type="button"
+        onClick={() => setLanguageOpen((prev) => !prev)}
+        className="w-full flex items-center justify-between py-2 text-gray-800 hover:text-[#C9A227] transition-colors"
+        aria-label="Select language"
+        aria-haspopup="listbox"
+        aria-expanded={languageOpen}
+      >
+        <span className="flex items-center gap-3">
+          <Globe size={20} />
+          <span>Language</span>
+        </span>
+        <span className="flex items-center gap-2 text-sm text-gray-500">
+          {languages[language]}
+          <ChevronDown
+            size={16}
+            className={`transition-transform duration-200 ${
+              languageOpen ? "rotate-180" : ""
+            }`}
+          />
+        </span>
+      </button>
+
+      {languageOpen && (
+        <div
+          className="mt-2 ml-8 rounded-lg border border-[#e3d4b5] bg-[#fffdf8] py-1"
+          role="listbox"
+          aria-label="Select language"
+        >
+          {Object.entries(languages).map(([code, name]) => (
+            <button
+              key={code}
+              type="button"
+              onClick={() => handleLanguageChange(code)}
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:text-[#C9A227] hover:bg-white transition-colors"
+              role="option"
+              aria-selected={language === code}
+            >
+              <span>{name}</span>
+              {language === code && <Check size={17} className="text-[#C9A227]" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   DESKTOP - LOGGED IN (with cart & wishlist counts)
+   ============================================================ */
+function LoggedInDesktop({ user, onLogout, cartCount, wishlistCount }) {
   return (
     <div className="flex items-center gap-3">
-
+      <Link
+        href="/wishlist"
+        className="text-gray-700 hover:text-[#C9A227] transition-colors"
+      >
+        ♡ Wishlist {wishlistCount !== null && `(${wishlistCount})`}
+      </Link>
+      <Link
+        href="/cart"
+        className="text-gray-700 hover:text-[#C9A227] transition-colors"
+      >
+        🛒 Cart {cartCount !== null && `(${cartCount})`}
+      </Link>
       <Link
         href="/profile"
         title={`Profile: ${user.name}`}
@@ -536,7 +471,6 @@ function LoggedInDesktop({ user, onLogout }) {
       >
         <User size={20} />
       </Link>
-
       <button
         type="button"
         onClick={onLogout}
@@ -544,16 +478,13 @@ function LoggedInDesktop({ user, onLogout }) {
       >
         Logout
       </button>
-
     </div>
   );
 }
 
-
 /* ============================================================
    DESKTOP - LOGGED OUT
    ============================================================ */
-
 function LoggedOutDesktop() {
   return (
     <>
@@ -563,7 +494,6 @@ function LoggedOutDesktop() {
       >
         Login
       </Link>
-
       <Link
         href="/signup"
         className="flex items-center justify-center h-10 px-5 rounded-xl bg-[#C9A227] text-white font-medium hover:bg-[#B8860B] transition-all duration-300 hover:scale-105"
@@ -574,14 +504,26 @@ function LoggedOutDesktop() {
   );
 }
 
-
 /* ============================================================
-   MOBILE - LOGGED IN
+   MOBILE - LOGGED IN (with counts)
    ============================================================ */
-
-function LoggedInMobile({ onLogout, onClose }) {
+function LoggedInMobile({ onLogout, onClose, cartCount, wishlistCount }) {
   return (
     <>
+      <Link
+        href="/wishlist"
+        onClick={onClose}
+        className="text-gray-800 hover:text-[#C9A227] transition-colors"
+      >
+        ♡ Wishlist {wishlistCount !== null && `(${wishlistCount})`}
+      </Link>
+      <Link
+        href="/cart"
+        onClick={onClose}
+        className="text-gray-800 hover:text-[#C9A227] transition-colors"
+      >
+        🛒 Cart {cartCount !== null && `(${cartCount})`}
+      </Link>
       <Link
         href="/profile"
         onClick={onClose}
@@ -590,7 +532,6 @@ function LoggedInMobile({ onLogout, onClose }) {
         <User size={20} />
         <span>My Profile</span>
       </Link>
-
       <button
         type="button"
         onClick={onLogout}
@@ -602,11 +543,9 @@ function LoggedInMobile({ onLogout, onClose }) {
   );
 }
 
-
 /* ============================================================
    MOBILE - LOGGED OUT
    ============================================================ */
-
 function LoggedOutMobile({ onClose }) {
   return (
     <>
@@ -617,7 +556,6 @@ function LoggedOutMobile({ onClose }) {
       >
         Login
       </Link>
-
       <Link
         href="/signup"
         onClick={onClose}
@@ -627,6 +565,4 @@ function LoggedOutMobile({ onClose }) {
       </Link>
     </>
   );
-=======
->>>>>>> origin/backend-development
 }
