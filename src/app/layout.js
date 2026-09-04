@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
 import { LanguageProvider } from "@/context/LanguageContext";
 import Chatbot from "@/components/chatbot/Chatbot";
+import { LanguageProvider } from "@/context/LanguageProvider"; // ⚠️ VERIFY this import path
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
