@@ -4,15 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
-<<<<<<< HEAD
-=======
 import { signup as signupAPI } from "@/lib/api";
->>>>>>> origin/backend-development
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,9 +19,12 @@ export default function SignupPage() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+
   const router = useRouter();
+
   const handleSignup = async () => {
     let valid = true;
 
@@ -35,15 +34,18 @@ export default function SignupPage() {
     setConfirmPasswordError("");
     setSuccessMessage("");
 
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedName) {
       setNameError("Full name is required");
       valid = false;
     }
 
-    if (!email.trim()) {
+    if (!trimmedEmail) {
       setEmailError("Email is required");
       valid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
       setEmailError("Please enter a valid email address");
       valid = false;
     }
@@ -70,46 +72,28 @@ export default function SignupPage() {
 
     setIsSubmitting(true);
 
-<<<<<<< HEAD
-    // Backend authentication will be connected here later.
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    setIsSubmitting(false);
-
-    localStorage.setItem(
-      "mavidhai_user",
-      JSON.stringify({
-        name: name.trim(),
-        email: email.trim(),
-        phone: "",
-        age: "",
-      })
-    );
-
-    setSuccessMessage("Welcome to MaVidhai! Your account has been created.");
-
-    setTimeout(() => {
-      router.push("/login");
-    }, 1000);
-=======
     try {
-      await signupAPI(name, email, password);
-      setSuccessMessage("Welcome to MaVidhai! Your account has been created.");
+      await signupAPI(trimmedName, trimmedEmail, password);
+
+      setSuccessMessage(
+        "Welcome to MaVidhai! Your account has been created."
+      );
+
       setTimeout(() => {
         router.push("/login?registered=true");
       }, 1000);
     } catch (err) {
-      setConfirmPasswordError(err.message || "Failed to create account");
+      setConfirmPasswordError(
+        err.message || "Failed to create account"
+      );
     } finally {
       setIsSubmitting(false);
     }
->>>>>>> origin/backend-development
   };
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#FAF8F3] px-4 py-10">
       <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8">
-        {/* Heading */}
         <h1 className="text-4xl font-bold text-center text-[#2B2B2B]">
           Create Account
         </h1>
@@ -192,12 +176,20 @@ export default function SignupPage() {
 
             <button
               type="button"
-              onClick={() => setShowPassword((previous) => !previous)}
+              onClick={() =>
+                setShowPassword((previous) => !previous)
+              }
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#C9A227] transition-colors"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={
+                showPassword ? "Hide password" : "Show password"
+              }
               aria-pressed={showPassword}
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {showPassword ? (
+                <EyeOff size={20} />
+              ) : (
+                <Eye size={20} />
+              )}
             </button>
           </div>
 
@@ -258,21 +250,22 @@ export default function SignupPage() {
 
         {/* Create Account Button */}
         <button
-            type="button"
-            onClick={handleSignup}
-            disabled={isSubmitting}
-          className="mt-8 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] hover:scale-105 hover:shadow-lg transition-all duration-300"
-       >
-        {isSubmitting ? "Creating Account..." : "Create Account"}
-      </button>
-      {successMessage && (
-        <p
-          className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700"
-          role="status"
+          type="button"
+          onClick={handleSignup}
+          disabled={isSubmitting}
+          className="mt-8 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] hover:scale-105 hover:shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {successMessage}
-        </p>
-      )}
+          {isSubmitting ? "Creating Account..." : "Create Account"}
+        </button>
+
+        {successMessage && (
+          <p
+            className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700"
+            role="status"
+          >
+            {successMessage}
+          </p>
+        )}
 
         {/* Login */}
         <p className="mt-6 text-center text-sm text-gray-600">
