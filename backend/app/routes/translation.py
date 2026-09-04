@@ -8,9 +8,6 @@ router = APIRouter(prefix="/api", tags=["translation"])
 
 @router.post("/translation", response_model=TranslationResponse, status_code=status.HTTP_200_OK)
 def translate(request: TranslationRequest):
-    if not request.text and not request.texts:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Either text or texts must be provided")
-
     if request.text is not None and len(request.text) > 500:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Text exceeds 500 characters")
 

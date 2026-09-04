@@ -15,15 +15,17 @@ def test_translate_single_text_success():
         )
 
     assert response.status_code == 200
-    assert response.json()["source_language"] == "en"
-    assert response.json()["target_language"] == "te"
-    assert response.json()["translated_text"] == "మావిధైకి స్వాగతం"
+    assert response.json() == {
+        "source_language": "en",
+        "target_language": "te",
+        "translated_text": "మావిధైకి స్వాగతం",
+    }
 
 
 def test_translate_batch_success():
     with patch(
         "app.services.translation_service.translate_texts",
-        return_value=["మావిధైకి స్వాగతం", "ఇప్పుడే షాపింగ్ చేయండి", "కార్ట్‌కు జోడించండి"],
+        return_value=["మావిధైకి స్వాగతం", "ఇప్పుడే షాపింగ్ చేయండి", "కార్ట్కు జోడించండి"],
     ):
         response = client.post(
             "/api/translation",
@@ -34,11 +36,15 @@ def test_translate_batch_success():
         )
 
     assert response.status_code == 200
-    assert response.json()["translations"] == [
-        "మావిధైకి స్వాగతం",
-        "ఇప్పుడే షాపింగ్ చేయండి",
-        "కార్ట్‌కు జోడించండి",
-    ]
+    assert response.json() == {
+        "source_language": "en",
+        "target_language": "te",
+        "translations": [
+            "మావిధైకి స్వాగతం",
+            "ఇప్పుడే షాపింగ్ చేయండి",
+            "కార్ట్కు జోడించండి",
+        ],
+    }
 
 
 def test_invalid_target_language_rejected():
@@ -54,6 +60,19 @@ def test_empty_payload_rejected():
     response = client.post(
         "/api/translation",
         json={"target_language": "te"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_mutual_exclusion_rejected():
+    response = client.post(
+        "/api/translation",
+        json={
+            "text": "Welcome",
+            "texts": ["Welcome"],
+            "target_language": "te",
+        },
     )
 
     assert response.status_code == 422
