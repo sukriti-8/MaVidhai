@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getProducts } from "@/lib/api";
+import { getProducts, addToWishlist, setAuthToken } from "@/lib/api";
 
 const categories = [
   "All",
@@ -534,10 +534,10 @@ function ShopProductCard({ product }) {
 
       <div className="relative aspect-[4/5] overflow-hidden bg-[#f1e8d7]">
 
-        <Link href={`/products/${product.id}`}>
+        <Link href={`/product/${product.slug}`}>
 
           <img
-            src={product.image}
+            src={product.image_url}
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
@@ -557,6 +557,22 @@ function ShopProductCard({ product }) {
         <button
           type="button"
           aria-label={`Add ${product.name} to wishlist`}
+          onClick={async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            try {
+              await addToWishlist(product.id);
+            } catch (err) {
+              if (err.message === "Unauthorized") {
+                setAuthToken(null);
+                window.location.href = "/login";
+              } else {
+                console.error(err);
+                alert("Failed to add to wishlist");
+              }
+            }
+          }}
           className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-lg text-[#81786d] shadow-sm transition-all hover:text-[#c99716] hover:shadow-md"
         >
           ♡
@@ -568,7 +584,7 @@ function ShopProductCard({ product }) {
           PRODUCT DETAILS
       ====================================================== */}
 
-      <Link href={`/products/${product.id}`}>
+      <Link href={`/product/${product.slug}`}>
 
         <div className="p-5">
 
@@ -615,7 +631,7 @@ function ShopProductCard({ product }) {
       <div className="px-5 pb-5">
 
         <Link
-          href={`/products/${product.id}`}
+          href={`/product/${product.slug}`}
           className="block w-full rounded-lg border border-[#d9bf7c] py-2.5 text-center text-xs font-medium text-[#9b6d0d] transition-colors hover:bg-[#fff8e8]"
         >
           View Product

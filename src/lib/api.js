@@ -73,7 +73,18 @@ export function getAuthToken() {
   }
   return null;
 }
+export async function getCurrentUser() {
+  const response = await fetch(`${API_URL}/api/auth/me`, {
+    headers: getAuthHeaders(),
+  });
 
+  if (!response.ok) {
+    if (response.status === 401) throw new Error("Unauthorized");
+    throw new Error("Failed to fetch current user");
+  }
+
+  return response.json();
+}
 function getAuthHeaders() {
   const token = getAuthToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -85,15 +96,27 @@ export async function login(email, password) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.detail || "Login failed");
   }
-  
+
   const data = await response.json();
+
   setAuthToken(data.access_token);
-  return data;
+
+  const user = await getCurrentUser();
+
+  if (typeof window !== "undefined") {
+    localStorage.setItem("mavidhai_user", JSON.stringify(user));
+    window.dispatchEvent(new Event("mavidhai-auth-changed"));
+  }
+
+  return {
+    ...data,
+    user,
+  };
 }
 
 export async function signup(fullName, email, password) {
@@ -187,6 +210,11 @@ export async function addToWishlist(productId) {
     if (response.status === 401) throw new Error("Unauthorized");
     throw new Error("Failed to add to wishlist");
   }
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("wishlist-updated"));
+  }
+
   return response.json();
 }
 
