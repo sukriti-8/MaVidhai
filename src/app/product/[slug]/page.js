@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   getProductBySlug,
   getProducts,
+  getCategories,
   addToCart,
   addToWishlist,
 } from "@/lib/api";
@@ -16,6 +17,7 @@ export default function ProductPage() {
 
   const [product, setProduct] = useState(null);
   const [otherProducts, setOtherProducts] = useState([]);
+  const [categoryName, setCategoryName] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,6 +44,18 @@ export default function ProductPage() {
         }
 
         setProduct(data);
+        try {
+          const categories = await getCategories();
+
+          const category = categories.find(
+            (item) => item.id === data.category_id
+          );
+
+          setCategoryName(category?.name || "");
+        } catch (categoryError) {
+          console.error("Failed to load product category:", categoryError);
+          setCategoryName("");
+        }
 
         // Load recommendations from the real backend catalog.
         try {
@@ -221,9 +235,9 @@ export default function ProductPage() {
                       : "border border-[#eadfca]"
                   }`}
                 >
-                  {product.image ? (
+                  {product.image_url ? (
                     <img
-                      src={product.image}
+                      src={product.image_url}
                       alt={product.name}
                       className="h-full w-full object-cover"
                     />
@@ -279,7 +293,7 @@ export default function ProductPage() {
           <div className="flex flex-col justify-center">
             {/* CATEGORY */}
             <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
-              {product.category}
+              {categoryName}
             </p>
 
             {/* NAME */}
@@ -651,7 +665,7 @@ function RecommendationCard({ product }) {
       <div className="flex aspect-square items-center justify-center overflow-hidden bg-[#f1e8d7]">
         {product.image ? (
           <img
-            src={product.image}
+            src={product.image_url}
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
