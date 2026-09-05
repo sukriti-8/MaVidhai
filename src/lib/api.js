@@ -30,6 +30,17 @@ export async function getProducts(params = {}, signal) {
 
   return response.json();
 }
+export async function getCategories(signal) {
+  const response = await fetch(`${API_URL}/api/categories`, {
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch categories");
+  }
+
+  return response.json();
+}
 
 export async function getWishlist() {
   const response = await fetch(`${API_URL}/api/wishlist`, {
@@ -201,7 +212,7 @@ export async function addToWishlist(productId) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...getAuthHeaders(),
+      ...getAuthHeaders(), 
     },
     body: JSON.stringify({ product_id: productId }),
   });
