@@ -111,37 +111,37 @@ export default function Home() {
             <CategoryCard
               title="Living"
               description="Thoughtful pieces for your home"
-              href="/categories/living"
+              href="/shop?category=living"
             />
 
             <CategoryCard
               title="Kitchen"
               description="Beautiful everyday essentials"
-              href="/categories/kitchen"
+              href="/shop?category=kitchen"
             />
 
             <CategoryCard
               title="Decor"
               description="Details that bring spaces alive"
-              href="/categories/decor"
+              href="/shop?category=decor"
             />
 
             <CategoryCard
               title="Personal Care"
               description="Simple and mindful essentials"
-              href="/categories/personal-care"
+             href="/shop?category=personal-care"
             />
 
             <CategoryCard
               title="Gifting"
               description="Meaningful gifts for every occasion"
-              href="/categories/gifting"
+              href="/shop?category=gifting"
             />
 
             <CategoryCard
               title="Clothing"
               description="Traditional pieces for today"
-              href="/categories/clothing"
+              href="/shop?category=clothing"
             />
 
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getProducts, addToWishlist, setAuthToken } from "@/lib/api";
 
@@ -16,6 +17,8 @@ const categories = [
 
 export default function ShopPage() {
   const [products, setProducts] = useState([]);
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams.get("category") || "";
 
   const [pagination, setPagination] = useState({
     page: 1,
@@ -24,12 +27,12 @@ export default function ShopPage() {
     pages: 0,
   });
 
-  const [filters, setFilters] = useState({
-    category: "",
-    minPrice: "",
-    maxPrice: "",
-    available: false,
-  });
+ const [filters, setFilters] = useState({
+  category: categoryFromUrl,
+  minPrice: "",
+  maxPrice: "",
+  available: false,
+});
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
