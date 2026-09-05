@@ -281,3 +281,18 @@ export async function verifyPayment(paymentData) {
   }
   return response.json();
 }
+
+export async function translateTexts(texts, targetLanguage) {
+  const response = await fetch(`${API_URL}/api/translation`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ texts, target_language: targetLanguage }),
+  });
+  
+  if (!response.ok) {
+    throw new Error("Translation failed");
+  }
+  return response.json();
+}

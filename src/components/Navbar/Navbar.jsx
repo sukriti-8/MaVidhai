@@ -3,12 +3,23 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { getAuthToken, setAuthToken, getCart, getWishlist } from "@/lib/api";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(null);
   const [wishlistCount, setWishlistCount] = useState(null);
   const [isAuth, setIsAuth] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const { t, currentLanguage, setLanguage } = useTranslation();
+
+  const languages = [
+    { code: "en", label: "English" },
+    { code: "te", label: "తెలుగు" },
+    { code: "hi", label: "हिन्दी" },
+    { code: "ta", label: "தமிழ்" },
+    { code: "kn", label: "ಕನ್ನಡ" },
+  ];
 
   const loadData = async () => {
     if (!getAuthToken()) {
@@ -94,49 +105,71 @@ export default function Navbar() {
             href="/"
             className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
           >
-            Home
+            {t("Home")}
           </Link>
 
           <Link
             href="/shop"
             className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
           >
-            Shop
+            {t("Shop")}
           </Link>
 
           <Link
             href="/#categories"
             className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
           >
-            Categories
+            {t("Categories")}
           </Link>
 
           <Link
             href="/#about"
             className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
           >
-            About
+            {t("About")}
           </Link>
         </div>
 
         {/* Desktop Buttons */}
         <div className="hidden md:flex items-center gap-4">
+          <div className="relative">
+            <button 
+              onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+              className="flex items-center gap-1 text-gray-700 hover:text-[#C9A227] font-medium transition-colors cursor-pointer"
+            >
+              🌐 {languages.find(l => l.code === currentLanguage)?.label || "English"} ▾
+            </button>
+            {langDropdownOpen && (
+              <div className="absolute top-full right-0 mt-2 w-32 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
+                {languages.map(lang => (
+                  <button
+                    key={lang.code}
+                    onClick={() => { setLanguage(lang.code); setLangDropdownOpen(false); }}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {isAuth ? (
             <>
               <Link href="/orders" className="text-gray-700 hover:text-[#C9A227] font-medium transition-colors">
-                Orders
+                {t("Orders")}
               </Link>
               <Link href="/wishlist" className="text-gray-700 hover:text-[#C9A227] font-medium transition-colors">
-                ♡ Wishlist {wishlistCount !== null && `(${wishlistCount})`}
+                ♡ {t("Wishlist")} {wishlistCount !== null && `(${wishlistCount})`}
               </Link>
               <Link href="/cart" className="text-gray-700 hover:text-[#C9A227] font-medium transition-colors">
-                🛒 Cart {cartCount !== null && `(${cartCount})`}
+                🛒 {t("Cart")} {cartCount !== null && `(${cartCount})`}
               </Link>
               <button
                 onClick={handleLogout}
                 className="flex items-center justify-center h-10 px-4 rounded-lg text-gray-700 font-medium hover:bg-gray-100 hover:text-red-500 transition-all duration-300 ml-2"
               >
-                Logout
+                {t("Logout")}
               </button>
             </>
           ) : (
@@ -145,14 +178,14 @@ export default function Navbar() {
                 href="/login"
                 className="flex items-center justify-center h-10 px-4 rounded-lg text-gray-700 font-medium hover:bg-gray-100 hover:text-[#C9A227] transition-all duration-300"
               >
-                Login
+                {t("Login")}
               </Link>
 
               <Link
                 href="/signup"
                 className="flex items-center justify-center h-10 px-5 rounded-xl bg-[#C9A227] text-white font-medium hover:bg-[#B8860B] transition-all duration-300 hover:scale-105"
               >
-                Sign Up
+                {t("Sign Up")}
               </Link>
             </>
           )}
@@ -201,12 +234,25 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="md:hidden flex flex-col gap-4 px-8 py-4 bg-white border-t border-gray-200 text-gray-800">
+          <div className="flex items-center justify-between border-b pb-2 mb-2">
+            <span className="font-medium text-gray-500">Language:</span>
+            <select
+              value={currentLanguage}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-transparent text-gray-700 font-medium outline-none cursor-pointer"
+            >
+              {languages.map(lang => (
+                <option key={lang.code} value={lang.code}>{lang.label}</option>
+              ))}
+            </select>
+          </div>
+
           <Link
             href="/"
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
-            Home
+            {t("Home")}
           </Link>
 
           <Link
@@ -214,7 +260,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
-            Shop
+            {t("Shop")}
           </Link>
 
           <Link
@@ -222,7 +268,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
-            Categories
+            {t("Categories")}
           </Link>
 
           <Link
@@ -230,7 +276,7 @@ export default function Navbar() {
             onClick={() => setMenuOpen(false)}
             className="text-gray-800 hover:text-[#C9A227] transition-colors"
           >
-            About
+            {t("About")}
           </Link>
 
           <hr />
@@ -242,7 +288,7 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="text-gray-800 hover:text-[#C9A227] transition-colors"
               >
-                Orders
+                {t("Orders")}
               </Link>
 
               <Link
@@ -250,7 +296,7 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="text-gray-800 hover:text-[#C9A227] transition-colors"
               >
-                ♡ Wishlist {wishlistCount !== null && `(${wishlistCount})`}
+                ♡ {t("Wishlist")} {wishlistCount !== null && `(${wishlistCount})`}
               </Link>
 
               <Link
@@ -258,14 +304,14 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="text-gray-800 hover:text-[#C9A227] transition-colors"
               >
-                🛒 Cart {cartCount !== null && `(${cartCount})`}
+                🛒 {t("Cart")} {cartCount !== null && `(${cartCount})`}
               </Link>
 
               <button
                 onClick={() => { setMenuOpen(false); handleLogout(); }}
                 className="text-left text-gray-800 hover:text-red-500 transition-colors"
               >
-                Logout
+                {t("Logout")}
               </button>
             </>
           ) : (
@@ -275,7 +321,7 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="text-gray-800 hover:text-[#C9A227] transition-colors"
               >
-                Login
+                {t("Login")}
               </Link>
 
               <Link
@@ -283,7 +329,7 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(false)}
                 className="bg-[#C9A227] text-white py-2 rounded-lg text-center hover:bg-[#B8860B] transition-colors"
               >
-                Sign Up
+                {t("Sign Up")}
               </Link>
             </>
           )}
