@@ -1,6 +1,13 @@
 import Link from "next/link";
+import { getProducts } from "@/lib/api";
 
-export default function Home() {
+export default async function Home() {
+    const data = await getProducts({
+      page: 1,
+      limit: 4,
+    });
+
+  const products = data.items || data;
   return (
     <main className="min-h-screen bg-[#fffdf8]">
 
@@ -183,29 +190,14 @@ export default function Home() {
 
         <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
 
-          <ProductCard
-            title="Handcrafted Product"
-            price="₹1,250"
-            href="/shop/handcrafted-product"
-          />
-
-          <ProductCard
-            title="Heritage Collection"
-            price="₹1,890"
-            href="/shop/heritage-collection"
-          />
-
-          <ProductCard
-            title="Everyday Essential"
-            price="₹750"
-            href="/shop/everyday-essential"
-          />
-
-          <ProductCard
-            title="Artisan Crafted Piece"
-            price="₹2,450"
-            href="/shop/artisan-crafted-piece"
-          />
+         {products.map((product) => (
+            <ProductCard
+              key={product.id}
+              title={product.name}
+              price={`₹${Number(product.price).toLocaleString("en-IN")}`}
+              href={`/product/${product.slug}`}
+            />
+          ))}
 
         </div>
 

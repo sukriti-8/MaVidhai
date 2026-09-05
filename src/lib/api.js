@@ -59,11 +59,16 @@ export async function removeFromWishlist(itemId) {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
-  
+
   if (!response.ok) {
     if (response.status === 401) throw new Error("Unauthorized");
     throw new Error("Failed to remove wishlist item");
   }
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("wishlist-updated"));
+  }
+
   return response.json();
 }
 
