@@ -6,6 +6,7 @@ class ProductResponse(BaseModel):
     id: int
     category_id: int
     name: str
+    slug: str
     price: Decimal
     description: str | None = None
     details: str | None = None
