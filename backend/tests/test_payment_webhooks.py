@@ -72,7 +72,7 @@ def test_webhook_valid_signature_payment_captured(mock_verify, sample_webhook_pa
     test_db.refresh(sample_pending_order)
     assert sample_pending_order.status == "confirmed"
     
-    event = test_db.query(PaymentEvent).filter_by(provider_event_id="ev_123").first()
+    event = test_db.query(PaymentEvent).filter_by(provider_event_id=ev_id).first()
     assert event is not None
     assert event.event_type == "payment.captured"
 
