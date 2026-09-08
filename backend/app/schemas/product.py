@@ -1,6 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from pydantic import BaseModel, ConfigDict
+from app.schemas.category import CategoryResponse
 
 class ProductResponse(BaseModel):
     id: int
@@ -16,7 +17,11 @@ class ProductResponse(BaseModel):
     care: str | None = None
     badge: str | None = None
     availability: bool
+    stock: int
     image_url: str | None = None
+    
+    category: CategoryResponse | None = None
+
     created_at: datetime
     updated_at: datetime
 
