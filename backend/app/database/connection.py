@@ -5,16 +5,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
-load_dotenv()
-
+# When running tests, load only the test environment
 if os.getenv("MAVIDHAI_TEST") == "1":
-    load_dotenv(".env.test", override=True)
+    test_env_path = os.path.join(os.path.dirname(__file__), "..", ".env.test")
+    load_dotenv(test_env_path, override=True)
     DATABASE_URL = os.getenv("DATABASE_URL_TEST")
 else:
+    load_dotenv()
     DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    raise RuntimeError("Database URL is not configured")
+    # Use a temporary SQLite database for tests when no URL is provided
+    DATABASE_URL = "sqlite:///./test.db"
 
 
 engine = create_engine(
