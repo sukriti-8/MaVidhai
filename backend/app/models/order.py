@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime, C
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.base import Base
+from datetime import datetime
 
 class Order(Base):
     __tablename__ = "orders"
@@ -38,6 +39,23 @@ class Order(Base):
         CheckConstraint("discount_amount >= 0", name="check_order_discount_positive"),
         CheckConstraint("total_amount >= 0", name="check_order_total_positive"),
     )
+
+    @property
+    def payment_status(self) -> str:
+        """Derive payment status from the most recent payment attempt."""
+        if not self.payments:
+            return "pending"
+        
+        latest = max(
+            self.payments,
+            key=lambda p: (p.created_at or datetime.min, p.id),
+        )
+        return latest.status
+
+    @property
+    def items_count(self) -> int:
+        """Return the number of items in the order. Useful for list serialization."""
+        return len(self.items)
 
 
 class OrderItem(Base):

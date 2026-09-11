@@ -17,7 +17,12 @@ export default function ProductPage() {
   const [isWishlisting, setIsWishlisting] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
+  const isOutOfStock =
+    product?.availability === false || product?.stock <= 0;
+
   const handleAddToCart = async () => {
+    if (isAddingToCart || isOutOfStock) return;
+
     setIsAddingToCart(true);
     try {
       await addToCart(product.id, quantity);
@@ -25,17 +30,17 @@ export default function ProductPage() {
       setTimeout(() => setCartAdded(false), 3000);
     } catch (err) {
       if (err.message === "Unauthorized") {
-        alert("Please log in to add items to your cart.");
-        router.push("/login");
-      } else {
-        alert("Unable to add to cart");
+        window.location.href = "/login";
+        return;
       }
+      alert("Unable to add to cart");
     } finally {
       setIsAddingToCart(false);
     }
   };
 
   const handleWishlist = async () => {
+    if (isWishlisting) return;
     setIsWishlisting(true);
     try {
       await addToWishlist(product.id);
@@ -148,9 +153,9 @@ export default function ProductPage() {
           PRODUCT SECTION
       ====================================================== */}
 
-      <section className="mx-auto max-w-[1300px] px-6 py-10 lg:px-10 lg:py-16">
+      <section className="mx-auto max-w-[1300px] px-5 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-16">
 
-        <div className="grid gap-12 lg:grid-cols-2">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
 
 
           {/* =================================================
@@ -161,7 +166,7 @@ export default function ProductPage() {
 
             {/* THUMBNAILS */}
 
-            <div className="order-2 flex gap-3 sm:order-1 sm:flex-col">
+            <div className="order-2 flex max-w-full gap-3 overflow-x-auto pb-1 sm:order-1 sm:flex-col sm:overflow-visible sm:pb-0">
 
               <div className="flex h-20 w-20 items-center justify-center rounded-xl border-2 border-[#d1a11c] bg-[#f1e8d7]">
 
@@ -192,7 +197,7 @@ export default function ProductPage() {
 
             {/* MAIN IMAGE */}
 
-            <div className="relative order-1 aspect-square overflow-hidden rounded-2xl bg-[#f1e8d7] sm:order-2">
+            <div className="relative order-1 aspect-[4/5] overflow-hidden rounded-2xl bg-[#f8f2e6] sm:order-2">
 
               <div className="flex h-full items-center justify-center">
 
@@ -216,6 +221,7 @@ export default function ProductPage() {
               <button
                 type="button"
                 onClick={handleWishlist}
+                disabled={isWishlisting}
                 aria-label="Add to wishlist"
                 className={`absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-md transition-colors hover:text-[#c99716] ${isWishlisted ? "text-[#c99716]" : "text-[#81786d]"}`}
               >
@@ -236,20 +242,20 @@ export default function ProductPage() {
             {/* CATEGORY */}
 
             <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
-              {product.category}
+              {product.category?.name}
             </p>
 
 
             {/* NAME */}
 
-            <h1 className="mt-3 text-3xl font-semibold leading-tight text-[#29251f] sm:text-4xl">
+            <h1 className="mt-3 text-3xl font-semibold leading-tight text-[#29251f] sm:text-4xl lg:text-[2.65rem]">
               {product.name}
             </h1>
 
 
             {/* RATING */}
 
-            <div className="mt-4 flex items-center gap-3">
+            <div className="mt-5 flex items-center gap-3">
 
               <div className="flex gap-1 text-[#d1a11c]">
                 <span>★</span>
@@ -279,6 +285,11 @@ export default function ProductPage() {
               ₹{product.price.toLocaleString("en-IN")}
             </p>
 
+            {isOutOfStock && (
+              <p className="mt-3 text-sm font-medium text-red-600">
+                Out of Stock
+              </p>
+            )}
 
             <div className="my-7 border-t border-[#eee5d2]" />
 
@@ -349,8 +360,11 @@ export default function ProductPage() {
 
                 <button
                   type="button"
-                  onClick={() => setQuantity(q => q + 1)}
-                  className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d]"
+                  onClick={() =>
+                    setQuantity((q) => Math.min(q + 1, product.stock))
+                  }
+                  disabled={isOutOfStock || quantity >= product.stock}
+                  className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   +
                 </button>
@@ -362,38 +376,41 @@ export default function ProductPage() {
 
             {/* ACTIONS */}
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
 
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={isAddingToCart}
-                className="flex-1 rounded-lg bg-[#d1a11c] px-6 py-3.5 text-sm font-medium text-white transition-all hover:bg-[#bd8d0f] hover:shadow-lg disabled:opacity-75"
+                disabled={isAddingToCart || isOutOfStock}
+                className="flex-[3] rounded-lg bg-[#d1a11c] px-6 py-3.5 text-sm font-medium text-white transition-all hover:bg-[#bd8d0f] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isAddingToCart ? "Adding..." : cartAdded ? "Added ✓" : "Add to Cart"}
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : isAddingToCart
+                    ? "Adding..."
+                    : cartAdded
+                      ? "Added ✓"
+                      : "Add to Cart"}
+              </button>
+
+              <button
+                type="button"
+                className="flex-[2] rounded-lg border border-[#d1a11c] bg-[#fffaf0] px-6 py-3.5 text-sm font-medium text-[#9b6d0d] transition-colors hover:bg-[#fff3d6]"
+              >
+                Buy Now
               </button>
 
               <button
                 type="button"
                 onClick={handleWishlist}
                 disabled={isWishlisting}
-                className={`flex h-12 w-12 items-center justify-center rounded-lg border border-[#d9bf7c] bg-white text-xl transition-colors hover:text-[#c99716] ${isWishlisted ? "text-[#c99716]" : "text-[#81786d]"}`}
+                className={`flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-lg border border-[#d9bf7c] bg-white text-xl transition-colors hover:text-[#c99716] ${isWishlisted ? "text-[#c99716]" : "text-[#81786d]"}`}
                 aria-label="Add to wishlist"
               >
                 {isWishlisted ? "♥" : "♡"}
               </button>
 
             </div>
-
-
-            {/* BUY NOW */}
-
-            <button
-              type="button"
-              className="mt-3 w-full rounded-lg border border-[#d1a11c] bg-[#fffaf0] py-3.5 text-sm font-medium text-[#9b6d0d] transition-colors hover:bg-[#fff3d6]"
-            >
-              Buy Now
-            </button>
 
 
             {/* TRUST */}
@@ -457,7 +474,7 @@ export default function ProductPage() {
               </div>
 
 
-              <div className="rounded-2xl border border-[#eadfca] bg-[#fffdf8] p-6">
+              <div className="rounded-2xl border border-[#eee5d2] bg-[#fffdf8] p-5 sm:p-6">
 
                 {product.material && (
                   <DetailRow
@@ -696,7 +713,7 @@ function RecommendationCard({ name, price }) {
       className="group overflow-hidden rounded-xl border border-[#eadfca] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
     >
 
-      <div className="flex aspect-square items-center justify-center bg-[#f1e8d7]">
+      <div className="flex aspect-[4/5] items-center justify-center bg-[#f1e8d7]">
 
         <div className="text-center">
 

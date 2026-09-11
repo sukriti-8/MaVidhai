@@ -11,9 +11,15 @@ config = context.config
 
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
-database_url = os.getenv("DATABASE_URL")
+if os.getenv("MAVIDHAI_TEST") == "1":
+    load_dotenv(".env.test", override=True)
+    database_url = os.getenv("DATABASE_URL_TEST")
+else:
+    database_url = os.getenv("DATABASE_URL")
+
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 

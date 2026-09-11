@@ -7,7 +7,7 @@ from app.database.connection import engine
 import os
 import logging
 
-from app.routes import auth, categories, products, cart, wishlist, orders, payments, translation, whatsapp
+from app.routes import auth, categories, products, cart, wishlist, orders, payments, translation, whatsapp, admin_categories, admin_products
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +92,8 @@ app.include_router(orders.router)
 app.include_router(payments.router)
 app.include_router(translation.router)
 app.include_router(whatsapp.router)
+app.include_router(admin_categories.router)
+app.include_router(admin_products.router)
 
 
 @app.get("/api/health")

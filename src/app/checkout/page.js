@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
+import Link from "next/link";
 import { getCart, createOrder, setAuthToken } from "@/lib/api";
 import { useRazorpayPayment } from "@/hooks/useRazorpayPayment";
 
@@ -11,6 +12,8 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState(null);
+  // P1.1: guard against double-submission across the full createOrder → startPayment lifecycle
+  const [submitting, setSubmitting] = useState(false);
 
   const {
     startPayment,
@@ -18,7 +21,8 @@ export default function CheckoutPage() {
     processingMessage,
     error: paymentError,
     isSuccess,
-    successMessage
+    successMessage,
+    successOrderNumber,
   } = useRazorpayPayment();
 
   const [formData, setFormData] = useState({
@@ -64,17 +68,23 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // P1.1: prevent duplicate submission
+    if (submitting) return;
     setInitError(null);
+    setSubmitting(true);
 
     try {
       // 1. Create Order
       const order = await createOrder(formData);
-      
-      // 2. Start Payment via Hook
-      startPayment(order.order_number, formData);
+
+      // 2. Start Payment via Hook — submitting remains true for the full lifecycle
+      await startPayment(order.order_number, formData);
+      setSubmitting(false);
     } catch (err) {
       console.error(err);
       setInitError(err.message || "Failed to initialize checkout.");
+      // Reset only on failure so the user can try again
+      setSubmitting(false);
     }
   };
 
@@ -93,8 +103,25 @@ export default function CheckoutPage() {
           <div className="w-16 h-16 bg-[#e6f4ea] text-[#1e8e3e] flex items-center justify-center rounded-full mx-auto mb-6 text-2xl">
             ✓
           </div>
-          <h1 className="text-2xl font-bold text-[#29251f] mb-4">Success</h1>
-          <p className="text-[#756d63] leading-relaxed mb-8">{successMessage}</p>
+          <h1 className="text-2xl font-bold text-[#29251f] mb-4">Order Placed!</h1>
+          <p className="text-[#756d63] leading-relaxed mb-8">
+            {successMessage ?? "Your payment was successful and your order has been confirmed."}
+          </p>
+          {/* P1.3: success navigation */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Link
+              href={successOrderNumber ? `/orders/${successOrderNumber}` : "/orders"}
+              className="flex-1 rounded-lg bg-[#d1a11c] py-3 text-sm font-medium text-white text-center transition-all hover:bg-[#bd8d0f] hover:shadow-md"
+            >
+              View Order
+            </Link>
+            <Link
+              href="/shop"
+              className="flex-1 rounded-lg border border-[#d1a11c] py-3 text-sm font-medium text-[#a9780d] text-center transition-all hover:bg-[#fef9ec]"
+            >
+              Continue Shopping
+            </Link>
+          </div>
         </div>
       </main>
     );
@@ -271,10 +298,10 @@ export default function CheckoutPage() {
             <button
               type="submit"
               form="checkout-form"
-              disabled={isProcessing}
+              disabled={isProcessing || submitting}
               className="mt-8 w-full rounded-lg bg-[#d1a11c] py-4 text-sm font-medium text-white transition-all hover:bg-[#bd8d0f] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isProcessing ? (processingMessage || "Processing...") : `Pay ₹${Number(cart?.subtotal || 0).toLocaleString("en-IN")}`}
+              {(isProcessing || submitting) ? (processingMessage || "Processing...") : `Pay ₹${Number(cart?.subtotal || 0).toLocaleString("en-IN")}`}
             </button>
           </div>
 

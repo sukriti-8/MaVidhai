@@ -5,7 +5,7 @@ RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
 
 client = None
-if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET:
+if os.getenv("MAVIDHAI_TEST") != "1" and RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET:
     client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 def create_provider_order(amount_paise: int, receipt: str, currency: str = "INR") -> dict:

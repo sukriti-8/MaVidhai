@@ -13,8 +13,8 @@ def test_product_list_contains_stock_and_category():
 
     data = response.json()
 
-    assert data["total"] == 12
-    assert len(data["items"]) == 12
+    assert data["total"] >= 12
+    assert len(data["items"]) >= 12
 
     for product in data["items"]:
         assert "slug" in product

@@ -35,7 +35,18 @@ export default function CartPage() {
   }
 
   const handleUpdateQuantity = async (itemId, newQuantity) => {
-    if (newQuantity < 1) return;
+    const item = cart?.items.find((cartItem) => cartItem.id === itemId);
+
+    if (!item) return;
+
+    if (
+      newQuantity < 1 ||
+      !item.product.availability ||
+      item.product.stock <= 0 ||
+      newQuantity > item.product.stock
+    ) {
+      return;
+    }
     try {
       setUpdatingId(itemId);
       const updatedCart = await updateCartItem(itemId, newQuantity);
@@ -131,7 +142,7 @@ export default function CartPage() {
                   
                   {/* PRODUCT INFO */}
                   <div className="flex items-center gap-6">
-                    <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl border border-[#eadfca] bg-[#f1e8d7]">
+                    <div className="flex h-24 w-[4.8rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#eadfca] bg-[#f8f2e6]">
                       <span className="text-[#c99716]">✦</span>
                     </div>
                     <div>
@@ -143,11 +154,11 @@ export default function CartPage() {
                       <p className="mt-1 text-sm text-[#756d63]">
                         ₹{item.product.price.toLocaleString("en-IN")}
                       </p>
-                      {!item.product.availability && (
+                      {!item.product.availability || item.product.stock <= 0 ? (
                         <p className="mt-1 text-xs text-red-500">
-                          Currently unavailable
+                          Out of Stock
                         </p>
-                      )}
+                      ) : null}
                       <button
                         type="button"
                         onClick={() => handleRemove(item.id)}
@@ -165,7 +176,12 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1 || updatingId === item.id}
+                        disabled={
+                          item.quantity <= 1 ||
+                          updatingId === item.id ||
+                          !item.product.availability ||
+                          item.product.stock <= 0
+                        }
                         className="flex h-9 w-9 items-center justify-center text-[#756d63] hover:text-[#a9780d] disabled:opacity-50"
                       >
                         −
@@ -176,7 +192,12 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                        disabled={updatingId === item.id}
+                        disabled={
+                          updatingId === item.id ||
+                          !item.product.availability ||
+                          item.product.stock <= 0 ||
+                          item.quantity >= item.product.stock
+                        }
                         className="flex h-9 w-9 items-center justify-center text-[#756d63] hover:text-[#a9780d] disabled:opacity-50"
                       >
                         +

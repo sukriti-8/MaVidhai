@@ -29,8 +29,8 @@ def create_order(db: Session, user: User, order_data: OrderCreate) -> Order:
     subtotal = 0.0
     
     for cart_item in cart.items:
-        # Load the current product state
-        product = db.query(Product).filter(Product.id == cart_item.product_id).first()
+        # Load the current product state with row-level lock
+        product = db.query(Product).filter(Product.id == cart_item.product_id).with_for_update().first()
         
         if not product:
             raise HTTPException(
@@ -42,6 +42,12 @@ def create_order(db: Session, user: User, order_data: OrderCreate) -> Order:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Product '{product.name}' is currently unavailable"
+            )
+            
+        if cart_item.quantity > product.stock:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Not enough stock for product '{product.name}'. Requested: {cart_item.quantity}, Available: {product.stock}"
             )
         
         # Calculate item subtotal using the current unit price
@@ -102,3 +108,32 @@ def create_order(db: Session, user: User, order_data: OrderCreate) -> Order:
     db.refresh(db_order)
     
     return db_order
+
+def reconcile_inventory_conflict(db: Session, order_number: str) -> Order:
+    # 1. Load the order with appropriate locking.
+    order = db.query(Order).filter(Order.order_number == order_number).with_for_update().first()
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+        
+    # 2. Verify it is inventory_conflict
+    if order.status != "inventory_conflict":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Order is not in inventory_conflict state")
+        
+    # 3. Verify its latest payment is captured
+    if order.payment_status != "captured":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Order payment is not captured")
+        
+    from app.services import inventory_service
+    
+    # 4. Use inventory service to securely lock and deduct
+    success = inventory_service.reserve_and_deduct_stock(db, order.items)
+    
+    if success:
+        order.status = "confirmed"
+    
+    # 8. Commit atomically
+    db.commit()
+    db.refresh(order)
+    
+    # 9. Return the updated order/state
+    return order

@@ -81,23 +81,23 @@ def process_webhook(db: Session, raw_body: bytes, signature: str, event_id: str)
         db.add(payment_event)
         
         # 10. & 11. Update Payment and Order
-        order = db.query(Order).filter(Order.id == payment.order_id).first()
+        order = db.query(Order).filter(Order.id == payment.order_id).with_for_update().first()
         
-        if event_type == "payment.captured":
-            payment.status = "captured"
-            payment.provider_payment_id = provider_payment_id
-            order.status = "confirmed"
-        elif event_type == "payment.failed":
-            payment.status = "failed"
-            payment.provider_payment_id = provider_payment_id
-            # Order remains pending
-            
-        # For order.paid, we just record the event and ensure state converges
-        if event_type == "order.paid":
+        from app.services import inventory_service
+
+        if event_type == "payment.captured" or event_type == "order.paid":
             if payment.status != "captured":
                 payment.status = "captured"
                 payment.provider_payment_id = provider_payment_id
-                order.status = "confirmed"
+                
+                success = inventory_service.reserve_and_deduct_stock(db, order.items)
+                order.status = "confirmed" if success else "inventory_conflict"
+                
+        elif event_type == "payment.failed":
+            if payment.status != "captured":
+                payment.status = "failed"
+                payment.provider_payment_id = provider_payment_id
+            # Order remains pending
                 
         # 12. Commit
         db.commit()

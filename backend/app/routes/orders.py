@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 import math
 from app.database.connection import get_db
-from app.utils.dependencies import get_current_user
+from app.utils.dependencies import get_current_user, get_super_admin
 from app.models.user import User
 from app.schemas.order import OrderCreate, OrderResponse, OrderListResponse
 from app.services import order_service, order_query_service
@@ -44,3 +44,13 @@ def get_order(
 ):
     return order_query_service.get_user_order_by_number(db=db, user=current_user, order_number=order_number)
 
+@router.post("/{order_number}/reconcile", response_model=OrderResponse)
+def reconcile_order(
+    order_number: str,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_super_admin)
+):
+    return order_service.reconcile_inventory_conflict(
+        db=db,
+        order_number=order_number,
+    )

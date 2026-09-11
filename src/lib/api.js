@@ -3,6 +3,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export async function getProducts(params = {}, signal) {
   const searchParams = new URLSearchParams();
 
+  if (params.search?.trim()) {
+    searchParams.set("search", params.search.trim());
+  }
+
   if (params.category) {
     searchParams.set("category", params.category);
   }

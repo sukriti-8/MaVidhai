@@ -1,153 +1,37 @@
 "use client";
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { getProducts } from "@/lib/api";
-
-/* const products = [
-  {
-    id: 1,
-    slug: "handcrafted-brass-lamp",
-    name: "Handcrafted Brass Lamp",
-    category: "Living",
-    price: 2499,
-    rating: 4.8,
-    reviews: 42,
-    badge: "Bestseller",
-  },
-  {
-    id: 2,
-    slug: "handwoven-table-runner",
-    name: "Handwoven Table Runner",
-    category: "Decor",
-    price: 1299,
-    rating: 4.7,
-    reviews: 28,
-    badge: "New",
-  },
-  {
-    id: 3,
-    slug: "artisan-ceramic-mug",
-    name: "Artisan Ceramic Mug",
-    category: "Kitchen",
-    price: 699,
-    rating: 4.9,
-    reviews: 56,
-    badge: null,
-  },
-  {
-    id: 4,
-    slug: "heritage-candle-set",
-    name: "Heritage Candle Set",
-    category: "Living",
-    price: 999,
-    rating: 4.6,
-    reviews: 31,
-    badge: null,
-  },
-  {
-    id: 5,
-    slug: "natural-body-care-set",
-    name: "Natural Body Care Set",
-    category: "Personal Care",
-    price: 1599,
-    rating: 4.8,
-    reviews: 37,
-    badge: "Popular",
-  },
-  {
-    id: 6,
-    slug: "artisan-gift-box",
-    name: "Artisan Gift Box",
-    category: "Gifting",
-    price: 1899,
-    rating: 4.9,
-    reviews: 24,
-    badge: "Gift Pick",
-  },
-  {
-    id: 7,
-    slug: "handcrafted-cotton-kurta",
-    name: "Handcrafted Cotton Kurta",
-    category: "Clothing",
-    price: 2199,
-    rating: 4.7,
-    reviews: 45,
-    badge: null,
-  },
-  {
-    id: 8,
-    slug: "wooden-serving-tray",
-    name: "Handcrafted Wooden Tray",
-    category: "Kitchen",
-    price: 1499,
-    rating: 4.8,
-    reviews: 19,
-    badge: null,
-  },
-  {
-    id: 9,
-    slug: "woven-storage-basket",
-    name: "Woven Storage Basket",
-    category: "Living",
-    price: 1199,
-    rating: 4.7,
-    reviews: 33,
-    badge: null,
-  },
-  {
-    id: 10,
-    slug: "hand-painted-vase",
-    name: "Hand-Painted Ceramic Vase",
-    category: "Decor",
-    price: 1799,
-    rating: 4.9,
-    reviews: 21,
-    badge: "Artisan Pick",
-  },
-  {
-    id: 11,
-    slug: "wellness-gifting-set",
-    name: "Wellness Gifting Set",
-    category: "Gifting",
-    price: 2299,
-    rating: 4.8,
-    reviews: 17,
-    badge: null,
-  },
-  {
-    id: 12,
-    slug: "everyday-handloom-shirt",
-    name: "Everyday Handloom Shirt",
-    category: "Clothing",
-    price: 1999,
-    rating: 4.6,
-    reviews: 29,
-    badge: null,
-  },
-]; */
-
-const categories = [
-  "All",
-  "Living",
-  "Kitchen",
-  "Decor",
-  "Personal Care",
-  "Gifting",
-  "Clothing",
-];
+import ProductSearch from "@/components/shop/ProductSearch";
+import ProductFilters from "@/components/shop/ProductFilters";
+import ProductGrid from "@/components/shop/ProductGrid";
+import Pagination from "@/components/shop/Pagination";
 
 export default function ShopPage() {
   const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 0 });
   const [filters, setFilters] = useState({
+    search: "",
     category: "",
     minPrice: "",
     maxPrice: "",
     available: false,
   });
   
+  const [searchInput, setSearchInput] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((prev) => {
+        if (prev.search === searchInput) return prev;
+        return { ...prev, search: searchInput };
+      });
+      setPagination((prev) => ({ ...prev, page: 1 }));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -236,122 +120,12 @@ export default function ShopPage() {
               FILTER SIDEBAR
           ================================================== */}
 
-          <aside className="w-full shrink-0 lg:w-56">
-
-            <div className="rounded-2xl border border-[#eadfca] bg-white p-5">
-
-              <div className="flex items-center justify-between">
-
-                <h2 className="text-sm font-semibold text-[#29251f]">
-                  Categories
-                </h2>
-
-                <span className="text-xs text-[#a48d69]">
-                  Filter
-                </span>
-
-              </div>
-
-
-              <div className="mt-5 space-y-1">
-
-                {categories.map((categoryName, index) => {
-                  const slug = categoryName === "All" ? "" : categoryName.toLowerCase().replace(" ", "-");
-                  const isActive = filters.category === slug;
-                  return (
-                    <button
-                      key={categoryName}
-                      type="button"
-                      onClick={() => handleCategoryChange(categoryName)}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
-                        isActive
-                          ? "bg-[#fff6df] font-medium text-[#a9780d]"
-                          : "text-[#686159] hover:bg-[#fffaf0] hover:text-[#a9780d]"
-                      }`}
-                    >
-                      <span>{categoryName}</span>
-                    </button>
-                  );
-                })}
-
-              </div>
-
-
-              <div className="my-6 border-t border-[#eee5d2]" />
-
-
-              {/* PRICE */}
-
-              <h3 className="text-sm font-semibold text-[#29251f]">
-                Price
-              </h3>
-
-              <div className="mt-4 space-y-3">
-                <label className="flex items-center gap-3 text-sm text-[#686159]">
-                  <input
-                    type="radio"
-                    name="price"
-                    checked={isPriceSelected("", "")}
-                    onChange={() => handlePriceChange("", "")}
-                    className="h-4 w-4 accent-[#d1a11c]"
-                  />
-                  All Prices
-                </label>
-                <label className="flex items-center gap-3 text-sm text-[#686159]">
-                  <input
-                    type="radio"
-                    name="price"
-                    checked={isPriceSelected(0, 1000)}
-                    onChange={() => handlePriceChange(0, 1000)}
-                    className="h-4 w-4 accent-[#d1a11c]"
-                  />
-                  Under ₹1,000
-                </label>
-                <label className="flex items-center gap-3 text-sm text-[#686159]">
-                  <input
-                    type="radio"
-                    name="price"
-                    checked={isPriceSelected(1000, 2000)}
-                    onChange={() => handlePriceChange(1000, 2000)}
-                    className="h-4 w-4 accent-[#d1a11c]"
-                  />
-                  ₹1,000 – ₹2,000
-                </label>
-                <label className="flex items-center gap-3 text-sm text-[#686159]">
-                  <input
-                    type="radio"
-                    name="price"
-                    checked={isPriceSelected(2000, "")}
-                    onChange={() => handlePriceChange(2000, "")}
-                    className="h-4 w-4 accent-[#d1a11c]"
-                  />
-                  Above ₹2,000
-                </label>
-              </div>
-
-
-              <div className="my-6 border-t border-[#eee5d2]" />
-
-
-              {/* AVAILABILITY */}
-
-              <h3 className="text-sm font-semibold text-[#29251f]">
-                Availability
-              </h3>
-
-              <label className="mt-4 flex items-center gap-3 text-sm text-[#686159]">
-                <input
-                  type="checkbox"
-                  checked={filters.available}
-                  onChange={(e) => handleAvailabilityChange(e.target.checked)}
-                  className="h-4 w-4 accent-[#d1a11c]"
-                />
-                In Stock
-              </label>
-
-            </div>
-
-          </aside>
+          <ProductFilters
+            filters={filters}
+            onCategoryChange={handleCategoryChange}
+            onPriceChange={handlePriceChange}
+            onAvailabilityChange={handleAvailabilityChange}
+          />
 
 
           {/* =================================================
@@ -363,20 +137,28 @@ export default function ShopPage() {
             {/* TOOLBAR */}
 
             <div className="mb-6 flex flex-col justify-between gap-4 border-b border-[#eee5d2] pb-5 sm:flex-row sm:items-center">
-              <p className="text-sm text-[#756d63]">
-                Showing{" "}
-                <span className="font-medium text-[#29251f]">
-                  {pagination.total}
-                </span>{" "}
-                products
-              </p>
+              
+              <ProductSearch
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
 
-              <button
-                type="button"
-                className="rounded-lg border border-[#dfd2bb] bg-white px-4 py-2.5 text-sm text-[#5f584f] hover:border-[#d1a11c]"
-              >
-                Sort by: Featured ▾
-              </button>
+              <div className="flex items-center justify-between gap-4 sm:justify-end">
+                <p className="text-sm text-[#756d63] hidden sm:block">
+                  Showing{" "}
+                  <span className="font-medium text-[#29251f]">
+                    {pagination.total}
+                  </span>{" "}
+                  products
+                </p>
+
+                <button
+                  type="button"
+                  className="rounded-lg border border-[#dfd2bb] bg-white px-4 py-2.5 text-sm text-[#5f584f] hover:border-[#d1a11c]"
+                >
+                  Sort by: Featured ▾
+                </button>
+              </div>
             </div>
 
             {/* PRODUCT GRID */}
@@ -393,10 +175,11 @@ export default function ShopPage() {
             ) : products.length === 0 ? (
               <div className="flex h-64 flex-col items-center justify-center text-center">
                 <p className="text-[#29251f] font-medium mb-2">No products found.</p>
-                <p className="text-[#756d63] text-sm">Try adjusting your filters.</p>
+                <p className="text-[#756d63] text-sm">Try a different search or adjust your filters.</p>
                 <button
                   onClick={() => {
-                    setFilters({ category: "", minPrice: "", maxPrice: "", available: false });
+                    setSearchInput("");
+                    setFilters({ search: "", category: "", minPrice: "", maxPrice: "", available: false });
                     setPagination(prev => ({ ...prev, page: 1 }));
                   }}
                   className="mt-4 text-[#a9780d] text-sm hover:underline"
@@ -405,39 +188,16 @@ export default function ShopPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-                {products.map((product) => (
-                  <ShopProductCard
-                    key={product.id}
-                    product={product}
-                  />
-                ))}
-              </div>
+              <ProductGrid products={products} />
             )}
             
             {/* PAGINATION */}
             {!loading && !error && pagination.pages > 1 && (
-              <div className="mt-10 flex items-center justify-between border-t border-[#eee5d2] pt-6">
-                <button
-                  type="button"
-                  disabled={pagination.page <= 1}
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  className="rounded-lg border border-[#dfd2bb] bg-white px-4 py-2.5 text-sm text-[#5f584f] hover:border-[#d1a11c] disabled:opacity-50 disabled:hover:border-[#dfd2bb]"
-                >
-                  Previous
-                </button>
-                <span className="text-sm text-[#686159]">
-                  Page {pagination.page} of {pagination.pages}
-                </span>
-                <button
-                  type="button"
-                  disabled={pagination.page >= pagination.pages}
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  className="rounded-lg border border-[#dfd2bb] bg-white px-4 py-2.5 text-sm text-[#5f584f] hover:border-[#d1a11c] disabled:opacity-50 disabled:hover:border-[#dfd2bb]"
-                >
-                  Next
-                </button>
-              </div>
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.pages}
+                onPageChange={handlePageChange}
+              />
             )}
 
           </div>
@@ -450,120 +210,3 @@ export default function ShopPage() {
   );
 }
 
-
-/* =========================================================
-   PRODUCT CARD
-========================================================= */
-
-function ShopProductCard({ product }) {
-  return (
-    <div className="group relative overflow-hidden rounded-2xl border border-[#eadfca] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-
-      {/* IMAGE */}
-
-      <div className="relative aspect-[4/5] overflow-hidden bg-[#f1e8d7]">
-
-        {/* PLACEHOLDER */}
-
-        <Link href={`/product/${product.slug}`}>
-
-          <div className="flex h-full items-center justify-center">
-
-            <div className="text-center">
-
-              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-[#d1a11c] text-xl text-[#c99716] transition-transform duration-300 group-hover:scale-110">
-                ✦
-              </div>
-
-              <p className="text-[10px] uppercase tracking-[2px] text-[#9b8a70]">
-                Product Image
-              </p>
-
-            </div>
-
-          </div>
-
-        </Link>
-
-
-        {/* BADGE */}
-
-        {product.badge && (
-          <span className="absolute left-3 top-3 rounded-full bg-[#d1a11c] px-3 py-1 text-[10px] font-medium text-white">
-            {product.badge}
-          </span>
-        )}
-
-
-        {/* WISHLIST */}
-
-        <button
-          type="button"
-          aria-label={`Add ${product.name} to wishlist`}
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-lg text-[#81786d] shadow-sm transition-all hover:text-[#c99716] hover:shadow-md"
-        >
-          ♡
-        </button>
-
-      </div>
-
-
-      {/* DETAILS */}
-
-      <Link href={`/product/${product.slug}`}>
-
-        <div className="p-4">
-
-          <p className="text-[10px] font-medium uppercase tracking-[1.5px] text-[#b5965c]">
-            {product.category}
-          </p>
-
-          <h3 className="mt-1.5 min-h-[40px] text-sm font-medium leading-5 text-[#3b342b]">
-            {product.name}
-          </h3>
-
-
-          {/* RATING */}
-
-          <div className="mt-2 flex items-center gap-1.5">
-
-            <span className="text-xs text-[#d1a11c]">
-              ★
-            </span>
-
-            <span className="text-xs font-medium text-[#5f584f]">
-              {product.rating}
-            </span>
-
-            <span className="text-[11px] text-[#a99d8b]">
-              ({product.reviews})
-            </span>
-
-          </div>
-
-
-          <p className="mt-3 text-sm font-semibold text-[#a9780d]">
-            ₹{product.price.toLocaleString("en-IN")}
-          </p>
-
-        </div>
-
-      </Link>
-
-
-      {/* QUICK ADD */}
-
-      <div className="px-4 pb-4">
-
-        <Link
-          href={`/product/${product.slug}`}
-          className="block w-full rounded-lg border border-[#d9bf7c] py-2.5 text-center text-xs font-medium text-[#9b6d0d] transition-colors hover:bg-[#fff8e8]"
-        >
-          View Product
-        </Link>
-
-      </div>
-
-    </div>
-  );
-}

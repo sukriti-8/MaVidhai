@@ -1,11 +1,14 @@
 from decimal import Decimal
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text, Integer
+from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text, Integer, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.base import Base
 
 class Product(Base):
     __tablename__ = "products"
+    __table_args__ = (
+        CheckConstraint("stock >= 0", name="check_stock_non_negative"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"), nullable=False)

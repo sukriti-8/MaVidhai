@@ -3,6 +3,38 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict
 from app.schemas.category import CategoryResponse
 
+class ProductCreate(BaseModel):
+    category_id: int
+    name: str
+    slug: str
+    price: Decimal
+    description: str | None = None
+    details: str | None = None
+    material: str | None = None
+    dimensions: str | None = None
+    colour: str | None = None
+    care: str | None = None
+    badge: str | None = None
+    availability: bool = True
+    stock: int = 0
+    image_url: str | None = None
+
+class ProductUpdate(BaseModel):
+    category_id: int | None = None
+    name: str | None = None
+    slug: str | None = None
+    price: Decimal | None = None
+    description: str | None = None
+    details: str | None = None
+    material: str | None = None
+    dimensions: str | None = None
+    colour: str | None = None
+    care: str | None = None
+    badge: str | None = None
+    availability: bool | None = None
+    stock: int | None = None
+    image_url: str | None = None
+
 class ProductResponse(BaseModel):
     id: int
     category_id: int
