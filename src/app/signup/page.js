@@ -76,7 +76,7 @@ export default function SignupPage() {
       await signupAPI(trimmedName, trimmedEmail, password);
 
       setSuccessMessage(
-        "Welcome to MaVidhai! Your account has been created."
+        "Welcome to VRHAZ! Your account has been created."
       );
 
       setTimeout(() => {
@@ -99,7 +99,7 @@ export default function SignupPage() {
         </h1>
 
         <p className="mt-3 text-center text-[#6B6B6B]">
-          Join MaVidhai and start shopping today.
+          Join VRHAZ and start shopping today.
         </p>
 
         {/* Full Name */}

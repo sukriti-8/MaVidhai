@@ -76,7 +76,7 @@ export default async function SearchPage({ searchParams }) {
             </div>
 
             <h2 className="text-xl font-semibold text-[#3b342b]">
-              Search MaVidhai
+              Search VRHAZ
             </h2>
 
             <p className="mt-2 text-sm text-[#81786d]">

@@ -23,9 +23,9 @@ const AUTH_STORAGE_KEY = "mavidhai_user";
 const AUTH_EVENT = "mavidhai-auth-changed";
 
 const BRAND = {
-  name: "MaVidhai",
-  color: "#C9A227",
-  hoverColor: "#B8860B",
+  name: "VRHAZ",
+  color: "#3F5144",
+  hoverColor: "#A85838",
 };
 
 const NAV_LINKS = [
@@ -172,7 +172,7 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-gray-700 hover:text-[#C9A227] transition-colors duration-300"
+              className="text-gray-700 hover:text-[#A85838] transition-colors duration-300"
             >
               {t(link.label)}
             </Link>
@@ -259,7 +259,7 @@ export default function Navbar() {
               key={link.href}
               href={link.href}
               onClick={closeMobileMenu}
-              className="text-gray-800 hover:text-[#C9A227] transition-colors"
+              className="text-gray-800 hover:text-[#A85838] transition-colors"
             >
               {t(link.label)}
             </Link>
@@ -309,14 +309,14 @@ function SearchForm({ desktop = false }) {
         placeholder={SEARCH_CONFIG.placeholder}
         className={
           desktop
-            ? "w-52 rounded-full border border-[#e3d4b5] bg-[#fffdf8] py-2.5 pl-4 pr-10 text-sm text-[#3b342b] outline-none transition-all placeholder:text-[#9b8a70] focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20"
-            : "w-full rounded-lg border border-[#e3d4b5] bg-[#fffdf8] py-3 pl-4 pr-12 text-sm text-[#3b342b] outline-none placeholder:text-[#9b8a70] focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20"
+            ? "w-52 rounded-full border border-[#e3d4b5] bg-[#fffdf8] py-2.5 pl-4 pr-10 text-sm text-[#3b342b] outline-none transition-all placeholder:text-[#9b8a70] focus:border-[#A85838] focus:ring-2 focus:ring-[#A85838]/20"
+            : "w-full rounded-lg border border-[#e3d4b5] bg-[#fffdf8] py-3 pl-4 pr-12 text-sm text-[#3b342b] outline-none placeholder:text-[#9b8a70] focus:border-[#A85838] focus:ring-2 focus:ring-[#A85838]/20"
         }
       />
       <button
         type="submit"
         aria-label="Search products"
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9b8a70] hover:text-[#C9A227] transition-colors"
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9b8a70] hover:text-[#A85838] transition-colors"
       >
         <Search size={18} />
       </button>
@@ -344,7 +344,7 @@ function LanguageSelector({
       <button
         type="button"
         onClick={() => setLanguageOpen((prev) => !prev)}
-        className="flex items-center gap-2 h-10 px-3 rounded-lg text-gray-700 hover:text-[#C9A227] hover:bg-[#fffdf8] transition-all duration-300"
+        className="flex items-center gap-2 h-10 px-3 rounded-lg text-gray-700 hover:text-[#A85838] hover:bg-[#fffdf8] transition-all duration-300"
         aria-label="Select language"
         aria-haspopup="listbox"
         aria-expanded={languageOpen}
@@ -373,12 +373,12 @@ function LanguageSelector({
               key={code}
               type="button"
               onClick={() => handleLanguageChange(code)}
-              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-[#fffdf8] hover:text-[#C9A227] transition-colors"
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-[#fffdf8] hover:text-[#A85838] transition-colors"
               role="option"
               aria-selected={language === code}
             >
               <span>{name}</span>
-              {language === code && <Check size={17} className="text-[#C9A227]" />}
+              {language === code && <Check size={17} className="text-[#A85838]" />}
             </button>
           ))}
         </div>
@@ -410,7 +410,7 @@ function MobileLanguageSelector({
       <button
         type="button"
         onClick={() => setLanguageOpen((previous) => !previous)}
-        className="w-full flex items-center justify-between py-2 text-gray-800 hover:text-[#C9A227] transition-colors"
+        className="w-full flex items-center justify-between py-2 text-gray-800 hover:text-[#A85838] transition-colors"
         aria-label="Select language"
         aria-haspopup="listbox"
         aria-expanded={languageOpen}
@@ -444,7 +444,7 @@ function MobileLanguageSelector({
               key={code}
               type="button"
               onClick={() => handleLanguageChange(code)}
-              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:text-[#C9A227] hover:bg-white transition-colors"
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:text-[#A85838] hover:bg-white transition-colors"
               role="option"
               aria-selected={language === code}
             >
@@ -453,7 +453,7 @@ function MobileLanguageSelector({
               {language === code && (
                 <Check
                   size={17}
-                  className="text-[#C9A227]"
+                  className="text-[#A85838]"
                 />
               )}
             </button>
@@ -473,13 +473,13 @@ function LoggedInDesktop({ user, onLogout, cartCount, wishlistCount }) {
     <div className="flex items-center gap-3">
       <Link
         href="/wishlist"
-        className="text-gray-700 hover:text-[#C9A227] transition-colors"
+        className="text-gray-700 hover:text-[#A85838] transition-colors"
       >
         ♡ Wishlist {wishlistCount !== null && `(${wishlistCount})`}
       </Link>
       <Link
         href="/cart"
-        className="text-gray-700 hover:text-[#C9A227] transition-colors"
+        className="text-gray-700 hover:text-[#A85838] transition-colors"
       >
         🛒 Cart {cartCount !== null && `(${cartCount})`}
       </Link>
@@ -487,7 +487,7 @@ function LoggedInDesktop({ user, onLogout, cartCount, wishlistCount }) {
         href="/profile"
         title={`Profile: ${user.name}`}
         aria-label="Profile"
-        className="flex items-center justify-center w-10 h-10 rounded-full border border-[#e3d4b5] text-gray-700 hover:text-[#C9A227] hover:border-[#C9A227] hover:bg-[#fffdf8] transition-all duration-300"
+        className="flex items-center justify-center w-10 h-10 rounded-full border border-[#e3d4b5] text-gray-700 hover:text-[#A85838] hover:border-[#A85838] hover:bg-[#fffdf8] transition-all duration-300"
       >
         <User size={20} />
       </Link>
@@ -510,13 +510,13 @@ function LoggedOutDesktop() {
     <>
       <Link
         href="/login"
-        className="flex items-center justify-center h-10 px-4 rounded-lg text-gray-700 font-medium hover:bg-gray-100 hover:text-[#C9A227] transition-all duration-300"
+        className="flex items-center justify-center h-10 px-4 rounded-lg text-gray-700 font-medium hover:bg-gray-100 hover:text-[#A85838] transition-all duration-300"
       >
         Login
       </Link>
       <Link
         href="/signup"
-        className="flex items-center justify-center h-10 px-5 rounded-xl bg-[#C9A227] text-white font-medium hover:bg-[#B8860B] transition-all duration-300 hover:scale-105"
+        className="flex items-center justify-center h-10 px-5 rounded-xl bg-[#A85838] text-white font-medium hover:bg-[#B8860B] transition-all duration-300 hover:scale-105"
       >
         Sign Up
       </Link>
@@ -533,21 +533,21 @@ function LoggedInMobile({ onLogout, onClose, cartCount, wishlistCount }) {
       <Link
         href="/wishlist"
         onClick={onClose}
-        className="text-gray-800 hover:text-[#C9A227] transition-colors"
+        className="text-gray-800 hover:text-[#A85838] transition-colors"
       >
         ♡ Wishlist {wishlistCount !== null && `(${wishlistCount})`}
       </Link>
       <Link
         href="/cart"
         onClick={onClose}
-        className="text-gray-800 hover:text-[#C9A227] transition-colors"
+        className="text-gray-800 hover:text-[#A85838] transition-colors"
       >
         🛒 Cart {cartCount !== null && `(${cartCount})`}
       </Link>
       <Link
         href="/profile"
         onClick={onClose}
-        className="flex items-center gap-3 text-gray-800 hover:text-[#C9A227] transition-colors"
+        className="flex items-center gap-3 text-gray-800 hover:text-[#A85838] transition-colors"
       >
         <User size={20} />
         <span>My Profile</span>
@@ -572,14 +572,14 @@ function LoggedOutMobile({ onClose }) {
       <Link
         href="/login"
         onClick={onClose}
-        className="text-gray-800 hover:text-[#C9A227] transition-colors"
+        className="text-gray-800 hover:text-[#A85838] transition-colors"
       >
         Login
       </Link>
       <Link
         href="/signup"
         onClick={onClose}
-        className="bg-[#C9A227] text-white py-2 rounded-lg text-center hover:bg-[#B8860B] transition-colors"
+        className="bg-[#A85838] text-white py-2 rounded-lg text-center hover:bg-[#B8860B] transition-colors"
       >
         Sign Up
       </Link>

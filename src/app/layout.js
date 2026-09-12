@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "MaVidhai",
+  title: "VRHAZ",
   description: "Premium ethnic wear and handcrafted fashion.",
 };
 

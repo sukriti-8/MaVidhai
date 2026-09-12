@@ -6,13 +6,22 @@ import Link from "next/link";
 import { getProducts, addToWishlist, setAuthToken } from "@/lib/api";
 
 const categories = [
-  "All",
-  "Living",
-  "Kitchen",
-  "Decor",
-  "Personal Care",
-  "Gifting",
-  "Clothing",
+  {
+    name: "All",
+    slug: "",
+  },
+  {
+    name: "Clothing",
+    slug: "clothing",
+  },
+  {
+    name: "Home & Living",
+    slug: "home-living",
+  },
+  {
+    name: "Toys",
+    slug: "toys",
+  },
 ];
 
 export default function ShopPage() {
@@ -88,22 +97,17 @@ export default function ShopPage() {
   // CATEGORY FILTER
   // =========================================================
 
-  const handleCategoryChange = (categoryName) => {
-    const slug =
-      categoryName === "All"
-        ? ""
-        : categoryName.toLowerCase().replace(" ", "-");
-
+  const handleCategoryChange = (category) => {
     setFilters((prev) => ({
       ...prev,
-      category: slug,
+      category: category.slug,
     }));
 
     setPagination((prev) => ({
       ...prev,
       page: 1,
     }));
-  };
+};
 
   // =========================================================
   // PRICE FILTER
@@ -234,27 +238,21 @@ export default function ShopPage() {
 
               <div className="mt-5 space-y-1">
 
-                {categories.map((categoryName) => {
-
-                  const slug =
-                    categoryName === "All"
-                      ? ""
-                      : categoryName.toLowerCase().replace(" ", "-");
-
-                  const isActive = filters.category === slug;
+                {categories.map((category) => {
+                  const isActive = filters.category === category.slug;
 
                   return (
                     <button
-                      key={categoryName}
+                      key={category.slug || "all"}
                       type="button"
-                      onClick={() => handleCategoryChange(categoryName)}
+                      onClick={() => handleCategoryChange(category)}
                       className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
                         isActive
                           ? "bg-[#fff6df] font-medium text-[#a9780d]"
                           : "text-[#686159] hover:bg-[#fffaf0] hover:text-[#a9780d]"
                       }`}
                     >
-                      <span>{categoryName}</span>
+                      <span>{category.name}</span>
                     </button>
                   );
                 })}
@@ -592,7 +590,7 @@ function ShopProductCard({ product }) {
         <div className="p-5">
 
           <p className="text-[10px] font-medium uppercase tracking-[1.5px] text-[#b5965c]">
-            {product.category}
+            {product.category?.name}
           </p>
 
           <h3 className="mt-1.5 min-h-[40px] text-base font-medium leading-5 text-[#3b342b]">

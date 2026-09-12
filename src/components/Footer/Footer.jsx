@@ -1,9 +1,9 @@
 export default function Footer() {
   return (
-   <footer
-    className="bg-white"
-    style={{ color: "#1D1D1B" }}
-  >
+    <footer
+      className="bg-white"
+      style={{ color: "#1D1D1B" }}
+    >
       <div className="max-w-7xl mx-auto px-8 py-10">
 
         <div className="flex flex-col md:flex-row justify-between gap-8">
