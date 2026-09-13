@@ -2,8 +2,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar/Navbar";
 import Footer from "@/components/Footer/Footer";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-
+import { LanguageProvider } from "@/context/LanguageContext";
+import Chatbot from "@/components/chatbot/Chatbot";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,6 +29,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col">
         <LanguageProvider>
           <Navbar />
+          <Chatbot />
 
           {children}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCart, updateCartItem, removeCartItem, setAuthToken } from "@/lib/api";
@@ -12,11 +12,7 @@ export default function CartPage() {
   const [error, setError] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
-  useEffect(() => {
-    loadCart();
-  }, []);
-
-  async function loadCart() {
+  const loadCart = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getCart();
@@ -32,7 +28,12 @@ export default function CartPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadCart();
+  }, [loadCart]);
 
   const handleUpdateQuantity = async (itemId, newQuantity) => {
     const item = cart?.items.find((cartItem) => cartItem.id === itemId);
@@ -103,7 +104,7 @@ export default function CartPage() {
         <div className="mx-auto max-w-[800px] text-center">
           <h1 className="text-4xl font-bold text-[#29251f]">Your cart is empty</h1>
           <p className="mt-4 text-[#756d63]">
-            Discover handcrafted products you'll love.
+            Discover handcrafted products you&apos;ll love.
           </p>
           <div className="mt-8">
             <Link

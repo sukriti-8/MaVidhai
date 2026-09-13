@@ -1,12 +1,94 @@
 "use client";
 
-import { useContext } from "react";
-import { LanguageContext } from "@/contexts/LanguageContext";
 
-export function useTranslation() {
-  const context = useContext(LanguageContext);
-  if (!context) {
-    throw new Error("useTranslation must be used within a LanguageProvider");
-  }
-  return context;
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLanguage } from "@/context/LanguageContext";
+import { translateTexts } from "@/services/translation";
+
+export function useTranslation(texts = []) {
+  const { language } = useLanguage();
+
+  const [translations, setTranslations] = useState({});
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const textKey = Array.isArray(texts)
+    ? texts
+        .filter((text) => typeof text === "string" && text.trim())
+        .join("\u0000")
+    : "";
+
+
+const normalizedTexts = useMemo(() => {
+    if (!Array.isArray(texts)) {
+      return [];
+    }
+    return [
+      ...new Set(
+        texts.filter((text) => typeof text === "string" && text.trim())
+      ),
+    ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [textKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadTranslations() {
+      if (normalizedTexts.length === 0) {
+        setTranslations({});
+        setIsTranslating(false);
+        return;
+      }
+      if (language === "en") {
+        const englishTranslations = Object.fromEntries(
+          normalizedTexts.map((text) => [text, text])
+        );
+        setTranslations(englishTranslations);
+        setIsTranslating(false);
+        return;
+      }
+      setIsTranslating(true);
+      try {
+        const translatedTexts = await translateTexts(
+          normalizedTexts,
+          language
+        );
+        if (cancelled) return;
+        const result = {};
+        normalizedTexts.forEach((text, index) => {
+          result[text] = translatedTexts[index] ?? text;
+        });
+        setTranslations(result);
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Translation failed:", error);
+        const fallbackTranslations = Object.fromEntries(
+          normalizedTexts.map((text) => [text, text])
+        );
+        setTranslations(fallbackTranslations);
+      } finally {
+        if (!cancelled) {
+          setIsTranslating(false);
+        }
+      }
+    }
+    loadTranslations();
+    return () => {
+      cancelled = true;
+    };
+  }, [language, textKey, normalizedTexts]);
+
+  const t = useCallback(
+    (text) => {
+      if (!text) return text;
+      return translations[text] ?? text;
+    },
+    [translations]
+  );
+
+  return {
+    t,
+    language,
+    isTranslating,
+  };
 }

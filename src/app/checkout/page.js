@@ -38,29 +38,29 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
-    loadCart();
-  }, []);
-
-  async function loadCart() {
-    try {
-      const data = await getCart();
-      if (!data || data.items.length === 0) {
-        router.push("/cart");
-        return;
+    async function loadCart() {
+      try {
+        const data = await getCart();
+        if (!data || data.items.length === 0) {
+          router.push("/cart");
+          return;
+        }
+        setCart(data);
+      } catch (err) {
+        if (err.message === "Unauthorized") {
+          setAuthToken(null);
+          router.push("/login");
+        } else {
+          console.error(err);
+          setInitError("Failed to load checkout details");
+        }
+      } finally {
+        setLoading(false);
       }
-      setCart(data);
-    } catch (err) {
-      if (err.message === "Unauthorized") {
-        setAuthToken(null);
-        router.push("/login");
-      } else {
-        console.error(err);
-        setInitError("Failed to load checkout details");
-      }
-    } finally {
-      setLoading(false);
     }
-  }
+
+    loadCart();
+  }, [router]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
