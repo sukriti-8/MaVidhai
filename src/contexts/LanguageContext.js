@@ -16,6 +16,7 @@ export const LanguageProvider = ({ children }) => {
   useEffect(() => {
     const savedLang = localStorage.getItem("mavidhai_lang");
     if (savedLang) {
+// eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentLanguage(savedLang);
     }
   }, []);

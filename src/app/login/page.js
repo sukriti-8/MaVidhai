@@ -23,6 +23,7 @@ function LoginContent() {
 
   useEffect(() => {
     if (searchParams.get("registered") === "true") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRegisteredMessage(
         "Account created successfully. Please log in to continue."
       );
@@ -214,7 +215,7 @@ function LoginContent() {
 
         {/* Sign Up */}
         <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/signup"
             className="font-semibold text-[#C9A227] hover:underline"

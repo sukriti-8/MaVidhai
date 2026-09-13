@@ -17,10 +17,12 @@ const LanguageContext = createContext(null);
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState("en");
 
+
   useEffect(() => {
     const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
 
     if (savedLanguage && LANGUAGES[savedLanguage]) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLanguage(savedLanguage);
     }
   }, []);

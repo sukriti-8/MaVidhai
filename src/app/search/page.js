@@ -92,7 +92,7 @@ export default async function SearchPage({ searchParams }) {
             </h2>
 
             <p className="mt-2 text-sm text-[#81786d]">
-              We couldn't find anything matching "{query}".
+              We couldn&apos;t find anything matching &quot;{query}&quot;.
             </p>
 
             <Link
