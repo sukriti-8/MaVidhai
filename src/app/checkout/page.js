@@ -2,28 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
 import Link from "next/link";
-import { getCart, createOrder, setAuthToken } from "@/lib/api";
-import { useRazorpayPayment } from "@/hooks/useRazorpayPayment";
+import { getCart, createOrder, setAuthToken, getAuthToken } from "@/lib/api";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState(null);
-  // P1.1: guard against double-submission across the full createOrder → startPayment lifecycle
   const [submitting, setSubmitting] = useState(false);
 
-  const {
-    startPayment,
-    isProcessing,
-    processingMessage,
-    error: paymentError,
-    isSuccess,
-    successMessage,
-    successOrderNumber,
-  } = useRazorpayPayment();
+  const [createdOrder, setCreatedOrder] = useState(null);
+  const [paymentData, setPaymentData] = useState(null);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
     shipping_full_name: "",
@@ -62,13 +53,41 @@ export default function CheckoutPage() {
     loadCart();
   }, [router]);
 
+  // Polling effect
+  useEffect(() => {
+    let interval;
+    if (createdOrder && !isSuccess) {
+      interval = setInterval(async () => {
+        try {
+          const token = typeof window !== 'undefined' ? localStorage.getItem("access_token") : null;
+          if (!token) return;
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/orders/${createdOrder.order_number}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === "confirmed" || data.status === "inventory_conflict" || data.payment_status === "captured") {
+              setIsSuccess(true);
+              setCreatedOrder(data);
+              clearInterval(interval);
+            }
+          }
+        } catch (err) {
+          console.error("Polling error", err);
+        }
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [createdOrder, isSuccess]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // P1.1: prevent duplicate submission
     if (submitting) return;
     setInitError(null);
     setSubmitting(true);
@@ -76,14 +95,30 @@ export default function CheckoutPage() {
     try {
       // 1. Create Order
       const order = await createOrder(formData);
+      setCreatedOrder(order);
 
-      // 2. Start Payment via Hook — submitting remains true for the full lifecycle
-      await startPayment(order.order_number, formData);
-      setSubmitting(false);
+      // 2. Create Payment
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access_token") : null;
+      const paymentRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/payments/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ order_number: order.order_number }),
+      });
+      
+      if (!paymentRes.ok) {
+        const errorData = await paymentRes.json();
+        throw new Error(errorData.detail || "Failed to create payment");
+      }
+      
+      const pData = await paymentRes.json();
+      setPaymentData(pData);
+      
     } catch (err) {
       console.error(err);
       setInitError(err.message || "Failed to initialize checkout.");
-      // Reset only on failure so the user can try again
       setSubmitting(false);
     }
   };
@@ -103,14 +138,13 @@ export default function CheckoutPage() {
           <div className="w-16 h-16 bg-[#e6f4ea] text-[#1e8e3e] flex items-center justify-center rounded-full mx-auto mb-6 text-2xl">
             ✓
           </div>
-          <h1 className="text-2xl font-bold text-[#29251f] mb-4">Order Placed!</h1>
+          <h1 className="text-2xl font-bold text-[#29251f] mb-4">Order Confirmed!</h1>
           <p className="text-[#756d63] leading-relaxed mb-8">
-            {successMessage ?? "Your payment was successful and your order has been confirmed."}
+            Your payment was successful and your order #{createdOrder?.order_number} has been placed.
           </p>
-          {/* P1.3: success navigation */}
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
-              href={successOrderNumber ? `/orders/${successOrderNumber}` : "/orders"}
+              href={createdOrder ? `/orders/${createdOrder.order_number}` : "/orders"}
               className="flex-1 rounded-lg bg-[#d1a11c] py-3 text-sm font-medium text-white text-center transition-all hover:bg-[#bd8d0f] hover:shadow-md"
             >
               View Order
@@ -127,16 +161,57 @@ export default function CheckoutPage() {
     );
   }
 
+  if (paymentData) {
+    return (
+      <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center p-6 text-center">
+        <div className="max-w-md bg-white rounded-2xl p-8 border border-[#eadfca] shadow-sm">
+          <h1 className="text-2xl font-bold text-[#29251f] mb-4">Complete Payment</h1>
+          <p className="text-[#756d63] leading-relaxed mb-6">
+            We have sent a payment link to your WhatsApp. You can also pay directly via the link below.
+            We are waiting for payment confirmation...
+          </p>
+          
+          <div className="flex flex-col gap-4">
+            {paymentData.whatsapp_deep_link && (
+              <a
+                href={paymentData.whatsapp_deep_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#25D366] py-3 text-sm font-medium text-white text-center transition-all hover:bg-[#1ebd5a] hover:shadow-md"
+              >
+                Pay via WhatsApp
+              </a>
+            )}
+            
+            {paymentData.payment_url && (
+              <a
+                href={paymentData.payment_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full rounded-lg bg-[#d1a11c] py-3 text-sm font-medium text-white text-center transition-all hover:bg-[#bd8d0f] hover:shadow-md"
+              >
+                Open Payment Link
+              </a>
+            )}
+          </div>
+          
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-[#756d63]">
+            <div className="w-4 h-4 border-2 border-[#d1a11c] border-t-transparent rounded-full animate-spin"></div>
+            Waiting for confirmation...
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[#fffdf8] px-6 py-10 lg:px-10 lg:py-16">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-      
       <div className="mx-auto max-w-[1200px]">
         <h1 className="text-3xl font-bold text-[#29251f] sm:text-4xl">Checkout</h1>
         
-        {(initError || paymentError) && (
+        {initError && (
           <div className="mt-6 rounded-lg bg-red-50 p-4 border border-red-100 text-red-600">
-            {initError || paymentError}
+            {initError}
           </div>
         )}
 
@@ -155,7 +230,7 @@ export default function CheckoutPage() {
                   required
                   value={formData.shipping_full_name}
                   onChange={handleChange}
-                  disabled={isProcessing}
+                  disabled={submitting}
                   className="mt-1 block w-full rounded-lg border border-[#e1d7c6] px-4 py-3 outline-none focus:border-[#c99716] disabled:opacity-50"
                 />
               </div>
@@ -168,7 +243,7 @@ export default function CheckoutPage() {
                   required
                   value={formData.shipping_email}
                   onChange={handleChange}
-                  disabled={isProcessing}
+                  disabled={submitting}
                   className="mt-1 block w-full rounded-lg border border-[#e1d7c6] px-4 py-3 outline-none focus:border-[#c99716] disabled:opacity-50"
                 />
               </div>
@@ -181,7 +256,7 @@ export default function CheckoutPage() {
                   required
                   value={formData.shipping_phone}
                   onChange={handleChange}
-                  disabled={isProcessing}
+                  disabled={submitting}
                   className="mt-1 block w-full rounded-lg border border-[#e1d7c6] px-4 py-3 outline-none focus:border-[#c99716] disabled:opacity-50"
                 />
               </div>
@@ -194,7 +269,7 @@ export default function CheckoutPage() {
                   required
                   value={formData.shipping_address_line1}
                   onChange={handleChange}
-                  disabled={isProcessing}
+                  disabled={submitting}
                   className="mt-1 block w-full rounded-lg border border-[#e1d7c6] px-4 py-3 outline-none focus:border-[#c99716] disabled:opacity-50"
                 />
               </div>
@@ -206,7 +281,7 @@ export default function CheckoutPage() {
                   name="shipping_address_line2"
                   value={formData.shipping_address_line2}
                   onChange={handleChange}
-                  disabled={isProcessing}
+                  disabled={submitting}
                   className="mt-1 block w-full rounded-lg border border-[#e1d7c6] px-4 py-3 outline-none focus:border-[#c99716] disabled:opacity-50"
                 />
               </div>
@@ -219,7 +294,7 @@ export default function CheckoutPage() {
                   required
                   value={formData.shipping_city}
                   onChange={handleChange}
-                  disabled={isProcessing}
+                  disabled={submitting}
                   className="mt-1 block w-full rounded-lg border border-[#e1d7c6] px-4 py-3 outline-none focus:border-[#c99716] disabled:opacity-50"
                 />
               </div>
@@ -232,7 +307,7 @@ export default function CheckoutPage() {
                   required
                   value={formData.shipping_state}
                   onChange={handleChange}
-                  disabled={isProcessing}
+                  disabled={submitting}
                   className="mt-1 block w-full rounded-lg border border-[#e1d7c6] px-4 py-3 outline-none focus:border-[#c99716] disabled:opacity-50"
                 />
               </div>
@@ -245,7 +320,7 @@ export default function CheckoutPage() {
                   required
                   value={formData.shipping_postal_code}
                   onChange={handleChange}
-                  disabled={isProcessing}
+                  disabled={submitting}
                   className="mt-1 block w-full rounded-lg border border-[#e1d7c6] px-4 py-3 outline-none focus:border-[#c99716] disabled:opacity-50"
                 />
               </div>
@@ -298,10 +373,10 @@ export default function CheckoutPage() {
             <button
               type="submit"
               form="checkout-form"
-              disabled={isProcessing || submitting}
+              disabled={submitting}
               className="mt-8 w-full rounded-lg bg-[#d1a11c] py-4 text-sm font-medium text-white transition-all hover:bg-[#bd8d0f] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {(isProcessing || submitting) ? (processingMessage || "Processing...") : `Pay ₹${Number(cart?.subtotal || 0).toLocaleString("en-IN")}`}
+              {submitting ? "Processing..." : `Checkout ₹${Number(cart?.subtotal || 0).toLocaleString("en-IN")}`}
             </button>
           </div>
 

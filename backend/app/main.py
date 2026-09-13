@@ -20,21 +20,14 @@ def validate_production_environment():
 
     errors = []
 
-    # --- Razorpay credentials ---
-    razorpay_key_id = os.getenv("RAZORPAY_KEY_ID")
-    razorpay_key_secret = os.getenv("RAZORPAY_KEY_SECRET")
-    razorpay_webhook_secret = os.getenv("RAZORPAY_WEBHOOK_SECRET")
-
-    if not razorpay_key_id:
-        errors.append("RAZORPAY_KEY_ID is required in production")
-    elif razorpay_key_id.startswith("rzp_test_"):
-        errors.append("RAZORPAY_KEY_ID appears to be a test key (rzp_test_...). Use live credentials (rzp_live_...) in production")
-
-    if not razorpay_key_secret:
-        errors.append("RAZORPAY_KEY_SECRET is required in production")
-
-    if not razorpay_webhook_secret:
-        errors.append("RAZORPAY_WEBHOOK_SECRET is required in production")
+    # --- WhatsApp credentials (New Payment & Communication Flow) ---
+    whatsapp_access_token = os.getenv("WHATSAPP_ACCESS_TOKEN")
+    whatsapp_phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
+    
+    if not whatsapp_access_token:
+        errors.append("WHATSAPP_ACCESS_TOKEN is required in production")
+    if not whatsapp_phone_number_id:
+        errors.append("WHATSAPP_PHONE_NUMBER_ID is required in production")
 
     # --- Application secrets ---
     secret_key = os.getenv("SECRET_KEY", "")

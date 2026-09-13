@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.utils.dependencies import get_current_user
@@ -11,10 +11,16 @@ router = APIRouter(prefix="/api/payments", tags=["Payments"])
 @router.post("/create", response_model=PaymentCreateResponse, status_code=status.HTTP_201_CREATED)
 def create_payment(
     request: PaymentCreateRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return payment_service.create_payment(db=db, user=current_user, order_number=request.order_number)
+    return payment_service.create_payment(
+        db=db, 
+        user=current_user, 
+        order_number=request.order_number,
+        background_tasks=background_tasks
+    )
 
 @router.post("/verify", response_model=PaymentVerifyResponse, status_code=status.HTTP_200_OK)
 def verify_payment(
