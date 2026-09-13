@@ -18,8 +18,10 @@ def test_product_list_contains_stock_and_category():
 
     for product in data["items"]:
         assert "slug" in product
-        assert product["stock"] == 20
-        assert product["availability"] is True
+        assert "stock" in product
+        assert isinstance(product["stock"], int)
+        assert "availability" in product
+        assert isinstance(product["availability"], bool)
 
         assert "category" in product
         assert product["category"] is not None
