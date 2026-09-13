@@ -23,6 +23,7 @@ def process_webhook(db: Session, raw_body: bytes, signature: str, event_id: str)
         
     # Delegate parsing to the provider
     parsed_event = payment_provider.parse_webhook_event(payload)
+    print(f"DEBUG_PARSED: {parsed_event}")
     
     provider_event_id = parsed_event.get("provider_event_id") or event_id
     provider_order_id = parsed_event.get("provider_order_id")
@@ -60,6 +61,17 @@ def process_webhook(db: Session, raw_body: bytes, signature: str, event_id: str)
         if payment.provider_payment_id and provider_payment_id and payment.provider_payment_id != provider_payment_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment ID mismatch")
             
+        if provider_payment_id and not payment.provider_payment_id:
+            # Check if this provider_payment_id is already assigned to a DIFFERENT local payment
+            conflict = db.query(Payment).filter(
+                Payment.provider_payment_id == provider_payment_id,
+                Payment.id != payment.id
+            ).first()
+            with open("webhook_debug.txt", "a") as f:
+                f.write(f"provider_payment_id={provider_payment_id}, payment.id={payment.id}, payment.provider_payment_id={payment.provider_payment_id}, conflict={conflict.id if conflict else None}\n")
+            if conflict:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment ID mismatch")
+            
         # 9. Create PaymentEvent
         from datetime import datetime, timezone
         payment_event = PaymentEvent(
@@ -94,9 +106,13 @@ def process_webhook(db: Session, raw_body: bytes, signature: str, event_id: str)
         return {"status": "success", "message": "Event processed successfully"}
         
     except IntegrityError:
-        # Concurrent duplicate delivery causing unique constraint violation on PaymentEvent
+        # If it's PaymentEvent unique constraint, it's a concurrent duplicate.
+        # But if it's Payment.provider_payment_id unique constraint, it's a forgery attempt.
         db.rollback()
-        return {"status": "success", "message": "Event already processed (concurrent)"}
+        # Since we can't easily distinguish SQLite IntegrityErrors without parsing the string,
+        # and we already check PaymentEvent explicitly above, any remaining IntegrityError
+        # during commit is likely the provider_payment_id uniqueness constraint.
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment ID already assigned to another order")
     except Exception as e:
         db.rollback()
         if isinstance(e, HTTPException):
