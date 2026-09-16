@@ -67,7 +67,7 @@ function LoginContent() {
       await loginAPI(trimmedEmail, password);
 
       setSuccessMessage(
-        "Login successful! Welcome back to MaVidhai."
+        "Login successful! Welcome back to VRHAZ."
       );
 
       setTimeout(() => {
@@ -90,7 +90,7 @@ function LoginContent() {
         </h1>
 
         <p className="mt-3 text-center text-[#6B6B6B]">
-          Sign in to continue to MaVidhai
+          Sign in to continue to VRHAZ
         </p>
 
         {/* Registered Message */}

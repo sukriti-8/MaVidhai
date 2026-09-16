@@ -27,7 +27,7 @@ const handleSendMessage = () => {
         type="button"
         onClick={() => setIsOpen((current) => !current)}
         className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#C9A227] text-2xl text-white shadow-lg hover:bg-[#B8860B]"
-        aria-label="Open MaVidhai AI assistant"
+        aria-label="Open VRHAZ AI assistant"
       >
         💬
       </button>
@@ -39,7 +39,7 @@ const handleSendMessage = () => {
           {/* Header */}
           <div className="flex items-center justify-between bg-[#C9A227] px-5 py-4 text-white">
             <div>
-              <h2 className="font-semibold">MaVidhai AI</h2>
+              <h2 className="font-semibold">VRHAZ AI</h2>
               <p className="text-xs opacity-90">
                 How can we help you?
               </p>
