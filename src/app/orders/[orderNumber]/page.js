@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Script from "next/script";
@@ -25,11 +25,7 @@ export default function OrderDetailsPage({ params }) {
     successMessage
   } = useRazorpayPayment();
 
-  useEffect(() => {
-    loadOrder();
-  }, [orderNumber]);
-
-  async function loadOrder() {
+  const loadOrder = useCallback(async () => {
     setLoading(true);
     setFetchError(null);
     try {
@@ -48,7 +44,12 @@ export default function OrderDetailsPage({ params }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [orderNumber, router]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadOrder();
+  }, [loadOrder]);
 
   const handleRetryPayment = () => {
     const shippingDetails = {
@@ -78,7 +79,7 @@ export default function OrderDetailsPage({ params }) {
         <div className="mx-auto max-w-[900px] text-center py-16">
           <h1 className="text-3xl font-bold text-[#29251f] sm:text-4xl mb-6">Order not found</h1>
           <p className="text-[#756d63] mb-10 max-w-md mx-auto">
-            This order doesn't exist or isn't available to your account.
+            This order doesn&apos;t exist or isn&apos;t available to your account.
           </p>
           <Link
             href="/orders"
@@ -99,7 +100,7 @@ export default function OrderDetailsPage({ params }) {
             &larr; My Orders
           </Link>
           <div className="rounded-lg bg-red-50 p-6 border border-red-100 text-red-600 text-center mt-6">
-            <p className="mb-4">We couldn't load this order.</p>
+            <p className="mb-4">We couldn&apos;t load this order.</p>
             <button 
               onClick={loadOrder}
               className="px-6 py-2 rounded-lg bg-[#d1a11c] text-white font-medium hover:bg-[#bd8d0f]"

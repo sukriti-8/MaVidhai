@@ -29,10 +29,12 @@ class OrderItemResponse(BaseModel):
 class OrderListItem(BaseModel):
     order_number: str
     status: str
+    payment_status: str
+    items_count: int
     currency: str
     total_amount: float
     created_at: datetime
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 class OrderListResponse(BaseModel):
@@ -46,7 +48,7 @@ class OrderResponse(BaseModel):
     id: int
     order_number: str
     status: str
-    payment_status: Optional[str] = "pending"
+    payment_status: str = "pending"
     subtotal: float
     shipping_amount: float
     discount_amount: float

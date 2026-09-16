@@ -11,11 +11,19 @@ config = context.config
 
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
-database_url = os.getenv("DATABASE_URL")
+if os.getenv("MAVIDHAI_TEST") == "1":
+    # Load test environment file located at project root
+    test_env_path = os.path.join(os.path.dirname(__file__), "..", ".env.test")
+    load_dotenv(test_env_path, override=True)
+    database_url = os.getenv("DATABASE_URL_TEST")
+else:
+    database_url = os.getenv("DATABASE_URL")
+
 if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+    config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

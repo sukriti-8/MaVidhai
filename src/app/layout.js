@@ -29,12 +29,11 @@ export default function RootLayout({ children }) {
       <body className="min-h-full flex flex-col">
         <LanguageProvider>
           <Navbar />
+          <Chatbot />
 
           {children}
 
           <Footer />
-
-          <Chatbot />
         </LanguageProvider>
       </body>
     </html>

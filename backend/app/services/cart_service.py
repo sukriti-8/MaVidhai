@@ -41,7 +41,7 @@ def add_item(db: Session, user_id: int, item_in: CartItemCreate) -> CartResponse
     product = db.execute(select(Product).where(Product.id == item_in.product_id)).scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    if not product.availability:
+    if not product.availability or product.stock <= 0:
         raise HTTPException(status_code=400, detail="Product is not available")
         
     cart_item = db.execute(
@@ -49,19 +49,24 @@ def add_item(db: Session, user_id: int, item_in: CartItemCreate) -> CartResponse
     ).scalar_one_or_none()
     
     if cart_item:
-        cart_item.quantity += item_in.quantity
-        if cart_item.quantity > 100:
-            cart_item.quantity = 100
+        new_quantity = cart_item.quantity + item_in.quantity
+        if new_quantity > product.stock:
+            raise HTTPException(status_code=400, detail="Not enough stock available")
+        cart_item.quantity = new_quantity
     else:
+        if item_in.quantity > product.stock:
+            raise HTTPException(status_code=400, detail="Not enough stock available")
         cart_item = CartItem(cart_id=cart.id, product_id=item_in.product_id, quantity=item_in.quantity)
         db.add(cart_item)
         
+    db.flush()
     db.commit()
     db.refresh(cart)
     return _build_cart_response(cart)
 
 def update_item(db: Session, user_id: int, item_id: int, item_update: CartItemUpdate) -> CartResponse:
     cart = get_or_create_cart(db, user_id)
+    
     cart_item = db.execute(
         select(CartItem).where(CartItem.id == item_id, CartItem.cart_id == cart.id)
     ).scalar_one_or_none()
@@ -69,7 +74,21 @@ def update_item(db: Session, user_id: int, item_id: int, item_update: CartItemUp
     if not cart_item:
         raise HTTPException(status_code=404, detail="Cart item not found")
         
+    product = db.execute(
+        select(Product).where(Product.id == cart_item.product_id)
+    ).scalar_one_or_none()
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+        
+    if not product.availability or product.stock <= 0:
+        raise HTTPException(status_code=400, detail="Product is not available")
+        
+    if item_update.quantity > product.stock:
+        raise HTTPException(status_code=400, detail="Not enough stock available")
+        
     cart_item.quantity = item_update.quantity
+    
     db.commit()
     db.refresh(cart)
     return _build_cart_response(cart)

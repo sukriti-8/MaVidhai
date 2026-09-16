@@ -3,6 +3,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export async function getProducts(params = {}, signal) {
   const searchParams = new URLSearchParams();
 
+  if (params.search?.trim()) {
+    searchParams.set("search", params.search.trim());
+  }
+
   if (params.category) {
     searchParams.set("category", params.category);
   }
@@ -217,7 +221,7 @@ export async function addToWishlist(productId) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...getAuthHeaders(), 
+      ...getAuthHeaders(),
     },
     body: JSON.stringify({ product_id: productId }),
   });
@@ -322,6 +326,21 @@ export async function verifyPayment(paymentData) {
   if (!response.ok) {
     if (response.status === 401) throw new Error("Unauthorized");
     throw new Error("Payment verification failed");
+  }
+  return response.json();
+}
+
+export async function translateTexts(texts, targetLanguage) {
+  const response = await fetch(`${API_URL}/api/translation`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ texts, target_language: targetLanguage }),
+  });
+  
+  if (!response.ok) {
+    throw new Error("Translation failed");
   }
   return response.json();
 }

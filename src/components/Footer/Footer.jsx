@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Footer() {
   return (
     <footer
@@ -29,13 +31,13 @@ export default function Footer() {
 
             <ul className="space-y-2 text-gray-600">
               <li>
-                <a
+                <Link
                   href="/"
                   className="hover:underline focus:outline-2 focus:outline-offset-2"
                   style={{ outlineColor: "#1D1D1B" }}
                 >
                   Home
-                </a>
+                </Link>
               </li>
 
               <li>
@@ -79,13 +81,13 @@ export default function Footer() {
               </li>
 
               <li>
-                <a
+                <Link
                   href="/#about"
                   className="hover:underline focus:outline-2 focus:outline-offset-2"
                   style={{ outlineColor: "#1D1D1B" }}
                 >
                   About Us
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

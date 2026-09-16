@@ -35,7 +35,7 @@ const handleSendMessage = () => {
       {/* Chatbot Window */}
       {isOpen && (
         <div className="fixed bottom-24 right-6 z-50 flex h-[500px] w-[360px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-          
+
           {/* Header */}
           <div className="flex items-center justify-between bg-[#C9A227] px-5 py-4 text-white">
             <div>

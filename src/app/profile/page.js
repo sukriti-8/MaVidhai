@@ -10,10 +10,12 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
-  useEffect(() => {
+
+useEffect(() => {
     const storedUser = localStorage.getItem(AUTH_STORAGE_KEY);
 
     if (storedUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setUser(JSON.parse(storedUser));
     }
   }, []);

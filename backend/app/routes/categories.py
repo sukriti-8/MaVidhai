@@ -14,6 +14,6 @@ router = APIRouter(prefix="/api/categories", tags=["categories"])
     response_model=List[CategoryResponse],
 )
 def get_categories(db: Session = Depends(get_db)):
-    stmt = select(Category)
+    stmt = select(Category).where(Category.is_active == True)
     categories = db.execute(stmt).scalars().all()
     return categories

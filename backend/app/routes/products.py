@@ -1,7 +1,7 @@
 from typing import List
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select
 
 from app.database.connection import get_db
@@ -16,6 +16,7 @@ router = APIRouter(prefix="/api/products", tags=["products"])
     response_model=PaginatedProductResponse,
 )
 def get_products(
+    search: str | None = Query(None, min_length=1),
     category: str | None = None,
     min_price: Decimal | None = Query(None, ge=0),
     max_price: Decimal | None = Query(None, ge=0),
@@ -26,6 +27,7 @@ def get_products(
 ):
     items, total = product_service.get_products(
         db=db,
+        search=search,
         category=category,
         min_price=min_price,
         max_price=max_price,
@@ -49,7 +51,11 @@ def get_products(
     response_model=ProductResponse,
 )
 def get_product(slug: str, db: Session = Depends(get_db)):
-    stmt = select(Product).where(Product.slug == slug)
+    stmt = (
+        select(Product)
+        .options(selectinload(Product.category))
+        .where(Product.slug == slug)
+    )
     product = db.execute(stmt).scalar_one_or_none()
     
     if not product:

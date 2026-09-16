@@ -1,6 +1,6 @@
 from decimal import Decimal
 from typing import Tuple, List
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, func
 from fastapi import HTTPException, status
 
@@ -9,6 +9,7 @@ from app.models.category import Category
 
 def get_products(
     db: Session,
+    search: str | None = None,
     category: str | None = None,
     min_price: Decimal | None = None,
     max_price: Decimal | None = None,
@@ -24,7 +25,14 @@ def get_products(
                 detail="min_price cannot be greater than max_price"
             )
 
-    stmt = select(Product)
+    stmt = select(Product).options(selectinload(Product.category))
+    
+    if search:
+        search_term = f"%{search.strip()}%"
+        stmt = stmt.where(
+            Product.name.ilike(search_term)
+            | Product.description.ilike(search_term)
+        )
     
     if category:
         stmt = stmt.join(Category, Product.category_id == Category.id).where(Category.slug == category)

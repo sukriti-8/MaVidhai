@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getOrders, setAuthToken } from "@/lib/api";
@@ -17,11 +17,7 @@ function OrdersContent() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(initialPage);
 
-  useEffect(() => {
-    loadOrders(page);
-  }, [page]);
-
-  async function loadOrders(pageNumber) {
+  const loadOrders = useCallback(async (pageNumber) => {
     setLoading(true);
     setError(null);
     try {
@@ -38,7 +34,12 @@ function OrdersContent() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadOrders(page);
+  }, [page, loadOrders]);
 
   const handlePageChange = (newPage) => {
     setPage(newPage);

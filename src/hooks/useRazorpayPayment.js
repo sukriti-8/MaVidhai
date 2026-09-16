@@ -7,61 +7,71 @@ export function useRazorpayPayment() {
   const [error, setError] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [successOrderNumber, setSuccessOrderNumber] = useState(null);
 
   const startPayment = async (orderNumber, shippingDetails = {}) => {
-    if (isProcessing) return; // Prevent double-clicks
-    
-    setError(null);
-    setIsProcessing(true);
-    setProcessingMessage("Opening secure payment...");
-    setIsSuccess(false);
-
-    try {
-      // 1. Create Payment Intent
-      const paymentIntent = await createPayment(orderNumber);
+    return new Promise(async (resolve) => {
+      if (isProcessing) {
+        resolve();
+        return; // Prevent double-clicks
+      }
       
-      // 2. Open Razorpay Checkout
-      const options = {
-        key: paymentIntent.key_id,
-        amount: paymentIntent.amount,
-        currency: paymentIntent.currency,
-        name: "VRHAZ",
-        description: `Order ${orderNumber}`,
-        order_id: paymentIntent.razorpay_order_id,
-        handler: function (response) {
-          handlePaymentSuccess(response, orderNumber);
-        },
-        modal: {
-          ondismiss: function() {
-            setIsProcessing(false);
-            setProcessingMessage(null);
-            setError("Payment was cancelled. Your order hasn't been cancelled.");
-          }
-        },
-        prefill: {
-          name: shippingDetails.shipping_full_name || "",
-          email: shippingDetails.shipping_email || "",
-          contact: shippingDetails.shipping_phone || "",
-        },
-        theme: {
-          color: "#d1a11c",
-        },
-      };
+      setError(null);
+      setIsProcessing(true);
+      setProcessingMessage("Opening secure payment...");
+      setIsSuccess(false);
 
-      const rzp = new window.Razorpay(options);
-      rzp.on("payment.failed", function (response) {
+      try {
+        // 1. Create Payment Intent
+        const paymentIntent = await createPayment(orderNumber);
+        
+        // 2. Open Razorpay Checkout
+        const options = {
+          key: paymentIntent.key_id,
+          amount: paymentIntent.amount,
+          currency: paymentIntent.currency,
+          name: "MaVidhai",
+          description: `Order ${orderNumber}`,
+          order_id: paymentIntent.razorpay_order_id,
+          handler: async function (response) {
+            await handlePaymentSuccess(response, orderNumber);
+            resolve();
+          },
+          modal: {
+            ondismiss: function() {
+              setIsProcessing(false);
+              setProcessingMessage(null);
+              setError("Payment was cancelled. Your order hasn't been cancelled.");
+              resolve();
+            }
+          },
+          prefill: {
+            name: shippingDetails.shipping_full_name || "",
+            email: shippingDetails.shipping_email || "",
+            contact: shippingDetails.shipping_phone || "",
+          },
+          theme: {
+            color: "#d1a11c",
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.on("payment.failed", function (response) {
+          setIsProcessing(false);
+          setProcessingMessage(null);
+          setError(`Payment failed: ${response.error.description}`);
+          resolve();
+        });
+        rzp.open();
+
+      } catch (err) {
+        console.error(err);
+        setError(err.message || "Failed to initialize payment.");
         setIsProcessing(false);
         setProcessingMessage(null);
-        setError(`Payment failed: ${response.error.description}`);
-      });
-      rzp.open();
-
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Failed to initialize payment.");
-      setIsProcessing(false);
-      setProcessingMessage(null);
-    }
+        resolve();
+      }
+    });
   };
 
   const handlePaymentSuccess = async (response, orderNumber) => {
@@ -95,6 +105,7 @@ export function useRazorpayPayment() {
         }
         
         setIsSuccess(true);
+        setSuccessOrderNumber(orderNumber);
         if (confirmed) {
           setSuccessMessage(`Order #${orderNumber} has been successfully confirmed!`);
         } else {
@@ -119,6 +130,7 @@ export function useRazorpayPayment() {
     error,
     isSuccess,
     successMessage,
+    successOrderNumber,
     setError
   };
 }

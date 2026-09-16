@@ -25,7 +25,7 @@ def test_translate_single_text_success():
 def test_translate_batch_success():
     with patch(
         "app.services.translation_service.translate_texts",
-        return_value=["మావిధైకి స్వాగతం", "ఇప్పుడే షాపింగ్ చేయండి", "కార్ట్కు జోడించండి"],
+        return_value=["మావిధైకి స్వాగతం", "ఇప్పుడే షాపింగ్ చేయండి", "కార్ట్‌కు జోడించండి"],
     ):
         response = client.post(
             "/api/translation",
@@ -42,7 +42,7 @@ def test_translate_batch_success():
         "translations": [
             "మావిధైకి స్వాగతం",
             "ఇప్పుడే షాపింగ్ చేయండి",
-            "కార్ట్కు జోడించండి",
+            "కార్ట్‌కు జోడించండి",
         ],
     }
 

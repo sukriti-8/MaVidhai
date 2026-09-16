@@ -68,7 +68,33 @@ def valid_shipping_data():
 
 @pytest.fixture
 def sample_products(test_db: Session):
-    return test_db.query(Product).limit(2).all()
+    # Only select products that are available and have stock — prevents
+    # picking up deactivated test products left by admin_products tests.
+    products = test_db.query(Product).filter(
+        Product.availability == True,
+        Product.stock > 0
+    ).limit(2).all()
+    assert len(products) >= 2, "Need at least 2 available products with stock for order tests"
+
+    original_values = {
+        product.id: {
+            "stock": product.stock,
+            "availability": product.availability,
+            "price": product.price,
+        }
+        for product in products
+    }
+
+    try:
+        yield products
+    finally:
+        for product in products:
+            values = original_values[product.id]
+            product.stock = values["stock"]
+            product.availability = values["availability"]
+            product.price = values["price"]
+
+        test_db.commit()
 
 def test_create_order_empty_cart(auth_headers_user1, valid_shipping_data):
     # clear cart
@@ -82,10 +108,11 @@ def test_create_order_success(auth_headers_user1, valid_shipping_data, sample_pr
     client.delete("/api/cart", headers=auth_headers_user1)
     
     product = sample_products[0]
-    client.post("/api/cart/items", json={"product_id": product.id, "quantity": 2}, headers=auth_headers_user1)
+    add_res = client.post("/api/cart/items", json={"product_id": product.id, "quantity": 2}, headers=auth_headers_user1)
+    assert add_res.status_code == 200, f"Failed to add cart item: {add_res.json()}"
     
     response = client.post("/api/orders", json=valid_shipping_data, headers=auth_headers_user1)
-    assert response.status_code == 201
+    assert response.status_code == 201, f"Order creation failed: {response.json()}"
     
     data = response.json()
     assert "order_number" in data
@@ -130,6 +157,71 @@ def test_create_order_unavailable_product(auth_headers_user1, valid_shipping_dat
     
     # Revert
     product.availability = True
+    test_db.commit()
+
+def test_create_order_insufficient_stock(auth_headers_user1, valid_shipping_data, sample_products, test_db: Session):
+    # clear orders
+    from app.models.user import User
+    from app.models.order import Order
+    user = test_db.query(User).filter(User.email == "userorder1@example.com").first()
+    if user:
+        test_db.query(Order).filter(Order.user_id == user.id).delete()
+        test_db.commit()
+
+    client.delete("/api/cart", headers=auth_headers_user1)
+    
+    product = sample_products[0]
+    original_stock = product.stock
+    
+    # Ensure stock is high enough to add to cart initially
+    product.stock = 20
+    test_db.commit()
+    
+    client.post("/api/cart/items", json={"product_id": product.id, "quantity": 6}, headers=auth_headers_user1)
+    
+    # Set stock to 5
+    product.stock = 5
+    test_db.commit()
+    
+    response = client.post("/api/orders", json=valid_shipping_data, headers=auth_headers_user1)
+    assert response.status_code == 409
+    assert "Not enough stock" in response.json()["detail"]
+    
+    # Verify cart untouched
+    cart_res = client.get("/api/cart", headers=auth_headers_user1)
+    assert cart_res.json()["item_count"] == 6
+    assert cart_res.json()["items"][0]["quantity"] == 6
+    
+    # Verify NO orders were created
+    orders_res = client.get("/api/orders", headers=auth_headers_user1)
+    assert orders_res.json()["total"] == 0
+
+    # Revert
+    product.stock = original_stock
+    test_db.commit()
+
+def test_create_order_zero_stock(auth_headers_user1, valid_shipping_data, sample_products, test_db: Session):
+    client.delete("/api/cart", headers=auth_headers_user1)
+    
+    product = sample_products[1]
+    original_stock = product.stock
+    
+    # Ensure stock is high enough to add to cart initially
+    product.stock = 20
+    test_db.commit()
+    
+    client.post("/api/cart/items", json={"product_id": product.id, "quantity": 1}, headers=auth_headers_user1)
+    
+    # Set stock to 0
+    product.stock = 0
+    test_db.commit()
+    
+    response = client.post("/api/orders", json=valid_shipping_data, headers=auth_headers_user1)
+    assert response.status_code == 409
+    assert "Not enough stock" in response.json()["detail"]
+
+    # Revert
+    product.stock = original_stock
     test_db.commit()
 
 def test_create_order_price_snapshot(auth_headers_user1, valid_shipping_data, sample_products, test_db: Session):
@@ -184,6 +276,16 @@ def test_get_order_history(auth_headers_user1, valid_shipping_data, sample_produ
     assert data["items"][1]["order_number"] == res1.json()["order_number"]
     assert "status" in data["items"][0]
     assert "total_amount" in data["items"][0]
+    # P0.1 contract: payment_status and items_count must be present in the list response
+    assert "payment_status" in data["items"][0]
+    assert "items_count" in data["items"][0]
+    # Second order had 2 items (qty=2, same product → 1 OrderItem row), first had 1
+    assert data["items"][0]["items_count"] == 1   # newest order: qty=2 but 1 line item
+    assert data["items"][1]["items_count"] == 1   # older order: 1 line item
+    # Both orders were just created — no payment yet → payment_status = pending
+    assert data["items"][0]["payment_status"] == "pending"
+    assert data["items"][1]["payment_status"] == "pending"
+
 
 def test_get_order_details_and_security(auth_headers_user1, auth_headers_user2, valid_shipping_data, sample_products, test_db: Session):
     client.delete("/api/cart", headers=auth_headers_user1)
@@ -226,17 +328,25 @@ def test_product_deletion_preserves_order(auth_headers_user1, valid_shipping_dat
     
     client.delete("/api/cart", headers=auth_headers_user1)
     client.post("/api/cart/items", json={"product_id": new_product.id, "quantity": 1}, headers=auth_headers_user1)
-    res = client.post("/api/orders", json=valid_shipping_data, headers=auth_headers_user1)
-    order_number = res.json()["order_number"]
     
-    # Delete the product
-    test_db.delete(new_product)
-    test_db.commit()
-    
-    # Get order details
-    details_res = client.get(f"/api/orders/{order_number}", headers=auth_headers_user1)
-    assert details_res.status_code == 200
-    data = details_res.json()
-    assert data["items"][0]["product_id"] is None
-    assert data["items"][0]["product_name"] == "Delete Me Lamp"
-    assert data["items"][0]["unit_price"] == 100.0
+    try:
+        res = client.post("/api/orders", json=valid_shipping_data, headers=auth_headers_user1)
+        order_number = res.json()["order_number"]
+        
+        # Delete the product
+        test_db.delete(new_product)
+        test_db.commit()
+        
+        # Get order details
+        details_res = client.get(f"/api/orders/{order_number}", headers=auth_headers_user1)
+        assert details_res.status_code == 200
+        data = details_res.json()
+        assert data["items"][0]["product_id"] is None
+        assert data["items"][0]["product_name"] == "Delete Me Lamp"
+        assert data["items"][0]["unit_price"] == 100.0
+    finally:
+        # In case the test fails before deleting
+        product = test_db.query(Product).filter_by(id=new_product.id).first()
+        if product:
+            test_db.delete(product)
+            test_db.commit()

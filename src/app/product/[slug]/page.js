@@ -6,7 +6,6 @@ import Link from "next/link";
 import {
   getProductBySlug,
   getProducts,
-  getCategories,
   addToCart,
   addToWishlist,
 } from "@/lib/api";
@@ -17,8 +16,6 @@ export default function ProductPage() {
 
   const [product, setProduct] = useState(null);
   const [otherProducts, setOtherProducts] = useState([]);
-  const [categoryName, setCategoryName] = useState("");
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -44,18 +41,6 @@ export default function ProductPage() {
         }
 
         setProduct(data);
-        try {
-          const categories = await getCategories();
-
-          const category = categories.find(
-            (item) => item.id === data.category_id
-          );
-
-          setCategoryName(category?.name || "");
-        } catch (categoryError) {
-          console.error("Failed to load product category:", categoryError);
-          setCategoryName("");
-        }
 
         // Load recommendations from the real backend catalog.
         try {
@@ -92,8 +77,11 @@ export default function ProductPage() {
     }
   }, [slug]);
 
+  const isOutOfStock =
+    product?.availability === false || product?.stock <= 0;
+
   const handleAddToCart = async () => {
-    if (!product) return;
+    if (isAddingToCart || isOutOfStock) return;
 
     setIsAddingToCart(true);
 
@@ -109,8 +97,8 @@ export default function ProductPage() {
       }, 3000);
     } catch (err) {
       if (err.message === "Unauthorized") {
-        alert("Please log in to add items to your cart.");
-        router.push("/login");
+        window.location.href = "/login";
+        return;
       } else {
         alert(err.message || "Unable to add to cart");
       }
@@ -120,7 +108,7 @@ export default function ProductPage() {
   };
 
   const handleWishlist = async () => {
-    if (!product) return;
+    if (!product || isWishlisting) return;
 
     setIsWishlisting(true);
 
@@ -158,7 +146,7 @@ export default function ProductPage() {
         </p>
 
         <p className="text-[#756d63] text-sm text-center">
-          The product you're looking for doesn't exist or may have been
+          The product you&apos;re looking for doesn&apos;t exist or may have been
           removed.
         </p>
 
@@ -219,42 +207,57 @@ export default function ProductPage() {
         </div>
       </div>
 
-      {/* PRODUCT SECTION */}
-      <section className="mx-auto max-w-[1300px] px-6 py-10 lg:px-10 lg:py-16">
-        <div className="grid gap-12 lg:grid-cols-2">
-          {/* PRODUCT IMAGES */}
+
+      {/* =====================================================
+          PRODUCT SECTION
+      ====================================================== */}
+
+      <section className="mx-auto max-w-[1300px] px-5 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-16">
+
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
+
+
+          {/* =================================================
+              PRODUCT IMAGES
+          ================================================== */}
+
           <div className="grid gap-4 sm:grid-cols-[90px_1fr]">
             {/* THUMBNAILS */}
-            <div className="order-2 flex gap-3 sm:order-1 sm:flex-col">
-              {[1, 2, 3].map((item) => (
-                <div
-                  key={item}
-                  className={`flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl bg-[#f1e8d7] ${
-                    item === 1
-                      ? "border-2 border-[#d1a11c]"
-                      : "border border-[#eadfca]"
-                  }`}
-                >
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-lg text-[#c99716]">
-                      ✦
-                    </span>
-                  )}
-                </div>
-              ))}
+
+            <div className="order-2 flex max-w-full gap-3 overflow-x-auto pb-1 sm:order-1 sm:flex-col sm:overflow-visible sm:pb-0">
+
+              <div className="flex h-20 w-20 items-center justify-center rounded-xl border-2 border-[#d1a11c] bg-[#f1e8d7]">
+
+                <span className="text-lg text-[#c99716]">
+                  ✦
+                </span>
+
+              </div>
+
+              <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-[#eadfca] bg-[#f1e8d7]">
+
+                <span className="text-lg text-[#c99716]">
+                  ✦
+                </span>
+
+              </div>
+
+              <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-[#eadfca] bg-[#f1e8d7]">
+
+                <span className="text-lg text-[#c99716]">
+                  ✦
+                </span>
+
+              </div>
+
             </div>
 
             {/* MAIN IMAGE */}
-            <div className="relative order-1 aspect-square overflow-hidden rounded-2xl bg-[#f1e8d7] sm:order-2">
-              {product.image ? (
+
+            <div className="relative order-1 aspect-[4/5] overflow-hidden rounded-2xl bg-[#f8f2e6] sm:order-2">
+              {product.image_url || product.image ? (
                 <img
-                  src={product.image}
+                  src={product.image_url || product.image}
                   alt={product.name}
                   className="h-full w-full object-cover"
                 />
@@ -293,16 +296,19 @@ export default function ProductPage() {
           <div className="flex flex-col justify-center">
             {/* CATEGORY */}
             <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
-              {categoryName}
+              {product.category?.name || product.category || "Collection"}
             </p>
 
             {/* NAME */}
-            <h1 className="mt-3 text-3xl font-semibold leading-tight text-[#29251f] sm:text-4xl">
+
+            <h1 className="mt-3 text-3xl font-semibold leading-tight text-[#29251f] sm:text-4xl lg:text-[2.65rem]">
               {product.name}
             </h1>
 
             {/* RATING */}
-            <div className="mt-4 flex items-center gap-3">
+
+            <div className="mt-5 flex items-center gap-3">
+
               <div className="flex gap-1 text-[#d1a11c]">
                 <span>★</span>
                 <span>★</span>
@@ -327,6 +333,12 @@ export default function ProductPage() {
             <p className="mt-6 text-2xl font-semibold text-[#a9780d]">
               ₹{Number(product.price || 0).toLocaleString("en-IN")}
             </p>
+
+            {isOutOfStock && (
+              <p className="mt-3 text-sm font-medium text-red-600">
+                Out of Stock
+              </p>
+            )}
 
             <div className="my-7 border-t border-[#eee5d2]" />
 
@@ -385,9 +397,14 @@ export default function ProductPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    setQuantity((q) => q + 1)
+                    setQuantity((q) =>
+                      product.stock !== undefined && product.stock !== null
+                        ? Math.min(q + 1, product.stock)
+                        : q + 1
+                    )
                   }
-                  className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d]"
+                  disabled={isOutOfStock || (product.stock !== undefined && product.stock !== null && quantity >= product.stock)}
+                  className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   +
                 </button>
@@ -395,42 +412,41 @@ export default function ProductPage() {
             </div>
 
             {/* ACTIONS */}
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+
               <button
                 type="button"
                 onClick={handleAddToCart}
-                disabled={isAddingToCart}
-                className="flex-1 rounded-lg bg-[#d1a11c] px-6 py-3.5 text-sm font-medium text-white transition-all hover:bg-[#bd8d0f] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-75"
+                disabled={isAddingToCart || isOutOfStock}
+                className="flex-[3] rounded-lg bg-[#d1a11c] px-6 py-3.5 text-sm font-medium text-white transition-all hover:bg-[#bd8d0f] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isAddingToCart
-                  ? "Adding..."
-                  : cartAdded
-                  ? "Added ✓"
-                  : "Add to Cart"}
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : isAddingToCart
+                    ? "Adding..."
+                    : cartAdded
+                      ? "Added ✓"
+                      : "Add to Cart"}
+              </button>
+
+              <button
+                type="button"
+                className="flex-[2] rounded-lg border border-[#d1a11c] bg-[#fffaf0] px-6 py-3.5 text-sm font-medium text-[#9b6d0d] transition-colors hover:bg-[#fff3d6]"
+              >
+                Buy Now
               </button>
 
               <button
                 type="button"
                 onClick={handleWishlist}
                 disabled={isWishlisting}
-                className={`flex h-12 w-12 items-center justify-center rounded-lg border border-[#d9bf7c] bg-white text-xl transition-colors hover:text-[#c99716] ${
-                  isWishlisted
-                    ? "text-[#c99716]"
-                    : "text-[#81786d]"
-                }`}
+                className={`flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-lg border border-[#d9bf7c] bg-white text-xl transition-colors hover:text-[#c99716] ${isWishlisted ? "text-[#c99716]" : "text-[#81786d]"}`}
                 aria-label="Add to wishlist"
               >
                 {isWishlisted ? "♥" : "♡"}
               </button>
             </div>
-
-            {/* BUY NOW */}
-            <button
-              type="button"
-              className="mt-3 w-full rounded-lg border border-[#d1a11c] bg-[#fffaf0] py-3.5 text-sm font-medium text-[#9b6d0d] transition-colors hover:bg-[#fff3d6]"
-            >
-              Buy Now
-            </button>
 
             {/* TRUST */}
             <div className="mt-8 grid grid-cols-3 gap-3 border-t border-[#eee5d2] pt-6">
@@ -481,7 +497,9 @@ export default function ProductPage() {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-[#eadfca] bg-[#fffdf8] p-6">
+
+              <div className="rounded-2xl border border-[#eee5d2] bg-[#fffdf8] p-5 sm:p-6">
+
                 {product.material && (
                   <DetailRow
                     label="Material"
@@ -662,18 +680,19 @@ function RecommendationCard({ product }) {
       href={`/product/${product.slug || product.id}`}
       className="group overflow-hidden rounded-xl border border-[#eadfca] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
     >
-      <div className="flex aspect-square items-center justify-center overflow-hidden bg-[#f1e8d7]">
-        {product.image ? (
+      <div className="flex aspect-[4/5] items-center justify-center bg-[#f1e8d7]">
+        {product.image_url || product.image ? (
           <img
-            src={product.image_url}
+            src={product.image_url || product.image}
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="text-center">
-            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-[#d1a11c] text-[#c99716]">
-              ✦
-            </div>
+
+          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-[#d1a11c] text-[#c99716]">
+            ✦
+          </div>
 
             <p className="text-[9px] uppercase tracking-[1.5px] text-[#9b8a70]">
               Product Image

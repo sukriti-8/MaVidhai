@@ -15,6 +15,8 @@ class CartProductResponse(BaseModel):
     slug: str
     price: Decimal
     image_url: str | None = None
+    stock: int
+    availability: bool
     
     class Config:
         from_attributes = True

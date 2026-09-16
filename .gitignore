@@ -15,7 +15,7 @@
 
 # next.js
 /.next/
-/out/
+out/
 
 # production
 /build
@@ -38,12 +38,20 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
 next-env.d.ts
-<<<<<<< HEAD
-=======
 
 # python
 backend/venv/
+backend/.venv/
 __pycache__/
 *.pyc
->>>>>>> origin/backend-development
+
+# temporary backend test/debug artifacts
+backend/*.log
+backend/test.db
+
+# local lint/debug reports
+eslint_report.json
+lint_*.json
+lint_*.txt
