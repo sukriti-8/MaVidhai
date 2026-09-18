@@ -27,7 +27,7 @@ def upgrade() -> None:
     sa.Column('event_type', sa.String(), nullable=False),
     sa.Column('payload', sa.JSON(), nullable=False),
     sa.Column('processed_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_payment_events_event_type'), 'payment_events', ['event_type'], unique=False)
@@ -44,8 +44,8 @@ def upgrade() -> None:
     sa.Column('currency', sa.String(), nullable=False),
     sa.Column('failure_code', sa.String(), nullable=True),
     sa.Column('failure_message', sa.String(), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.ForeignKeyConstraint(['order_id'], ['orders.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )

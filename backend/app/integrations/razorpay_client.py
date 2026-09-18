@@ -103,6 +103,60 @@ class RazorpayProvider(PaymentProvider):
             result["status"] = "captured"
             
         return result
+        
+    def refund_payment(self, provider_payment_id: str, amount: float, receipt: str) -> Dict[str, Any]:
+        """
+        Issues a full refund via Razorpay API.
+        amount is in INR (float), needs to be converted to paise.
+        """
+        if not self.client:
+            # Mock for tests
+            return {
+                "provider_refund_id": f"rfnd_mock_{provider_payment_id}_{receipt}",
+                "status": "processed",
+                "receipt": receipt
+            }
+            
+        amount_paise = int(amount * 100)
+        try:
+            # According to Razorpay Python SDK, refund is issued via payment.refund
+            refund_data = self.client.payment.refund(provider_payment_id, {
+                "amount": amount_paise,
+                "receipt": receipt
+            })
+            return {
+                "provider_refund_id": refund_data.get("id"),
+                "status": refund_data.get("status", "processed"),
+                "receipt": refund_data.get("receipt", receipt)
+            }
+        except razorpay.errors.BadRequestError as e:
+            # E.g. already refunded
+            raise ValueError(str(e))
+        except Exception as e:
+            raise RuntimeError(f"Razorpay refund failed: {str(e)}")
+
+    def fetch_refunds(self, provider_payment_id: str) -> list[Dict[str, Any]]:
+        """
+        Fetches all refunds for a specific payment from Razorpay.
+        """
+        if not self.client:
+            # Mock for tests: return an empty list by default, tests can mock this
+            return []
+            
+        try:
+            # Returns a dictionary with "items" containing the list of refunds
+            refunds_data = self.client.payment.refunds(provider_payment_id)
+            items = refunds_data.get("items", [])
+            return [
+                {
+                    "provider_refund_id": r.get("id"),
+                    "status": r.get("status"),
+                    "receipt": r.get("receipt")
+                }
+                for r in items
+            ]
+        except Exception as e:
+            raise RuntimeError(f"Razorpay fetch refunds failed: {str(e)}")
 
 # Singleton instance
 provider = RazorpayProvider()

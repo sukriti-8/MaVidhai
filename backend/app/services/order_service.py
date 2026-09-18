@@ -5,6 +5,7 @@ from app.models.product import Product
 from app.models.order import Order, OrderItem
 from app.schemas.order import OrderCreate
 from app.models.user import User
+from app.services.audit_service import log_admin_action
 import datetime
 import uuid
 
@@ -126,7 +127,7 @@ def reconcile_inventory_conflict(db: Session, order_number: str) -> Order:
     from app.services import inventory_service
     
     # 4. Use inventory service to securely lock and deduct
-    success = inventory_service.reserve_and_deduct_stock(db, order.items)
+    success = inventory_service.reserve_and_deduct_stock(db, order.items, order.id)
     
     if success:
         order.status = "confirmed"
@@ -137,3 +138,77 @@ def reconcile_inventory_conflict(db: Session, order_number: str) -> Order:
     
     # 9. Return the updated order/state
     return order
+
+def admin_update_order_status(db: Session, order_id: int, new_status: str, admin_id: int) -> Order:
+    from app.services import inventory_service
+    
+    # 1. Lock the order
+    order = db.query(Order).filter(Order.id == order_id).with_for_update().first()
+    if not order:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+        
+    old_status = order.status
+    
+    if old_status == "cancelled":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot change status of a cancelled order")
+        
+    if new_status == old_status:
+        return order
+        
+    # State machine rules
+    if new_status == "confirmed":
+        if old_status != "pending":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot transition from {old_status} to confirmed")
+        if order.payment_status != "captured":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot confirm order without captured payment")
+            
+        success = inventory_service.reserve_and_deduct_stock(db, order.items, order.id)
+        if not success:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Insufficient stock to confirm order")
+        order.status = "confirmed"
+        
+    elif new_status == "shipped":
+        if old_status != "confirmed":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot transition from {old_status} to shipped")
+        order.status = "shipped"
+        
+    elif new_status == "delivered":
+        if old_status != "shipped":
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cannot transition from {old_status} to delivered")
+        order.status = "delivered"
+        
+    elif new_status == "cancelled":
+        cancel_order_internal(db, order)
+        
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unsupported state transition to {new_status}")
+        
+    action_name = "ORDER_CANCELLED" if new_status == "cancelled" else "ORDER_STATUS_CHANGED"
+    log_admin_action(
+        db=db,
+        admin_id=admin_id,
+        action=action_name,
+        entity_type="ORDER",
+        entity_id=str(order.id),
+        details={"old_status": old_status, "new_status": new_status}
+    )
+        
+    db.commit()
+    db.refresh(order)
+    return order
+
+def cancel_order_internal(db: Session, order: Order, adjustment_type: str = "ORDER_CANCELLATION"):
+    """
+    Cancels an order and restores inventory if needed.
+    Does not commit the transaction, so it can be composed in larger atomic operations.
+    Assumes the order is already locked.
+    """
+    from app.services import inventory_service
+    
+    if order.status == "cancelled":
+        return # already cancelled
+        
+    if order.status in ["confirmed", "shipped", "delivered"]:
+        inventory_service.restore_stock(db, order.items, order.id, adjustment_type)
+        
+    order.status = "cancelled"

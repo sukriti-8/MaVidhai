@@ -39,3 +39,4 @@ class Product(Base):
     )
 
     category = relationship("Category", back_populates="products")
+    inventory_audits = relationship("InventoryAudit", back_populates="product", cascade="all, delete-orphan")
