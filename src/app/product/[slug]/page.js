@@ -13,10 +13,18 @@ import {
 export default function ProductPage() {
   const { slug } = useParams();
   const router = useRouter();
-  const productImages = [
-    "/sarees/saree1.jpeg",
-    "/sarees/saree2.jpeg",
-  ];
+  const productImages =
+    slug?.toLowerCase().includes("basket")
+      ? [
+          "/rope-basket/basket-1.jpeg",
+          "/rope-basket/basket-2.jpeg",
+          "/rope-basket/basket-3.jpeg",
+          "/rope-basket/basket-4.jpeg",
+        ]
+      : [
+          "/sarees/saree1.jpeg",
+          "/sarees/saree2.jpeg",
+        ];
   const [product, setProduct] = useState(null);
   const [otherProducts, setOtherProducts] = useState([]);
   const [loading, setLoading] = useState(true);
