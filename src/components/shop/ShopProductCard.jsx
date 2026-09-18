@@ -39,18 +39,26 @@ function ShopProductCard({ product }) {
       {/* IMAGE */}
       <div className="relative aspect-[4/5] overflow-hidden bg-[#f1e8d7]">
 
-        {/* PLACEHOLDER */}
         <Link href={`/product/${product.slug}`}>
-          <div className="flex h-full items-center justify-center">
-            <div className="text-center">
-              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-[#d1a11c] text-xl text-[#c99716] transition-transform duration-300 group-hover:scale-110">
-                ✦
+          {product.image_url || product.image ? (
+            <img
+              src={product.image_url || product.image}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-[#d1a11c] text-xl text-[#c99716] transition-transform duration-300 group-hover:scale-110">
+                  ✦
+                </div>
+
+                <p className="text-[10px] uppercase tracking-[2px] text-[#9b8a70]">
+                  Product Image
+                </p>
               </div>
-              <p className="text-[10px] uppercase tracking-[2px] text-[#9b8a70]">
-                Product Image
-              </p>
             </div>
-          </div>
+          )}
         </Link>
 
         {/* BADGE */}
