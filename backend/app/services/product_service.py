@@ -14,6 +14,7 @@ def get_products(
     min_price: Decimal | None = None,
     max_price: Decimal | None = None,
     available: bool | None = None,
+    low_stock: bool | None = None,
     page: int = 1,
     limit: int = 20
 ) -> Tuple[List[Product], int]:
@@ -45,6 +46,9 @@ def get_products(
         
     if available is not None:
         stmt = stmt.where(Product.availability == available)
+        
+    if low_stock:
+        stmt = stmt.where(Product.stock <= 10)
         
     # Count total matching products
     count_stmt = select(func.count()).select_from(stmt.subquery())

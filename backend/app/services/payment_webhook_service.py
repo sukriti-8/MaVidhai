@@ -88,7 +88,9 @@ def process_webhook(db: Session, raw_body: bytes, signature: str, event_id: str)
         from app.services import inventory_service
 
         if event_status == "captured":
-            if payment.status != "captured":
+            if payment.status == "refunded":
+                pass
+            elif payment.status != "captured":
                 payment.status = "captured"
                 payment.provider_payment_id = provider_payment_id
                 
@@ -96,7 +98,9 @@ def process_webhook(db: Session, raw_body: bytes, signature: str, event_id: str)
                 order.status = "confirmed" if success else "inventory_conflict"
                 
         elif event_status == "failed":
-            if payment.status != "captured":
+            if payment.status == "refunded":
+                pass
+            elif payment.status != "captured":
                 payment.status = "failed"
                 payment.provider_payment_id = provider_payment_id
             # Order remains pending

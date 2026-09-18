@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime, JSON
+from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime, JSON, Index, text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.base import Base
@@ -39,3 +39,34 @@ class PaymentEvent(Base):
     
     processed_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class PaymentRefund(Base):
+    __tablename__ = "payment_refunds"
+
+    id = Column(Integer, primary_key=True, index=True)
+    payment_id = Column(Integer, ForeignKey("payments.id", ondelete="CASCADE"), nullable=False, index=True)
+    admin_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    
+    provider_refund_id = Column(String, unique=True, index=True, nullable=True)
+    amount = Column(Numeric(10, 2), nullable=False)
+    status = Column(String, nullable=False, default="pending") # pending, completed, failed
+    
+    failure_code = Column(String, nullable=True)
+    failure_message = Column(String, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    payment = relationship("Payment", backref="refunds")
+    admin = relationship("User")
+
+    __table_args__ = (
+        Index(
+            "ix_payment_refunds_one_pending_per_payment",
+            "payment_id",
+            unique=True,
+            sqlite_where=text("status = 'pending'"),
+            postgresql_where=text("status = 'pending'")
+        ),
+    )
