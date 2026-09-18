@@ -54,29 +54,26 @@ PRODUCTS = [
         "price": Decimal("999.00"),
 
         "description": (
-            "A handwoven cotton saree in Rani pink with "
-            "a deep purple border, featuring traditional "
-            "paisley motifs and a checked pallu."
+            "Handwoven cotton saree in Rani pink with a deep "
+            "purple border, featuring woven paisley rows across "
+            "the body and a checked pattern in the pallu."
         ),
 
         "details": (
-            "100% cotton saree with a Rani pink body and "
-            "deep purple border. The body features paisley "
-            "motifs, while the pallu has a checked pattern "
-            "and the border features a traditional peacock design."
-        ),
+              "Woven paisley rows run across the body, with a "
+              "checked pattern in the pallu. Deep purple border "
+              "with a traditional peacock design."
+          ),
 
         "material": "100% Cotton",
         "dimensions": "5.5 m",
         "colour": "Rani Pink with Deep Purple",
-        "care": None,
-        "badge": None,
+       
 
         "availability": True,
         "stock": 20,
 
-        # We will add the actual image URL later.
-        "image_url": None,
+        "image_url": "/sarees/saree-1.png",
     },
 
     {
