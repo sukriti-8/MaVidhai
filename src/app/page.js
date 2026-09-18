@@ -128,14 +128,14 @@ export default async function Home() {
             <CategoryCard
               title="Sarees"
               description="Timeless Indian clothing for every occasion."
-              href="/shop?category=clothing"
+              href="/shop?category=sarees"
               background={colors.peach}
             />
 
             <CategoryCard
               title="Rope Baskets"
               description="Handcrafted home pieces with purpose."
-              href="/shop?category=home-living"
+              href="/shop?category=home-and-living"
               background={colors.sage}
             />
 

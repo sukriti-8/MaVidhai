@@ -101,10 +101,14 @@ function ShopContent() {
   // =========================================================
 
   const handleCategoryChange = (categoryName) => {
-    const slug =
-      categoryName === "All"
-        ? ""
-        : categoryName.toLowerCase().replace(" ", "-");
+    const categorySlugs = {
+      All: "",
+      Sarees: "sarees",
+      "Home & Living": "home-and-living",
+      Toys: "toys",
+    };
+
+    const slug = categorySlugs[categoryName] ?? "";
 
     setFilters((prev) => ({
       ...prev,
@@ -117,18 +121,18 @@ function ShopContent() {
     }));
   };
 
-  const handlePriceChange = (min, max) => {
-    setFilters((prev) => ({
-      ...prev,
-      minPrice: min,
-      maxPrice: max,
-    }));
+    const handlePriceChange = (min, max) => {
+      setFilters((prev) => ({
+        ...prev,
+        minPrice: min,
+        maxPrice: max,
+      }));
 
-    setPagination((prev) => ({
-      ...prev,
-      page: 1,
-    }));
-  };
+      setPagination((prev) => ({
+        ...prev,
+        page: 1,
+      }));
+    };
 
   const handleAvailabilityChange = (checked) => {
     setFilters((prev) => ({

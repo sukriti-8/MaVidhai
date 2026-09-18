@@ -1,13 +1,9 @@
 "use client";
 
-const categories = [
-  "All",
-  "Living",
-  "Kitchen",
-  "Decor",
-  "Personal Care",
-  "Gifting",
-  "Clothing",
+const CATEGORIES = [
+  "Sarees",
+  "Home & Living",
+  "Toys",
 ];
 
 export default function ProductFilters({
@@ -16,117 +12,182 @@ export default function ProductFilters({
   onPriceChange,
   onAvailabilityChange,
 }) {
+  const isCategorySelected = (category) => {
+    const slug = category.toLowerCase().replace(/\s+/g, "-");
+    return filters.category === slug;
+  };
+
   const isPriceSelected = (min, max) =>
     filters.minPrice === min && filters.maxPrice === max;
 
   return (
-    <aside className="w-full shrink-0 lg:w-56">
+    <aside className="w-full shrink-0 lg:w-[230px]">
       <div className="rounded-2xl border border-[#eadfca] bg-white p-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[#29251f]">
-            Categories
-          </h2>
 
-          <span className="text-xs text-[#a48d69]">
-            Filter
-          </span>
-        </div>
+        {/* CATEGORY */}
+        <div>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-[#29251f]">
+              Categories
+            </h3>
 
-        <div className="mt-5 space-y-1">
-          {categories.map((categoryName) => {
-            const slug =
-              categoryName === "All"
-                ? ""
-                : categoryName.toLowerCase().replace(" ", "-");
+            <span className="text-xs text-[#b5965c]">
+              Filter
+            </span>
+          </div>
 
-            const isActive = filters.category === slug;
+          <div className="mt-5 space-y-1">
+            <button
+              type="button"
+              onClick={() => onCategoryChange("All")}
+              className={`w-full rounded-lg px-3 py-3 text-left text-sm transition-colors ${
+                filters.category === ""
+                  ? "bg-[#fff3d8] text-[#9b6d0d]"
+                  : "text-[#5f584f] hover:bg-[#fffaf0]"
+              }`}
+            >
+              All
+            </button>
 
-            return (
+            {CATEGORIES.map((category) => (
               <button
-                key={categoryName}
+                key={category}
                 type="button"
-                onClick={() => onCategoryChange(categoryName)}
-                className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition-colors ${
-                  isActive
-                    ? "bg-[#fff6df] font-medium text-[#a9780d]"
-                    : "text-[#686159] hover:bg-[#fffaf0] hover:text-[#a9780d]"
+                onClick={() => onCategoryChange(category)}
+                className={`w-full rounded-lg px-3 py-3 text-left text-sm transition-colors ${
+                  isCategorySelected(category)
+                    ? "bg-[#fff3d8] text-[#9b6d0d]"
+                    : "text-[#5f584f] hover:bg-[#fffaf0]"
                 }`}
               >
-                <span>{categoryName}</span>
+                {category}
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
 
+        {/* DIVIDER */}
         <div className="my-6 border-t border-[#eee5d2]" />
 
         {/* PRICE */}
-        <h3 className="text-sm font-semibold text-[#29251f]">
-          Price
-        </h3>
+        <div>
+          <h3 className="text-sm font-semibold text-[#29251f]">
+            Price
+          </h3>
 
-        <div className="mt-4 space-y-3">
-          <label className="flex items-center gap-3 text-sm text-[#686159]">
-            <input
-              type="radio"
-              name="price"
-              checked={isPriceSelected("", "")}
-              onChange={() => onPriceChange("", "")}
-              className="h-4 w-4 accent-[#d1a11c]"
-            />
-            All Prices
-          </label>
+          <div className="mt-4 space-y-3">
 
-          <label className="flex items-center gap-3 text-sm text-[#686159]">
-            <input
-              type="radio"
-              name="price"
-              checked={isPriceSelected(0, 1000)}
-              onChange={() => onPriceChange(0, 1000)}
-              className="h-4 w-4 accent-[#d1a11c]"
-            />
-            Under ₹1,000
-          </label>
+            <button
+              type="button"
+              onClick={() => onPriceChange("", "")}
+              className="flex items-center gap-3 text-sm text-[#5f584f]"
+            >
+              <span
+                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                  isPriceSelected("", "")
+                    ? "border-[#d1a11c]"
+                    : "border-[#a9a29a]"
+                }`}
+              >
+                {isPriceSelected("", "") && (
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#d1a11c]" />
+                )}
+              </span>
 
-          <label className="flex items-center gap-3 text-sm text-[#686159]">
-            <input
-              type="radio"
-              name="price"
-              checked={isPriceSelected(1000, 2000)}
-              onChange={() => onPriceChange(1000, 2000)}
-              className="h-4 w-4 accent-[#d1a11c]"
-            />
-            ₹1,000 – ₹2,000
-          </label>
+              All Prices
+            </button>
 
-          <label className="flex items-center gap-3 text-sm text-[#686159]">
-            <input
-              type="radio"
-              name="price"
-              checked={isPriceSelected(2000, "")}
-              onChange={() => onPriceChange(2000, "")}
-              className="h-4 w-4 accent-[#d1a11c]"
-            />
-            Above ₹2,000
-          </label>
+            <button
+              type="button"
+              onClick={() => onPriceChange("", "999")}
+              className="flex items-center gap-3 text-sm text-[#5f584f]"
+            >
+              <span
+                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                  isPriceSelected("", "999")
+                    ? "border-[#d1a11c]"
+                    : "border-[#a9a29a]"
+                }`}
+              >
+                {isPriceSelected("", "999") && (
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#d1a11c]" />
+                )}
+              </span>
+
+              Under ₹1,000
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onPriceChange("1000", "2000")}
+              className="flex items-center gap-3 text-sm text-[#5f584f]"
+            >
+              <span
+                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                  isPriceSelected("1000", "2000")
+                    ? "border-[#d1a11c]"
+                    : "border-[#a9a29a]"
+                }`}
+              >
+                {isPriceSelected("1000", "2000") && (
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#d1a11c]" />
+                )}
+              </span>
+
+              ₹1,000 – ₹2,000
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onPriceChange("2000", "")}
+              className="flex items-center gap-3 text-sm text-[#5f584f]"
+            >
+              <span
+                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                  isPriceSelected("2000", "")
+                    ? "border-[#d1a11c]"
+                    : "border-[#a9a29a]"
+                }`}
+              >
+                {isPriceSelected("2000", "") && (
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#d1a11c]" />
+                )}
+              </span>
+
+              Above ₹2,000
+            </button>
+
+          </div>
         </div>
 
+        {/* DIVIDER */}
         <div className="my-6 border-t border-[#eee5d2]" />
 
         {/* AVAILABILITY */}
-        <h3 className="text-sm font-semibold text-[#29251f]">
-          Availability
-        </h3>
+        <div>
+          <button
+            type="button"
+            onClick={() =>
+              onAvailabilityChange(!filters.available)
+            }
+            className="flex items-center gap-3 text-sm text-[#5f584f]"
+          >
+            <span
+              className={`flex h-5 w-5 items-center justify-center rounded border ${
+                filters.available
+                  ? "border-[#d1a11c] bg-[#d1a11c]"
+                  : "border-[#a9a29a]"
+              }`}
+            >
+              {filters.available && (
+                <span className="text-xs text-white">✓</span>
+              )}
+            </span>
 
-        <label className="mt-4 flex items-center gap-3 text-sm text-[#686159]">
-          <input
-            type="checkbox"
-            checked={filters.available}
-            onChange={(e) => onAvailabilityChange(e.target.checked)}
-            className="h-4 w-4 accent-[#d1a11c]"
-          />
-          In Stock
-        </label>
+            In stock only
+          </button>
+        </div>
+
       </div>
     </aside>
   );
