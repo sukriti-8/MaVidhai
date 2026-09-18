@@ -15,7 +15,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 if os.getenv("MAVIDHAI_TEST") == "1":
-    load_dotenv(".env.test", override=True)
+    # Load test environment file located at project root
+    test_env_path = os.path.join(os.path.dirname(__file__), "..", ".env.test")
+    load_dotenv(test_env_path, override=True)
     database_url = os.getenv("DATABASE_URL_TEST")
 else:
     database_url = os.getenv("DATABASE_URL")
@@ -62,6 +64,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -83,7 +86,7 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, target_metadata=target_metadata, render_as_batch=True
         )
 
         with context.begin_transaction():

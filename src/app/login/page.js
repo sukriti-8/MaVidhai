@@ -8,77 +8,92 @@ import { login as loginAPI } from "@/lib/api";
 
 function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [successMessage, setSuccessMessage] = useState("");
+  const [registeredMessage, setRegisteredMessage] = useState("");
 
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const searchParams = useSearchParams();
-  const [registeredMessage, setRegisteredMessage] = useState("");
 
   useEffect(() => {
     if (searchParams.get("registered") === "true") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRegisteredMessage(
         "Account created successfully. Please log in to continue."
       );
     }
-}, [searchParams]);
+  }, [searchParams]);
 
- const handleLogin = async () => {
-  let valid = true;
+  const handleLogin = async () => {
+    let valid = true;
 
-  setEmailError("");
-  setPasswordError("");
-  setSuccessMessage("");
+    setEmailError("");
+    setPasswordError("");
+    setSuccessMessage("");
 
-  if (!email.trim()) {
-    setEmailError("Email is required");
-    valid = false;
-  } else if (!/\S+@\S+\.\S+/.test(email)) {
-    setEmailError("Please enter a valid email address");
-    valid = false;
-  }
+    const trimmedEmail = email.trim();
 
-  if (!password) {
-    setPasswordError("Password is required");
-    valid = false;
-  } else if (password.length < 8) {
-    setPasswordError("Password must be at least 8 characters");
-    valid = false;
-  }
+    // Email validation
+    if (!trimmedEmail) {
+      setEmailError("Email is required");
+      valid = false;
+    } else if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+      setEmailError("Please enter a valid email address");
+      valid = false;
+    }
 
-  if (!valid) {
-    return;
-  }
+    // Password validation
+    if (!password) {
+      setPasswordError("Password is required");
+      valid = false;
+    } else if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      valid = false;
+    }
 
-  setIsSubmitting(true);
+    if (!valid) {
+      return;
+    }
 
-  try {
-    await loginAPI(email, password);
-    setSuccessMessage("Login successful! Welcome back to MaVidhai.");
-    setTimeout(() => {
-      router.push("/");
-    }, 1000);
-  } catch (err) {
-    setPasswordError(err.message || "Failed to log in");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    setIsSubmitting(true);
+
+    try {
+      await loginAPI(trimmedEmail, password);
+
+      setSuccessMessage(
+        "Login successful! Welcome back to VRHAZ."
+      );
+
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
+    } catch (err) {
+      setPasswordError(err.message || "Failed to log in");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#FAF8F3] px-4 py-10">
       <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8">
+
         {/* Heading */}
         <h1 className="text-4xl font-bold text-center text-[#2B2B2B]">
           Welcome Back
         </h1>
 
         <p className="mt-3 text-center text-[#6B6B6B]">
-          Sign in to continue to MaVidhai
+          Sign in to continue to VRHAZ
         </p>
+
+        {/* Registered Message */}
         {registeredMessage && (
           <p
             className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-center text-sm text-green-700"
@@ -101,14 +116,17 @@ function LoginContent() {
             id="login-email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => setEmail(event.target.value)}
             placeholder="Enter your email"
             autoComplete="email"
             className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
           />
 
           {emailError && (
-            <p className="mt-2 text-sm text-red-600" role="alert">
+            <p
+              className="mt-2 text-sm text-red-600"
+              role="alert"
+            >
               {emailError}
             </p>
           )}
@@ -128,7 +146,7 @@ function LoginContent() {
               id="login-password"
               type={showPassword ? "text" : "password"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
               placeholder="Enter your password"
               autoComplete="current-password"
               className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
@@ -136,17 +154,30 @@ function LoginContent() {
 
             <button
               type="button"
-              onClick={() => setShowPassword((previous) => !previous)}
+              onClick={() =>
+                setShowPassword((previous) => !previous)
+              }
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#C9A227] transition-colors"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={
+                showPassword
+                  ? "Hide password"
+                  : "Show password"
+              }
               aria-pressed={showPassword}
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {showPassword ? (
+                <EyeOff size={20} />
+              ) : (
+                <Eye size={20} />
+              )}
             </button>
           </div>
 
           {passwordError && (
-            <p className="mt-2 text-sm text-red-600" role="alert">
+            <p
+              className="mt-2 text-sm text-red-600"
+              role="alert"
+            >
               {passwordError}
             </p>
           )}
@@ -167,10 +198,12 @@ function LoginContent() {
           type="button"
           onClick={handleLogin}
           disabled={isSubmitting}
-          className="mt-6 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] hover:scale-105 hover:shadow-lg transition-all duration-300"
+          className="mt-6 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] hover:scale-105 hover:shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {isSubmitting ? "Signing In..." : "Login"}
         </button>
+
+        {/* Success Message */}
         {successMessage && (
           <p
             className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700"
@@ -182,7 +215,7 @@ function LoginContent() {
 
         {/* Sign Up */}
         <p className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/signup"
             className="font-semibold text-[#C9A227] hover:underline"
@@ -197,7 +230,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
       <LoginContent />
     </Suspense>
   );

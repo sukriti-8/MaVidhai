@@ -33,50 +33,94 @@ def test_admin_category_rbac(auth_headers_user2, super_admin_headers):
     res = client.get("/api/admin/categories", headers=super_admin_headers)
     assert res.status_code == 200
 
-def test_admin_category_create(test_db: Session, super_admin_headers):
-    unique_slug = f"test-admin-category-{uuid.uuid4().hex[:8]}"
+def test_admin_category_validation(test_db: Session, super_admin_headers):
+    # Empty name -> 422
     res = client.post("/api/admin/categories", json={
-        "name": "Test Admin Category",
-        "slug": unique_slug
+        "name": "",
+        "slug": f"valid-slug-{uuid.uuid4().hex[:8]}"
+    }, headers=super_admin_headers)
+    assert res.status_code == 422
+
+    # Whitespace-only name -> 422 (because strip_whitespace should reduce it to "")
+    res = client.post("/api/admin/categories", json={
+        "name": "   ",
+        "slug": f"valid-slug-{uuid.uuid4().hex[:8]}"
+    }, headers=super_admin_headers)
+    assert res.status_code == 422
+
+    # Empty slug -> 422
+    res = client.post("/api/admin/categories", json={
+        "name": "Valid Name",
+        "slug": ""
+    }, headers=super_admin_headers)
+    assert res.status_code == 422
+
+def test_admin_category_create_and_uniqueness(test_db: Session, super_admin_headers):
+    name = f"Test Admin Category {uuid.uuid4().hex[:8]}"
+    slug = f"test-admin-cat-{uuid.uuid4().hex[:8]}"
+    
+    res = client.post("/api/admin/categories", json={
+        "name": name,
+        "slug": slug
     }, headers=super_admin_headers)
     
     assert res.status_code == 201
     data = res.json()
-    assert data["name"] == "Test Admin Category"
-    # The slug is generated dynamically; ensure it matches the pattern
-    assert data["slug"].startswith('test-admin-category-')
-    created_slug = data["slug"]
+    assert data["name"] == name
+    assert data["slug"] == slug
     assert data["is_active"] is True
     
-    # Duplicate slug -> 409
-    # Attempt to create a duplicate using the same slug as the first category
+    # Duplicate slug -> 400
     res = client.post("/api/admin/categories", json={
-        "name": "Another Category",
-        "slug": created_slug
+        "name": f"Another Name {uuid.uuid4().hex[:8]}",
+        "slug": slug
     }, headers=super_admin_headers)
-    assert res.status_code == 409
-
-def test_admin_category_update(test_db: Session, super_admin_headers):
-    unique_slug = f"update-me-{uuid.uuid4().hex[:8]}"
-    cat = Category(name="Update Me", slug=unique_slug, is_active=True)
-    test_db.add(cat)
-    test_db.commit()
-    test_db.refresh(cat)
+    assert res.status_code == 400
     
-    updated_slug = f"updated-category-{uuid.uuid4().hex[:8]}"
-    res = client.put(f"/api/admin/categories/{cat.id}", json={
-        "name": "Updated Category",
-        "slug": updated_slug
+    # Duplicate name -> 400
+    res = client.post("/api/admin/categories", json={
+        "name": name,
+        "slug": f"another-slug-{uuid.uuid4().hex[:8]}"
     }, headers=super_admin_headers)
+    assert res.status_code == 400
 
+def test_admin_category_update_and_uniqueness(test_db: Session, super_admin_headers):
+    name1 = f"Cat One {uuid.uuid4().hex[:8]}"
+    slug1 = f"cat-one-{uuid.uuid4().hex[:8]}"
+    cat1 = Category(name=name1, slug=slug1, is_active=True)
+    test_db.add(cat1)
+    
+    name2 = f"Cat Two {uuid.uuid4().hex[:8]}"
+    slug2 = f"cat-two-{uuid.uuid4().hex[:8]}"
+    cat2 = Category(name=name2, slug=slug2, is_active=True)
+    test_db.add(cat2)
+    test_db.commit()
+    test_db.refresh(cat1)
+    test_db.refresh(cat2)
+    
+    # Update to duplicate name -> 400
+    res = client.put(f"/api/admin/categories/{cat2.id}", json={
+        "name": name1
+    }, headers=super_admin_headers)
+    assert res.status_code == 400
+    
+    # Update to duplicate slug -> 400
+    res = client.put(f"/api/admin/categories/{cat2.id}", json={
+        "slug": slug1
+    }, headers=super_admin_headers)
+    assert res.status_code == 400
+    
+    # Valid update
+    new_name = f"Updated Cat Two {uuid.uuid4().hex[:8]}"
+    res = client.put(f"/api/admin/categories/{cat2.id}", json={
+        "name": new_name
+    }, headers=super_admin_headers)
     assert res.status_code == 200
-    data = res.json()
-    assert data["name"] == "Updated Category"
-    assert data["slug"] == updated_slug
+    assert res.json()["name"] == new_name
 
 def test_admin_category_deactivate(test_db: Session, super_admin_headers):
     unique_slug = f"deactivate-me-{uuid.uuid4().hex[:8]}"
-    cat = Category(name="Deactivate Me", slug=unique_slug, is_active=True)
+    cat = Category(name=f"Deactivate Me {uuid.uuid4().hex[:8]}", slug=unique_slug, is_active=True)
     test_db.add(cat)
     test_db.commit()
     test_db.refresh(cat)
@@ -89,7 +133,7 @@ def test_admin_category_deactivate(test_db: Session, super_admin_headers):
 
 def test_cannot_deactivate_category_with_active_products(test_db: Session, super_admin_headers):
     unique_slug = str(uuid.uuid4())
-    cat = Category(name="Has Products", slug=unique_slug, is_active=True)
+    cat = Category(name=f"Has Products {uuid.uuid4().hex[:8]}", slug=unique_slug, is_active=True)
     test_db.add(cat)
     test_db.commit()
     test_db.refresh(cat)

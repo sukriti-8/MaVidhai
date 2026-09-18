@@ -1,13 +1,13 @@
 from datetime import datetime
 from decimal import Decimal
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from app.schemas.category import CategoryResponse
 
 class ProductCreate(BaseModel):
     category_id: int
-    name: str
-    slug: str
-    price: Decimal
+    name: str = Field(..., min_length=1)
+    slug: str = Field(..., min_length=1)
+    price: Decimal = Field(..., gt=0)
     description: str | None = None
     details: str | None = None
     material: str | None = None
@@ -16,14 +16,14 @@ class ProductCreate(BaseModel):
     care: str | None = None
     badge: str | None = None
     availability: bool = True
-    stock: int = 0
+    stock: int = Field(0, ge=0)
     image_url: str | None = None
 
 class ProductUpdate(BaseModel):
     category_id: int | None = None
-    name: str | None = None
-    slug: str | None = None
-    price: Decimal | None = None
+    name: str | None = Field(None, min_length=1)
+    slug: str | None = Field(None, min_length=1)
+    price: Decimal | None = Field(None, gt=0)
     description: str | None = None
     details: str | None = None
     material: str | None = None
@@ -32,8 +32,12 @@ class ProductUpdate(BaseModel):
     care: str | None = None
     badge: str | None = None
     availability: bool | None = None
-    stock: int | None = None
+    # stock is specifically excluded here to enforce delta-based adjustments
     image_url: str | None = None
+
+class ProductStockUpdate(BaseModel):
+    delta: int
+    reason: str
 
 class ProductResponse(BaseModel):
     id: int

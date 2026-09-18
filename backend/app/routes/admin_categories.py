@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from app.database.connection import get_db
 from app.models.category import Category
@@ -9,6 +9,7 @@ from app.models.product import Product
 from app.models.user import User
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
 from app.utils.dependencies import get_super_admin
+from app.services.audit_service import log_admin_action
 
 router = APIRouter(prefix="/api/admin/categories", tags=["admin_categories"])
 
@@ -34,11 +35,18 @@ def create_category(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_super_admin),
 ):
-    stmt = select(Category).where(Category.slug == request.slug)
+    stmt = select(Category).where(func.lower(Category.slug) == request.slug.lower())
     if db.execute(stmt).scalar_one_or_none():
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Category slug already exists",
+        )
+        
+    stmt_name = select(Category).where(func.lower(Category.name) == request.name.lower())
+    if db.execute(stmt_name).scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Category name already exists",
         )
         
     category = Category(
@@ -47,6 +55,16 @@ def create_category(
         is_active=True,
     )
     db.add(category)
+    
+    log_admin_action(
+        db=db,
+        admin_id=current_admin.id,
+        action="CATEGORY_CREATED",
+        entity_type="CATEGORY",
+        entity_id=request.slug,
+        details={"name": request.name}
+    )
+    
     db.commit()
     db.refresh(category)
     return category
@@ -65,12 +83,20 @@ def update_category(
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
         
-    if request.slug is not None and request.slug != category.slug:
-        stmt = select(Category).where(Category.slug == request.slug)
+    if request.slug is not None and request.slug.lower() != category.slug.lower():
+        stmt = select(Category).where(func.lower(Category.slug) == request.slug.lower())
         if db.execute(stmt).scalar_one_or_none():
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Category slug already exists",
+            )
+            
+    if request.name is not None and request.name.lower() != category.name.lower():
+        stmt = select(Category).where(func.lower(Category.name) == request.name.lower())
+        if db.execute(stmt).scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Category name already exists",
             )
             
     if request.name is not None:
@@ -79,6 +105,15 @@ def update_category(
         category.slug = request.slug
     if request.is_active is not None:
         category.is_active = request.is_active
+        
+    log_admin_action(
+        db=db,
+        admin_id=current_admin.id,
+        action="CATEGORY_UPDATED",
+        entity_type="CATEGORY",
+        entity_id=str(category.id),
+        details={"request": request.model_dump(exclude_unset=True)}
+    )
         
     db.commit()
     db.refresh(category)
@@ -111,6 +146,16 @@ def deactivate_category(
         )
         
     category.is_active = False
+    
+    log_admin_action(
+        db=db,
+        admin_id=current_admin.id,
+        action="CATEGORY_DEACTIVATED",
+        entity_type="CATEGORY",
+        entity_id=str(category.id),
+        details={}
+    )
+    
     db.commit()
     db.refresh(category)
     return category

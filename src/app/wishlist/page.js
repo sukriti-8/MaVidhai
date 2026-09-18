@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getWishlist, removeFromWishlist, addToCart, setAuthToken } from "@/lib/api";
@@ -14,11 +14,7 @@ export default function WishlistPage() {
   const [addingToCartId, setAddingToCartId] = useState(null);
   const [cartAddedIds, setCartAddedIds] = useState({});
 
-  useEffect(() => {
-    loadWishlist();
-  }, []);
-
-  async function loadWishlist() {
+  const loadWishlist = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getWishlist();
@@ -34,7 +30,12 @@ export default function WishlistPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [router]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadWishlist();
+  }, [loadWishlist]);
 
   const handleRemove = async (itemId) => {
     try {
@@ -116,7 +117,7 @@ export default function WishlistPage() {
       <div className="mx-auto max-w-[1200px]">
         <h1 className="text-3xl font-bold text-[#29251f] sm:text-4xl">My Wishlist</h1>
         <p className="mt-2 text-[#756d63]">
-          Products you've saved
+          Products you&apos;ve saved
         </p>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

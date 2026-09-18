@@ -1,21 +1,81 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getProductBySlug, addToCart, addToWishlist } from "@/lib/api";
+import {
+  getProductBySlug,
+  getProducts,
+  addToCart,
+  addToWishlist,
+} from "@/lib/api";
 
 export default function ProductPage() {
   const { slug } = useParams();
   const router = useRouter();
+
   const [product, setProduct] = useState(null);
+  const [otherProducts, setOtherProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   const [quantity, setQuantity] = useState(1);
+
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
+
   const [isWishlisting, setIsWishlisting] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+
+  useEffect(() => {
+    async function loadProduct() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await getProductBySlug(slug);
+
+        if (!data) {
+          setError(404);
+          return;
+        }
+
+        setProduct(data);
+
+        // Load recommendations from the real backend catalog.
+        try {
+          const productsData = await getProducts({
+            page: 1,
+            limit: 10,
+          });
+
+          const items = productsData?.items || [];
+
+          const recommendations = items
+            .filter((item) => item.id !== data.id)
+            .slice(0, 4);
+
+          setOtherProducts(recommendations);
+        } catch (recommendationError) {
+          console.error(
+            "Failed to load recommended products:",
+            recommendationError
+          );
+
+          setOtherProducts([]);
+        }
+      } catch (err) {
+        console.error("Failed to load product:", err);
+        setError(500);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    if (slug) {
+      loadProduct();
+    }
+  }, [slug]);
 
   const isOutOfStock =
     product?.availability === false || product?.stock <= 0;
@@ -24,60 +84,51 @@ export default function ProductPage() {
     if (isAddingToCart || isOutOfStock) return;
 
     setIsAddingToCart(true);
+
     try {
       await addToCart(product.id, quantity);
+
       setCartAdded(true);
-      setTimeout(() => setCartAdded(false), 3000);
+
+      window.dispatchEvent(new Event("cart-updated"));
+
+      setTimeout(() => {
+        setCartAdded(false);
+      }, 3000);
     } catch (err) {
       if (err.message === "Unauthorized") {
         window.location.href = "/login";
         return;
+      } else {
+        alert(err.message || "Unable to add to cart");
       }
-      alert("Unable to add to cart");
     } finally {
       setIsAddingToCart(false);
     }
   };
 
   const handleWishlist = async () => {
-    if (isWishlisting) return;
+    if (!product || isWishlisting) return;
+
     setIsWishlisting(true);
+
     try {
       await addToWishlist(product.id);
+
       setIsWishlisted(true);
+
+      window.dispatchEvent(new Event("wishlist-updated"));
     } catch (err) {
       if (err.message === "Unauthorized") {
         alert("Please log in to add items to your wishlist.");
         router.push("/login");
       } else {
-        alert("Unable to add to wishlist");
+        alert(err.message || "Unable to add to wishlist");
       }
     } finally {
       setIsWishlisting(false);
     }
   };
-
-  useEffect(() => {
-    async function loadProduct() {
-      try {
-        setLoading(true);
-        const data = await getProductBySlug(slug);
-        if (!data) {
-          setError(404);
-        } else {
-          setProduct(data);
-        }
-      } catch (err) {
-        console.error(err);
-        setError(500);
-      } finally {
-        setLoading(false);
-      }
-    }
-    if (slug) {
-      loadProduct();
-    }
-  }, [slug]);
 
   if (loading) {
     return (
@@ -89,37 +140,48 @@ export default function ProductPage() {
 
   if (error === 404) {
     return (
-      <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center gap-4">
-        <p className="text-[#29251f] font-medium text-lg">Product not found</p>
-        <p className="text-[#756d63] text-sm">The product you're looking for doesn't exist or may have been removed.</p>
-        <Link href="/shop" className="text-[#a48d69] underline">Back to Shop</Link>
+      <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center gap-4 px-6">
+        <p className="text-[#29251f] font-medium text-lg">
+          Product not found
+        </p>
+
+        <p className="text-[#756d63] text-sm text-center">
+          The product you&apos;re looking for doesn&apos;t exist or may have been
+          removed.
+        </p>
+
+        <Link
+          href="/shop"
+          className="text-[#a48d69] underline"
+        >
+          Back to Shop
+        </Link>
       </main>
     );
   }
 
-  if (error === 500) {
+  if (error === 500 || !product) {
     return (
       <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center gap-4">
         <p className="text-red-500">Failed to fetch product</p>
-        <button onClick={() => window.location.reload()} className="text-[#a48d69] underline">Try again</button>
+
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="text-[#a48d69] underline"
+        >
+          Try again
+        </button>
       </main>
     );
   }
 
-
   return (
     <main className="min-h-screen bg-[#fffdf8]">
-
-      {/* =====================================================
-          BREADCRUMB
-      ====================================================== */}
-
+      {/* BREADCRUMB */}
       <div className="border-b border-[#eee5d2] bg-white px-6 py-4 lg:px-10">
-
         <div className="mx-auto max-w-[1300px]">
-
           <div className="flex items-center gap-2 text-xs text-[#91887c]">
-
             <Link
               href="/"
               className="hover:text-[#b27d0d]"
@@ -141,11 +203,8 @@ export default function ProductPage() {
             <span className="text-[#5f584f]">
               {product.name}
             </span>
-
           </div>
-
         </div>
-
       </div>
 
 
@@ -163,7 +222,6 @@ export default function ProductPage() {
           ================================================== */}
 
           <div className="grid gap-4 sm:grid-cols-[90px_1fr]">
-
             {/* THUMBNAILS */}
 
             <div className="order-2 flex max-w-full gap-3 overflow-x-auto pb-1 sm:order-1 sm:flex-col sm:overflow-visible sm:pb-0">
@@ -194,64 +252,58 @@ export default function ProductPage() {
 
             </div>
 
-
             {/* MAIN IMAGE */}
 
             <div className="relative order-1 aspect-[4/5] overflow-hidden rounded-2xl bg-[#f8f2e6] sm:order-2">
+              {product.image_url || product.image ? (
+                <img
+                  src={product.image_url || product.image}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <div className="text-center">
+                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-[#d1a11c] text-3xl text-[#c99716]">
+                      ✦
+                    </div>
 
-              <div className="flex h-full items-center justify-center">
-
-                <div className="text-center">
-
-                  <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-[#d1a11c] text-3xl text-[#c99716]">
-                    ✦
+                    <p className="text-xs uppercase tracking-[2px] text-[#9b8a70]">
+                      Product Image
+                    </p>
                   </div>
-
-                  <p className="text-xs uppercase tracking-[2px] text-[#9b8a70]">
-                    Product Image
-                  </p>
-
                 </div>
-
-              </div>
-
+              )}
 
               {/* WISHLIST */}
-
               <button
                 type="button"
                 onClick={handleWishlist}
                 disabled={isWishlisting}
                 aria-label="Add to wishlist"
-                className={`absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-md transition-colors hover:text-[#c99716] ${isWishlisted ? "text-[#c99716]" : "text-[#81786d]"}`}
+                className={`absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-md transition-colors hover:text-[#c99716] ${
+                  isWishlisted
+                    ? "text-[#c99716]"
+                    : "text-[#81786d]"
+                }`}
               >
                 {isWishlisted ? "♥" : "♡"}
               </button>
-
             </div>
-
           </div>
 
-
-          {/* =================================================
-              PRODUCT INFORMATION
-          ================================================== */}
-
+          {/* PRODUCT INFORMATION */}
           <div className="flex flex-col justify-center">
-
             {/* CATEGORY */}
-
             <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
-              {product.category?.name}
+              {product.category?.name || product.category || "Collection"}
             </p>
-
 
             {/* NAME */}
 
             <h1 className="mt-3 text-3xl font-semibold leading-tight text-[#29251f] sm:text-4xl lg:text-[2.65rem]">
               {product.name}
             </h1>
-
 
             {/* RATING */}
 
@@ -266,23 +318,20 @@ export default function ProductPage() {
               </div>
 
               <span className="text-sm font-medium text-[#5f584f]">
-                4.8
+                {product.rating || "4.8"}
               </span>
 
               <Link
                 href="#reviews"
                 className="text-sm text-[#91887c] underline-offset-4 hover:underline"
               >
-                42 reviews
+                {product.reviews || 0} reviews
               </Link>
-
             </div>
 
-
             {/* PRICE */}
-
             <p className="mt-6 text-2xl font-semibold text-[#a9780d]">
-              ₹{product.price.toLocaleString("en-IN")}
+              ₹{Number(product.price || 0).toLocaleString("en-IN")}
             </p>
 
             {isOutOfStock && (
@@ -293,62 +342,49 @@ export default function ProductPage() {
 
             <div className="my-7 border-t border-[#eee5d2]" />
 
-
             {/* DESCRIPTION */}
-
             <div>
-
               <h2 className="text-sm font-semibold text-[#29251f]">
                 Description
               </h2>
 
               <p className="mt-3 text-sm leading-7 text-[#686159]">
-                {product.description}
+                {product.description ||
+                  "A beautifully crafted piece from our collection."}
               </p>
-
             </div>
 
-
             {/* COLOUR */}
+            <div className="mt-7">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-[#29251f]">
+                  Colour
+                </p>
 
-            {product.colour && (
-              <div className="mt-7">
-
-                <div className="flex items-center justify-between">
-
-                  <p className="text-sm font-semibold text-[#29251f]">
-                    Colour
-                  </p>
-
-                  <span className="text-sm text-[#756d63]">
-                    {product.colour}
-                  </span>
-
-                </div>
-
-                <div className="mt-3 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#d1a11c] bg-[#d8ae46]">
-                  <span className="sr-only">
-                    {product.colour}
-                  </span>
-                </div>
-
+                <span className="text-sm text-[#756d63]">
+                  {product.colour || "Assorted"}
+                </span>
               </div>
-            )}
 
+              <div className="mt-3 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#d1a11c] bg-[#d8ae46]">
+                <span className="sr-only">
+                  {product.colour || "Colour"}
+                </span>
+              </div>
+            </div>
 
             {/* QUANTITY */}
-
             <div className="mt-7">
-
               <p className="text-sm font-semibold text-[#29251f]">
                 Quantity
               </p>
 
               <div className="mt-3 flex w-fit items-center rounded-lg border border-[#dfd2bb] bg-white">
-
                 <button
                   type="button"
-                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                  onClick={() =>
+                    setQuantity((q) => Math.max(1, q - 1))
+                  }
                   className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d]"
                 >
                   −
@@ -361,18 +397,19 @@ export default function ProductPage() {
                 <button
                   type="button"
                   onClick={() =>
-                    setQuantity((q) => Math.min(q + 1, product.stock))
+                    setQuantity((q) =>
+                      product.stock !== undefined && product.stock !== null
+                        ? Math.min(q + 1, product.stock)
+                        : q + 1
+                    )
                   }
-                  disabled={isOutOfStock || quantity >= product.stock}
+                  disabled={isOutOfStock || (product.stock !== undefined && product.stock !== null && quantity >= product.stock)}
                   className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   +
                 </button>
-
               </div>
-
             </div>
-
 
             {/* ACTIONS */}
 
@@ -409,14 +446,10 @@ export default function ProductPage() {
               >
                 {isWishlisted ? "♥" : "♡"}
               </button>
-
             </div>
 
-
             {/* TRUST */}
-
             <div className="mt-8 grid grid-cols-3 gap-3 border-t border-[#eee5d2] pt-6">
-
               <TrustItem
                 icon="◇"
                 title="Secure"
@@ -434,29 +467,21 @@ export default function ProductPage() {
                 title="Quality"
                 description="Crafted"
               />
-
             </div>
-
           </div>
-
         </div>
-
       </section>
 
-
-      {/* =====================================================
-          PRODUCT DETAILS
-      ====================================================== */}
-
-      { (product.details || product.material || product.dimensions || product.colour || product.care) && (
+      {/* PRODUCT DETAILS */}
+      {(product.details ||
+        product.material ||
+        product.dimensions ||
+        product.colour ||
+        product.care) && (
         <section className="border-y border-[#eee5d2] bg-white px-6 py-14 lg:px-10">
-
           <div className="mx-auto max-w-[1100px]">
-
             <div className="grid gap-10 md:grid-cols-2">
-
               <div>
-
                 <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
                   Details
                 </p>
@@ -464,13 +489,12 @@ export default function ProductPage() {
                 <h2 className="mt-2 text-2xl font-semibold text-[#29251f]">
                   Made with intention
                 </h2>
-                
+
                 {product.details && (
                   <p className="mt-5 text-sm leading-7 text-[#686159]">
                     {product.details}
                   </p>
                 )}
-
               </div>
 
 
@@ -503,30 +527,19 @@ export default function ProductPage() {
                     value={product.care}
                   />
                 )}
-
               </div>
-
             </div>
-
           </div>
-
         </section>
       )}
 
-
-      {/* =====================================================
-          REVIEWS
-      ====================================================== */}
-
+      {/* REVIEWS */}
       <section
         id="reviews"
         className="bg-[#f8f2e6] px-6 py-14 lg:px-10"
       >
-
         <div className="mx-auto max-w-[1100px]">
-
           <div className="text-center">
-
             <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
               Customer feedback
             </p>
@@ -534,12 +547,9 @@ export default function ProductPage() {
             <h2 className="mt-2 text-2xl font-semibold text-[#29251f]">
               What customers say
             </h2>
-
           </div>
 
-
           <div className="mt-8 grid gap-5 md:grid-cols-3">
-
             <Review
               name="Ananya R."
               review="Beautiful craftsmanship and even better in person."
@@ -554,26 +564,15 @@ export default function ProductPage() {
               name="Riya K."
               review="A beautiful addition to my home. Would definitely recommend."
             />
-
           </div>
-
         </div>
-
       </section>
 
-
-      {/* =====================================================
-          YOU MAY ALSO LIKE
-      ====================================================== */}
-
+      {/* YOU MAY ALSO LIKE */}
       <section className="bg-white px-6 py-14 lg:px-10">
-
         <div className="mx-auto max-w-[1300px]">
-
           <div className="flex items-end justify-between">
-
             <div>
-
               <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
                 Curated for you
               </p>
@@ -581,7 +580,6 @@ export default function ProductPage() {
               <h2 className="mt-2 text-2xl font-semibold text-[#29251f]">
                 You may also like
               </h2>
-
             </div>
 
             <Link
@@ -590,42 +588,21 @@ export default function ProductPage() {
             >
               View all →
             </Link>
-
           </div>
-
 
           <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-
-            <RecommendationCard
-              name="Handwoven Table Runner"
-              price="₹1,299"
-            />
-
-            <RecommendationCard
-              name="Artisan Ceramic Mug"
-              price="₹699"
-            />
-
-            <RecommendationCard
-              name="Heritage Candle Set"
-              price="₹999"
-            />
-
-            <RecommendationCard
-              name="Hand-Painted Ceramic Vase"
-              price="₹1,799"
-            />
-
+            {otherProducts.map((item) => (
+              <RecommendationCard
+                key={item.id}
+                product={item}
+              />
+            ))}
           </div>
-
         </div>
-
       </section>
-
     </main>
   );
 }
-
 
 /* =========================================================
    DETAIL ROW
@@ -634,7 +611,6 @@ export default function ProductPage() {
 function DetailRow({ label, value }) {
   return (
     <div className="flex justify-between gap-5 border-b border-[#eee5d2] py-4 last:border-b-0">
-
       <span className="text-sm text-[#91887c]">
         {label}
       </span>
@@ -642,11 +618,9 @@ function DetailRow({ label, value }) {
       <span className="text-right text-sm font-medium text-[#3b342b]">
         {value}
       </span>
-
     </div>
   );
 }
-
 
 /* =========================================================
    TRUST ITEM
@@ -655,7 +629,6 @@ function DetailRow({ label, value }) {
 function TrustItem({ icon, title, description }) {
   return (
     <div className="text-center">
-
       <div className="text-lg text-[#c99716]">
         {icon}
       </div>
@@ -667,11 +640,9 @@ function TrustItem({ icon, title, description }) {
       <p className="text-[10px] text-[#91887c]">
         {description}
       </p>
-
     </div>
   );
 }
-
 
 /* =========================================================
    REVIEW
@@ -680,7 +651,6 @@ function TrustItem({ icon, title, description }) {
 function Review({ name, review }) {
   return (
     <div className="rounded-xl border border-[#eadfca] bg-white p-5">
-
       <div className="flex gap-1 text-xs text-[#d1a11c]">
         ★ ★ ★ ★ ★
       </div>
@@ -696,51 +666,50 @@ function Review({ name, review }) {
       <p className="mt-1 text-[10px] text-[#91887c]">
         Verified Customer
       </p>
-
     </div>
   );
 }
-
 
 /* =========================================================
    RECOMMENDATION CARD
 ========================================================= */
 
-function RecommendationCard({ name, price }) {
+function RecommendationCard({ product }) {
   return (
     <Link
-      href="/shop"
+      href={`/product/${product.slug || product.id}`}
       className="group overflow-hidden rounded-xl border border-[#eadfca] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
     >
-
       <div className="flex aspect-[4/5] items-center justify-center bg-[#f1e8d7]">
-
-        <div className="text-center">
+        {product.image_url || product.image ? (
+          <img
+            src={product.image_url || product.image}
+            alt={product.name}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="text-center">
 
           <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-[#d1a11c] text-[#c99716]">
             ✦
           </div>
 
-          <p className="text-[9px] uppercase tracking-[1.5px] text-[#9b8a70]">
-            Product Image
-          </p>
-
-        </div>
-
+            <p className="text-[9px] uppercase tracking-[1.5px] text-[#9b8a70]">
+              Product Image
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="p-4">
-
         <h3 className="text-xs font-medium text-[#3b342b]">
-          {name}
+          {product.name}
         </h3>
 
         <p className="mt-2 text-sm font-semibold text-[#a9780d]">
-          {price}
+          ₹{Number(product.price || 0).toLocaleString("en-IN")}
         </p>
-
       </div>
-
     </Link>
   );
 }
