@@ -6,6 +6,16 @@ import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { login as loginAPI } from "@/lib/api";
 
+const colors = {
+  ivory: "#F8F6F2",
+  white: "#FFFFFF",
+  peach: "#F2C9B9",
+  terracotta: "#A85838",
+  sage: "#A8B39F",
+  forest: "#3F5144",
+  charcoal: "#1D1D1B",
+};
+
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,7 +49,6 @@ function LoginContent() {
 
     const trimmedEmail = email.trim();
 
-    // Email validation
     if (!trimmedEmail) {
       setEmailError("Email is required");
       valid = false;
@@ -48,7 +57,6 @@ function LoginContent() {
       valid = false;
     }
 
-    // Password validation
     if (!password) {
       setPasswordError("Password is required");
       valid = false;
@@ -81,22 +89,43 @@ function LoginContent() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#FAF8F3] px-4 py-10">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8">
-
+    <main
+      className="flex min-h-screen items-center justify-center px-4 py-10"
+      style={{ backgroundColor: colors.ivory }}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-8 shadow-xl"
+        style={{
+          backgroundColor: colors.white,
+          color: colors.charcoal,
+        }}
+      >
         {/* Heading */}
-        <h1 className="text-4xl font-bold text-center text-[#2B2B2B]">
+        <h1
+          className="text-center text-4xl font-medium"
+          style={{
+            color: colors.charcoal,
+            fontFamily: "Georgia, serif",
+          }}
+        >
           Welcome Back
         </h1>
 
-        <p className="mt-3 text-center text-[#6B6B6B]">
+        <p
+          className="mt-3 text-center text-sm"
+          style={{ color: colors.charcoal }}
+        >
           Sign in to continue to VRHAZ
         </p>
 
         {/* Registered Message */}
         {registeredMessage && (
           <p
-            className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-center text-sm text-green-700"
+            className="mt-4 rounded-lg px-4 py-3 text-center text-sm"
+            style={{
+              backgroundColor: "#F0F5EF",
+              color: colors.forest,
+            }}
             role="status"
           >
             {registeredMessage}
@@ -107,7 +136,8 @@ function LoginContent() {
         <div className="mt-8">
           <label
             htmlFor="login-email"
-            className="block text-sm font-medium text-[#2B2B2B] mb-2"
+            className="mb-2 block text-sm font-medium"
+            style={{ color: colors.charcoal }}
           >
             Email Address
           </label>
@@ -119,12 +149,27 @@ function LoginContent() {
             onChange={(event) => setEmail(event.target.value)}
             placeholder="Enter your email"
             autoComplete="email"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
+            className="w-full rounded-lg border px-4 py-3 text-sm outline-none transition-colors"
+            style={{
+              borderColor: colors.sage,
+              backgroundColor: colors.white,
+              color: colors.charcoal,
+            }}
+            onFocus={(event) => {
+              event.currentTarget.style.borderColor = colors.charcoal;
+              event.currentTarget.style.outline = `2px solid ${colors.charcoal}`;
+              event.currentTarget.style.outlineOffset = "1px";
+            }}
+            onBlur={(event) => {
+              event.currentTarget.style.borderColor = colors.sage;
+              event.currentTarget.style.outline = "none";
+            }}
           />
 
           {emailError && (
             <p
-              className="mt-2 text-sm text-red-600"
+              className="mt-2 text-sm"
+              style={{ color: "#B42318" }}
               role="alert"
             >
               {emailError}
@@ -136,7 +181,8 @@ function LoginContent() {
         <div className="mt-6">
           <label
             htmlFor="login-password"
-            className="block text-sm font-medium text-[#2B2B2B] mb-2"
+            className="mb-2 block text-sm font-medium"
+            style={{ color: colors.charcoal }}
           >
             Password
           </label>
@@ -149,7 +195,21 @@ function LoginContent() {
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Enter your password"
               autoComplete="current-password"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
+              className="w-full rounded-lg border px-4 py-3 pr-12 text-sm outline-none transition-colors"
+              style={{
+                borderColor: colors.sage,
+                backgroundColor: colors.white,
+                color: colors.charcoal,
+              }}
+              onFocus={(event) => {
+                event.currentTarget.style.borderColor = colors.charcoal;
+                event.currentTarget.style.outline = `2px solid ${colors.charcoal}`;
+                event.currentTarget.style.outlineOffset = "1px";
+              }}
+              onBlur={(event) => {
+                event.currentTarget.style.borderColor = colors.sage;
+                event.currentTarget.style.outline = "none";
+              }}
             />
 
             <button
@@ -157,7 +217,8 @@ function LoginContent() {
               onClick={() =>
                 setShowPassword((previous) => !previous)
               }
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#C9A227] transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
+              style={{ color: colors.charcoal }}
               aria-label={
                 showPassword
                   ? "Hide password"
@@ -175,7 +236,8 @@ function LoginContent() {
 
           {passwordError && (
             <p
-              className="mt-2 text-sm text-red-600"
+              className="mt-2 text-sm"
+              style={{ color: "#B42318" }}
               role="alert"
             >
               {passwordError}
@@ -187,7 +249,11 @@ function LoginContent() {
         <div className="mt-3 text-right">
           <Link
             href="/forgot-password"
-            className="text-sm text-[#C9A227] hover:underline"
+            className="text-sm font-medium transition-colors hover:underline focus:outline-2 focus:outline-offset-2"
+            style={{
+              color: colors.terracotta,
+              outlineColor: colors.charcoal,
+            }}
           >
             Forgot Password?
           </Link>
@@ -198,7 +264,12 @@ function LoginContent() {
           type="button"
           onClick={handleLogin}
           disabled={isSubmitting}
-          className="mt-6 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] hover:scale-105 hover:shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="mt-6 w-full rounded-lg py-3 font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md focus:outline-2 focus:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          style={{
+            backgroundColor: colors.peach,
+            color: colors.charcoal,
+            outlineColor: colors.charcoal,
+          }}
         >
           {isSubmitting ? "Signing In..." : "Login"}
         </button>
@@ -206,7 +277,11 @@ function LoginContent() {
         {/* Success Message */}
         {successMessage && (
           <p
-            className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700"
+            className="mt-4 rounded-lg px-4 py-3 text-sm"
+            style={{
+              backgroundColor: "#F0F5EF",
+              color: colors.forest,
+            }}
             role="status"
           >
             {successMessage}
@@ -214,11 +289,18 @@ function LoginContent() {
         )}
 
         {/* Sign Up */}
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p
+          className="mt-6 text-center text-sm"
+          style={{ color: colors.charcoal }}
+        >
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="font-semibold text-[#C9A227] hover:underline"
+            className="font-semibold hover:underline focus:outline-2 focus:outline-offset-2"
+            style={{
+              color: colors.terracotta,
+              outlineColor: colors.charcoal,
+            }}
           >
             Sign Up
           </Link>
@@ -232,8 +314,11 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center">
-          Loading...
+        <div
+          className="flex min-h-screen items-center justify-center"
+          style={{ backgroundColor: colors.ivory }}
+        >
+          <p style={{ color: colors.charcoal }}>Loading...</p>
         </div>
       }
     >

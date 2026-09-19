@@ -37,11 +37,13 @@ export default function SignupPage() {
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
 
+    // Full name validation
     if (!trimmedName) {
       setNameError("Full name is required");
       valid = false;
     }
 
+    // Email validation
     if (!trimmedEmail) {
       setEmailError("Email is required");
       valid = false;
@@ -50,6 +52,7 @@ export default function SignupPage() {
       valid = false;
     }
 
+    // Password validation
     if (!password) {
       setPasswordError("Password is required");
       valid = false;
@@ -58,6 +61,7 @@ export default function SignupPage() {
       valid = false;
     }
 
+    // Confirm password validation
     if (!confirmPassword) {
       setConfirmPasswordError("Confirm password is required");
       valid = false;
@@ -92,13 +96,15 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#FAF8F3] px-4 py-10">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-8">
-        <h1 className="text-4xl font-bold text-center text-[#2B2B2B]">
+    <main className="min-h-screen flex items-center justify-center bg-[#F8F6F2] px-4 py-10">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+
+        {/* Heading */}
+        <h1 className="text-center text-4xl font-bold text-[#1D1D1B]">
           Create Account
         </h1>
 
-        <p className="mt-3 text-center text-[#6B6B6B]">
+        <p className="mt-3 text-center text-[#1D1D1B]">
           Join VRHAZ and start shopping today.
         </p>
 
@@ -106,7 +112,7 @@ export default function SignupPage() {
         <div className="mt-8">
           <label
             htmlFor="signup-name"
-            className="block text-sm font-medium text-[#2B2B2B] mb-2"
+            className="mb-2 block text-sm font-medium text-[#1D1D1B]"
           >
             Full Name
           </label>
@@ -118,11 +124,14 @@ export default function SignupPage() {
             onChange={(e) => setName(e.target.value)}
             placeholder="Enter your full name"
             autoComplete="name"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-[#1D1D1B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1D1D1B] focus:border-[#1D1D1B]"
           />
 
           {nameError && (
-            <p className="mt-2 text-sm text-red-600" role="alert">
+            <p
+              className="mt-2 text-sm text-red-600"
+              role="alert"
+            >
               {nameError}
             </p>
           )}
@@ -132,7 +141,7 @@ export default function SignupPage() {
         <div className="mt-6">
           <label
             htmlFor="signup-email"
-            className="block text-sm font-medium text-[#2B2B2B] mb-2"
+            className="mb-2 block text-sm font-medium text-[#1D1D1B]"
           >
             Email Address
           </label>
@@ -144,11 +153,14 @@ export default function SignupPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
             autoComplete="email"
-            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 text-[#1D1D1B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1D1D1B] focus:border-[#1D1D1B]"
           />
 
           {emailError && (
-            <p className="mt-2 text-sm text-red-600" role="alert">
+            <p
+              className="mt-2 text-sm text-red-600"
+              role="alert"
+            >
               {emailError}
             </p>
           )}
@@ -158,7 +170,7 @@ export default function SignupPage() {
         <div className="mt-6">
           <label
             htmlFor="signup-password"
-            className="block text-sm font-medium text-[#2B2B2B] mb-2"
+            className="mb-2 block text-sm font-medium text-[#1D1D1B]"
           >
             Password
           </label>
@@ -171,7 +183,7 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Create a password"
               autoComplete="new-password"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-[#1D1D1B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1D1D1B] focus:border-[#1D1D1B]"
             />
 
             <button
@@ -179,9 +191,11 @@ export default function SignupPage() {
               onClick={() =>
                 setShowPassword((previous) => !previous)
               }
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#C9A227] transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors hover:text-[#A85838] focus:outline-none focus:ring-2 focus:ring-[#1D1D1B] rounded-sm"
               aria-label={
-                showPassword ? "Hide password" : "Show password"
+                showPassword
+                  ? "Hide password"
+                  : "Show password"
               }
               aria-pressed={showPassword}
             >
@@ -194,7 +208,10 @@ export default function SignupPage() {
           </div>
 
           {passwordError && (
-            <p className="mt-2 text-sm text-red-600" role="alert">
+            <p
+              className="mt-2 text-sm text-red-600"
+              role="alert"
+            >
               {passwordError}
             </p>
           )}
@@ -204,7 +221,7 @@ export default function SignupPage() {
         <div className="mt-6">
           <label
             htmlFor="signup-confirm-password"
-            className="block text-sm font-medium text-[#2B2B2B] mb-2"
+            className="mb-2 block text-sm font-medium text-[#1D1D1B]"
           >
             Confirm Password
           </label>
@@ -217,7 +234,7 @@ export default function SignupPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm your password"
               autoComplete="new-password"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#C9A227] focus:border-[#C9A227]"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-[#1D1D1B] placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1D1D1B] focus:border-[#1D1D1B]"
             />
 
             <button
@@ -225,7 +242,7 @@ export default function SignupPage() {
               onClick={() =>
                 setShowConfirmPassword((previous) => !previous)
               }
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#C9A227] transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors hover:text-[#A85838] focus:outline-none focus:ring-2 focus:ring-[#1D1D1B] rounded-sm"
               aria-label={
                 showConfirmPassword
                   ? "Hide confirm password"
@@ -242,7 +259,10 @@ export default function SignupPage() {
           </div>
 
           {confirmPasswordError && (
-            <p className="mt-2 text-sm text-red-600" role="alert">
+            <p
+              className="mt-2 text-sm text-red-600"
+              role="alert"
+            >
               {confirmPasswordError}
             </p>
           )}
@@ -253,14 +273,15 @@ export default function SignupPage() {
           type="button"
           onClick={handleSignup}
           disabled={isSubmitting}
-          className="mt-8 w-full rounded-lg bg-[#C9A227] py-3 text-white font-semibold hover:bg-[#B8860B] hover:scale-105 hover:shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="mt-8 w-full rounded-lg bg-[#F2C9B9] py-3 font-semibold text-[#1D1D1B] transition-all duration-300 hover:brightness-95 hover:scale-[1.02] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#1D1D1B] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? "Creating Account..." : "Create Account"}
         </button>
 
+        {/* Success Message */}
         {successMessage && (
           <p
-            className="mt-4 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700"
+            className="mt-4 rounded-lg bg-[#A8B39F] px-4 py-3 text-sm text-[#1D1D1B]"
             role="status"
           >
             {successMessage}
@@ -268,11 +289,11 @@ export default function SignupPage() {
         )}
 
         {/* Login */}
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-[#1D1D1B]">
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-semibold text-[#C9A227] hover:underline"
+            className="font-semibold text-[#A85838] hover:underline focus:outline-none focus:ring-2 focus:ring-[#1D1D1B] focus:ring-offset-2"
           >
             Login
           </Link>
