@@ -3,88 +3,87 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer
-      className="bg-white"
-      style={{ color: "#1D1D1B" }}
+      className="bg-[#3F5144] text-white"
+      style={{ backgroundColor: "#3F5144", color: "#FFFFFF" }}
     >
-      <div className="max-w-7xl mx-auto px-8 py-10">
+      <div className="mx-auto max-w-7xl px-8 py-12">
 
-        <div className="flex flex-col md:flex-row justify-between gap-8">
+        <div className="flex flex-col justify-between gap-10 md:flex-row">
 
+          {/* BRAND */}
           <div>
             <h2
               className="text-2xl font-bold"
-              style={{ color: "#3F5144" }}
+              style={{ color: "#F2C9B9" }}
             >
               VRHAZ
             </h2>
 
-            <p className="text-gray-600 mt-3 max-w-sm">
+            <p className="mt-3 max-w-sm text-sm leading-6 text-white/80">
               A modern marketplace bringing thoughtfully made products
               inspired by Indian heritage into everyday living.
             </p>
           </div>
 
+          {/* QUICK LINKS */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">
+            <h3
+              className="mb-4 font-semibold"
+              style={{ color: "#F2C9B9" }}
+            >
               Quick Links
             </h3>
 
-            <ul className="space-y-2 text-gray-600">
+            <ul className="space-y-2 text-sm text-white/85">
               <li>
                 <Link
                   href="/"
-                  className="hover:underline focus:outline-2 focus:outline-offset-2"
-                  style={{ outlineColor: "#1D1D1B" }}
+                  className="transition-colors hover:text-[#F2C9B9]"
                 >
                   Home
                 </Link>
               </li>
 
               <li>
-                <a
+                <Link
                   href="/shop"
-                  className="hover:underline focus:outline-2 focus:outline-offset-2"
-                  style={{ outlineColor: "#1D1D1B" }}
+                  className="transition-colors hover:text-[#F2C9B9]"
                 >
                   Shop
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a
+                <Link
                   href="/shop?category=clothing"
-                  className="hover:underline focus:outline-2 focus:outline-offset-2"
-                  style={{ outlineColor: "#1D1D1B" }}
+                  className="transition-colors hover:text-[#F2C9B9]"
                 >
                   Sarees
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a
+                <Link
                   href="/shop?category=home-living"
-                  className="hover:underline focus:outline-2 focus:outline-offset-2"
-                  style={{ outlineColor: "#1D1D1B" }}
+                  className="transition-colors hover:text-[#F2C9B9]"
                 >
                   Baskets
-                </a>
+                </Link>
               </li>
 
               <li>
-                <a
+                <Link
                   href="/shop?category=toys"
-                  className="hover:underline focus:outline-2 focus:outline-offset-2"
-                  style={{ outlineColor: "#1D1D1B" }}
+                  className="transition-colors hover:text-[#F2C9B9]"
                 >
                   Toys
-                </a>
+                </Link>
               </li>
 
               <li>
                 <Link
                   href="/#about"
-                  className="hover:underline focus:outline-2 focus:outline-offset-2"
-                  style={{ outlineColor: "#1D1D1B" }}
+                  className="transition-colors hover:text-[#F2C9B9]"
                 >
                   About Us
                 </Link>
@@ -92,24 +91,26 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* CONTACT */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">
+            <h3
+              className="mb-4 font-semibold"
+              style={{ color: "#F2C9B9" }}
+            >
               Contact
             </h3>
 
-            <p className="text-gray-600">
-              support@mavidhai.com
-            </p>
-
-            <p className="text-gray-600">
-              Hyderabad, India
-            </p>
+            <div className="space-y-2 text-sm text-white/80">
+              <p>support@mavidhai.com</p>
+              <p>Hyderabad, India</p>
+            </div>
           </div>
 
         </div>
 
+        {/* COPYRIGHT */}
         <div
-          className="border-t mt-8 pt-5 text-center text-gray-500"
+          className="mt-10 border-t pt-5 text-center text-xs text-white/70"
           style={{ borderColor: "#A8B39F" }}
         >
           © 2026 VRHAZ. All rights reserved.
