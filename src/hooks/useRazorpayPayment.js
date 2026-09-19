@@ -30,7 +30,7 @@ export function useRazorpayPayment() {
           key: paymentIntent.key_id,
           amount: paymentIntent.amount,
           currency: paymentIntent.currency,
-          name: "MaVidhai",
+          name: "VRHAZ",
           description: `Order ${orderNumber}`,
           order_id: paymentIntent.razorpay_order_id,
           handler: async function (response) {

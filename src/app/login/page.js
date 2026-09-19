@@ -1,11 +1,11 @@
 "use client";
-
+ 
 import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { login as loginAPI } from "@/lib/api";
-
+ 
 const colors = {
   ivory: "#F8F6F2",
   white: "#FFFFFF",
@@ -15,22 +15,22 @@ const colors = {
   forest: "#3F5144",
   charcoal: "#1D1D1B",
 };
-
+ 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
+ 
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+ 
   const [successMessage, setSuccessMessage] = useState("");
   const [registeredMessage, setRegisteredMessage] = useState("");
-
+ 
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
+ 
   useEffect(() => {
     if (searchParams.get("registered") === "true") {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -39,16 +39,16 @@ function LoginContent() {
       );
     }
   }, [searchParams]);
-
+ 
   const handleLogin = async () => {
     let valid = true;
-
+ 
     setEmailError("");
     setPasswordError("");
     setSuccessMessage("");
-
+ 
     const trimmedEmail = email.trim();
-
+ 
     if (!trimmedEmail) {
       setEmailError("Email is required");
       valid = false;
@@ -56,7 +56,7 @@ function LoginContent() {
       setEmailError("Please enter a valid email address");
       valid = false;
     }
-
+ 
     if (!password) {
       setPasswordError("Password is required");
       valid = false;
@@ -64,22 +64,25 @@ function LoginContent() {
       setPasswordError("Password must be at least 8 characters");
       valid = false;
     }
-
+ 
     if (!valid) {
       return;
     }
-
+ 
     setIsSubmitting(true);
-
+ 
     try {
       await loginAPI(trimmedEmail, password);
-
+ 
       setSuccessMessage(
         "Login successful! Welcome back to VRHAZ."
       );
-
+ 
+      const next = searchParams.get("next");
+      const destination = next && next.startsWith("/") ? next : "/";
+ 
       setTimeout(() => {
-        router.push("/");
+        router.push(destination);
       }, 1000);
     } catch (err) {
       setPasswordError(err.message || "Failed to log in");
@@ -87,7 +90,7 @@ function LoginContent() {
       setIsSubmitting(false);
     }
   };
-
+ 
   return (
     <main
       className="flex min-h-screen items-center justify-center px-4 py-10"
@@ -110,14 +113,14 @@ function LoginContent() {
         >
           Welcome Back
         </h1>
-
+ 
         <p
           className="mt-3 text-center text-sm"
           style={{ color: colors.charcoal }}
         >
           Sign in to continue to VRHAZ
         </p>
-
+ 
         {/* Registered Message */}
         {registeredMessage && (
           <p
@@ -131,7 +134,7 @@ function LoginContent() {
             {registeredMessage}
           </p>
         )}
-
+ 
         {/* Email */}
         <div className="mt-8">
           <label
@@ -141,7 +144,7 @@ function LoginContent() {
           >
             Email Address
           </label>
-
+ 
           <input
             id="login-email"
             type="email"
@@ -165,7 +168,7 @@ function LoginContent() {
               event.currentTarget.style.outline = "none";
             }}
           />
-
+ 
           {emailError && (
             <p
               className="mt-2 text-sm"
@@ -176,7 +179,7 @@ function LoginContent() {
             </p>
           )}
         </div>
-
+ 
         {/* Password */}
         <div className="mt-6">
           <label
@@ -186,7 +189,7 @@ function LoginContent() {
           >
             Password
           </label>
-
+ 
           <div className="relative">
             <input
               id="login-password"
@@ -211,7 +214,7 @@ function LoginContent() {
                 event.currentTarget.style.outline = "none";
               }}
             />
-
+ 
             <button
               type="button"
               onClick={() =>
@@ -233,7 +236,7 @@ function LoginContent() {
               )}
             </button>
           </div>
-
+ 
           {passwordError && (
             <p
               className="mt-2 text-sm"
@@ -244,21 +247,7 @@ function LoginContent() {
             </p>
           )}
         </div>
-
-        {/* Forgot Password */}
-        <div className="mt-3 text-right">
-          <Link
-            href="/forgot-password"
-            className="text-sm font-medium transition-colors hover:underline focus:outline-2 focus:outline-offset-2"
-            style={{
-              color: colors.terracotta,
-              outlineColor: colors.charcoal,
-            }}
-          >
-            Forgot Password?
-          </Link>
-        </div>
-
+ 
         {/* Login Button */}
         <button
           type="button"
@@ -273,7 +262,7 @@ function LoginContent() {
         >
           {isSubmitting ? "Signing In..." : "Login"}
         </button>
-
+ 
         {/* Success Message */}
         {successMessage && (
           <p
@@ -287,7 +276,7 @@ function LoginContent() {
             {successMessage}
           </p>
         )}
-
+ 
         {/* Sign Up */}
         <p
           className="mt-6 text-center text-sm"
@@ -309,7 +298,7 @@ function LoginContent() {
     </main>
   );
 }
-
+ 
 export default function LoginPage() {
   return (
     <Suspense

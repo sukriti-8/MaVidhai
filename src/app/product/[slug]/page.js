@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   getProductBySlug,
@@ -13,6 +13,11 @@ import {
 export default function ProductPage() {
   const { slug } = useParams();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const goToLogin = () => {
+    router.push(`/login?next=${encodeURIComponent(pathname)}`);
+  };
   const productImages =
     slug?.toLowerCase().includes("basket")
       ? [
@@ -108,7 +113,7 @@ export default function ProductPage() {
       }, 3000);
     } catch (err) {
       if (err.message === "Unauthorized") {
-        window.location.href = "/login";
+        goToLogin();
         return;
       } else {
         alert(err.message || "Unable to add to cart");
@@ -131,8 +136,7 @@ export default function ProductPage() {
       window.dispatchEvent(new Event("wishlist-updated"));
     } catch (err) {
       if (err.message === "Unauthorized") {
-        alert("Please log in to add items to your wishlist.");
-        router.push("/login");
+        goToLogin();
       } else {
         alert(err.message || "Unable to add to wishlist");
       }

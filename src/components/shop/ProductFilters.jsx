@@ -1,21 +1,13 @@
 "use client";
 
-const CATEGORIES = [
-  "Sarees",
-  "Home & Living",
-  "Toys",
-];
-
 export default function ProductFilters({
   filters,
+  categories = [],
   onCategoryChange,
   onPriceChange,
   onAvailabilityChange,
 }) {
-  const isCategorySelected = (category) => {
-    const slug = category.toLowerCase().replace(/\s+/g, "-");
-    return filters.category === slug;
-  };
+  const isCategorySelected = (slug) => filters.category === slug;
 
   const isPriceSelected = (min, max) =>
     filters.minPrice === min && filters.maxPrice === max;
@@ -39,7 +31,7 @@ export default function ProductFilters({
           <div className="mt-5 space-y-1">
             <button
               type="button"
-              onClick={() => onCategoryChange("All")}
+              onClick={() => onCategoryChange("")}
               className={`w-full rounded-lg px-3 py-3 text-left text-sm transition-colors ${
                 filters.category === ""
                   ? "bg-[#fff3d8] text-[#9b6d0d]"
@@ -49,18 +41,18 @@ export default function ProductFilters({
               All
             </button>
 
-            {CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <button
-                key={category}
+                key={category.id ?? category.slug}
                 type="button"
-                onClick={() => onCategoryChange(category)}
+                onClick={() => onCategoryChange(category.slug)}
                 className={`w-full rounded-lg px-3 py-3 text-left text-sm transition-colors ${
-                  isCategorySelected(category)
+                  isCategorySelected(category.slug)
                     ? "bg-[#fff3d8] text-[#9b6d0d]"
                     : "text-[#5f584f] hover:bg-[#fffaf0]"
                 }`}
               >
-                {category}
+                {category.name}
               </button>
             ))}
           </div>

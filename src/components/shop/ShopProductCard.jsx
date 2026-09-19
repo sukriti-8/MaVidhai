@@ -2,12 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { addToCart } from "@/lib/api";
+import { useRouter, usePathname } from "next/navigation";
+import { addToCart, addToWishlist } from "@/lib/api";
 
 function ShopProductCard({ product }) {
+  const router = useRouter();
+  const pathname = usePathname();
+
   const [addingToCart, setAddingToCart] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [cartError, setCartError] = useState("");
+
+  const [isWishlisting, setIsWishlisting] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  const goToLogin = () => {
+    router.push(`/login?next=${encodeURIComponent(pathname)}`);
+  };
 
   const handleQuickAdd = async (e) => {
     e.preventDefault();
@@ -20,16 +31,38 @@ function ShopProductCard({ product }) {
     try {
       await addToCart(product.id, 1);
       setAddedToCart(true);
+      window.dispatchEvent(new Event("cart-updated"));
       setTimeout(() => setAddedToCart(false), 3000);
     } catch (error) {
       if (error.message === "Unauthorized") {
-        window.location.href = "/login";
+        goToLogin();
         return;
       }
 
       setCartError("Unable to add to cart");
     } finally {
       setAddingToCart(false);
+    }
+  };
+
+  const handleWishlist = async (e) => {
+    e.preventDefault();
+    if (isWishlisting) return;
+
+    setIsWishlisting(true);
+
+    try {
+      await addToWishlist(product.id);
+      setIsWishlisted(true);
+      window.dispatchEvent(new Event("wishlist-updated"));
+    } catch (error) {
+      if (error.message === "Unauthorized") {
+        goToLogin();
+        return;
+      }
+      // No inline error slot for this button; fail quietly.
+    } finally {
+      setIsWishlisting(false);
     }
   };
 
@@ -71,10 +104,13 @@ function ShopProductCard({ product }) {
         {/* WISHLIST */}
         <button
           type="button"
+          onClick={handleWishlist}
+          disabled={isWishlisting}
           aria-label={`Add ${product.name} to wishlist`}
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-lg text-[#81786d] shadow-sm transition-all hover:text-[#c99716] hover:shadow-md"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-lg shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+          style={{ color: isWishlisted ? "#c99716" : "#81786d" }}
         >
-          ♡
+          {isWishlisted ? "♥" : "♡"}
         </button>
 
       </div>

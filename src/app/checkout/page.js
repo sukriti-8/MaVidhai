@@ -1,21 +1,21 @@
 "use client";
-
+ 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCart, createOrder, setAuthToken, getAuthToken } from "@/lib/api";
-
+ 
 export default function CheckoutPage() {
   const router = useRouter();
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [initError, setInitError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
+ 
   const [createdOrder, setCreatedOrder] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [isSuccess, setIsSuccess] = useState(false);
-
+ 
   const [formData, setFormData] = useState({
     shipping_full_name: "",
     shipping_email: "",
@@ -27,7 +27,7 @@ export default function CheckoutPage() {
     shipping_postal_code: "",
     shipping_country: "India",
   });
-
+ 
   useEffect(() => {
     async function loadCart() {
       try {
@@ -49,23 +49,20 @@ export default function CheckoutPage() {
         setLoading(false);
       }
     }
-
+ 
     loadCart();
   }, [router]);
-
+ 
   // Polling effect
   useEffect(() => {
     let interval;
     if (createdOrder && !isSuccess) {
       interval = setInterval(async () => {
         try {
-          const token =
-            typeof window !== "undefined"
-              ? localStorage.getItem("access_token")
-              : null;
-
+          const token = getAuthToken();
+ 
           if (!token) return;
-
+ 
           const res = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/orders/${createdOrder.order_number}`,
             {
@@ -74,10 +71,10 @@ export default function CheckoutPage() {
               },
             }
           );
-
+ 
           if (res.ok) {
             const data = await res.json();
-
+ 
             if (
               data.status === "confirmed" ||
               data.status === "inventory_conflict" ||
@@ -93,33 +90,30 @@ export default function CheckoutPage() {
         }
       }, 3000);
     }
-
+ 
     return () => clearInterval(interval);
   }, [createdOrder, isSuccess]);
-
+ 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+ 
     if (submitting) return;
-
+ 
     setInitError(null);
     setSubmitting(true);
-
+ 
     try {
       // 1. Create Order
       const order = await createOrder(formData);
       setCreatedOrder(order);
-
+ 
       // 2. Create Payment
-      const token =
-        typeof window !== "undefined"
-          ? localStorage.getItem("access_token")
-          : null;
-
+      const token = getAuthToken();
+ 
       const paymentRes = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/payments/create`,
         {
@@ -133,14 +127,14 @@ export default function CheckoutPage() {
           }),
         }
       );
-
+ 
       if (!paymentRes.ok) {
         const errorData = await paymentRes.json();
         throw new Error(
           errorData.detail || "Failed to create payment"
         );
       }
-
+ 
       const pData = await paymentRes.json();
       setPaymentData(pData);
     } catch (err) {
@@ -149,7 +143,7 @@ export default function CheckoutPage() {
       setSubmitting(false);
     }
   };
-
+ 
   if (loading) {
     return (
       <main className="min-h-screen bg-[#F8F6F2] flex items-center justify-center">
@@ -157,7 +151,7 @@ export default function CheckoutPage() {
       </main>
     );
   }
-
+ 
   if (isSuccess) {
     return (
       <main className="min-h-screen bg-[#F8F6F2] flex flex-col items-center justify-center p-6 text-center">
@@ -165,16 +159,16 @@ export default function CheckoutPage() {
           <div className="w-16 h-16 bg-[#e6f4ea] text-[#1e8e3e] flex items-center justify-center rounded-full mx-auto mb-6 text-2xl">
             ✓
           </div>
-
+ 
           <h1 className="text-2xl font-bold text-[#1D1D1B] mb-4">
             Order Confirmed!
           </h1>
-
+ 
           <p className="text-[#3F5144] leading-relaxed mb-8">
             Your payment was successful and your order #
             {createdOrder?.order_number} has been placed.
           </p>
-
+ 
           <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href={
@@ -186,7 +180,7 @@ export default function CheckoutPage() {
             >
               View Order
             </Link>
-
+ 
             <Link
               href="/shop"
               className="flex-1 rounded-lg border border-[#A85838] py-3 text-sm font-medium text-[#A85838] text-center transition-all hover:bg-[#F2C9B9]"
@@ -198,7 +192,7 @@ export default function CheckoutPage() {
       </main>
     );
   }
-
+ 
   if (paymentData) {
     return (
       <main className="min-h-screen bg-[#F8F6F2] flex flex-col items-center justify-center p-6 text-center">
@@ -206,13 +200,13 @@ export default function CheckoutPage() {
           <h1 className="text-2xl font-bold text-[#1D1D1B] mb-4">
             Complete Payment
           </h1>
-
+ 
           <p className="text-[#3F5144] leading-relaxed mb-6">
             We have sent a payment link to your WhatsApp. You can also pay
             directly via the link below. We are waiting for payment
             confirmation...
           </p>
-
+ 
           <div className="flex flex-col gap-4">
             {paymentData.whatsapp_deep_link && (
               <a
@@ -224,7 +218,7 @@ export default function CheckoutPage() {
                 Pay via WhatsApp
               </a>
             )}
-
+ 
             {paymentData.payment_url && (
               <a
                 href={paymentData.payment_url}
@@ -236,7 +230,7 @@ export default function CheckoutPage() {
               </a>
             )}
           </div>
-
+ 
           <div className="mt-8 flex items-center justify-center gap-2 text-sm text-[#3F5144]">
             <div className="w-4 h-4 border-2 border-[#A85838] border-t-transparent rounded-full animate-spin"></div>
             Waiting for confirmation...
@@ -245,20 +239,20 @@ export default function CheckoutPage() {
       </main>
     );
   }
-
+ 
   return (
     <main className="min-h-screen bg-[#F8F6F2] px-6 py-10 lg:px-10 lg:py-16">
       <div className="mx-auto max-w-[1200px]">
         <h1 className="text-3xl font-bold text-[#1D1D1B] sm:text-4xl">
           Checkout
         </h1>
-
+ 
         {initError && (
           <div className="mt-6 rounded-lg bg-red-50 p-4 border border-red-100 text-red-600">
             {initError}
           </div>
         )}
-
+ 
         <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_400px]">
           
           {/* SHIPPING FORM */}
@@ -266,7 +260,7 @@ export default function CheckoutPage() {
             <h2 className="text-xl font-semibold text-[#1D1D1B] mb-6">
               Shipping Address
             </h2>
-
+ 
             <form
               id="checkout-form"
               onSubmit={handleSubmit}
@@ -277,7 +271,7 @@ export default function CheckoutPage() {
                 <label className="block text-sm font-medium text-[#3F5144]">
                   Full Name
                 </label>
-
+ 
                 <input
                   type="text"
                   name="shipping_full_name"
@@ -288,12 +282,12 @@ export default function CheckoutPage() {
                   className="mt-1 block w-full rounded-lg border border-[#A8B39F] px-4 py-3 outline-none focus:border-[#A85838] disabled:opacity-50"
                 />
               </div>
-
+ 
               <div>
                 <label className="block text-sm font-medium text-[#3F5144]">
                   Email
                 </label>
-
+ 
                 <input
                   type="email"
                   name="shipping_email"
@@ -304,12 +298,12 @@ export default function CheckoutPage() {
                   className="mt-1 block w-full rounded-lg border border-[#A8B39F] px-4 py-3 outline-none focus:border-[#A85838] disabled:opacity-50"
                 />
               </div>
-
+ 
               <div>
                 <label className="block text-sm font-medium text-[#3F5144]">
                   Phone
                 </label>
-
+ 
                 <input
                   type="text"
                   name="shipping_phone"
@@ -320,12 +314,12 @@ export default function CheckoutPage() {
                   className="mt-1 block w-full rounded-lg border border-[#A8B39F] px-4 py-3 outline-none focus:border-[#A85838] disabled:opacity-50"
                 />
               </div>
-
+ 
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-[#3F5144]">
                   Address Line 1
                 </label>
-
+ 
                 <input
                   type="text"
                   name="shipping_address_line1"
@@ -336,12 +330,12 @@ export default function CheckoutPage() {
                   className="mt-1 block w-full rounded-lg border border-[#A8B39F] px-4 py-3 outline-none focus:border-[#A85838] disabled:opacity-50"
                 />
               </div>
-
+ 
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-[#3F5144]">
                   Address Line 2 (Optional)
                 </label>
-
+ 
                 <input
                   type="text"
                   name="shipping_address_line2"
@@ -351,12 +345,12 @@ export default function CheckoutPage() {
                   className="mt-1 block w-full rounded-lg border border-[#A8B39F] px-4 py-3 outline-none focus:border-[#A85838] disabled:opacity-50"
                 />
               </div>
-
+ 
               <div>
                 <label className="block text-sm font-medium text-[#3F5144]">
                   City
                 </label>
-
+ 
                 <input
                   type="text"
                   name="shipping_city"
@@ -367,12 +361,12 @@ export default function CheckoutPage() {
                   className="mt-1 block w-full rounded-lg border border-[#A8B39F] px-4 py-3 outline-none focus:border-[#A85838] disabled:opacity-50"
                 />
               </div>
-
+ 
               <div>
                 <label className="block text-sm font-medium text-[#3F5144]">
                   State
                 </label>
-
+ 
                 <input
                   type="text"
                   name="shipping_state"
@@ -383,12 +377,12 @@ export default function CheckoutPage() {
                   className="mt-1 block w-full rounded-lg border border-[#A8B39F] px-4 py-3 outline-none focus:border-[#A85838] disabled:opacity-50"
                 />
               </div>
-
+ 
               <div>
                 <label className="block text-sm font-medium text-[#3F5144]">
                   Postal Code
                 </label>
-
+ 
                 <input
                   type="text"
                   name="shipping_postal_code"
@@ -399,12 +393,12 @@ export default function CheckoutPage() {
                   className="mt-1 block w-full rounded-lg border border-[#A8B39F] px-4 py-3 outline-none focus:border-[#A85838] disabled:opacity-50"
                 />
               </div>
-
+ 
               <div>
                 <label className="block text-sm font-medium text-[#3F5144]">
                   Country
                 </label>
-
+ 
                 <input
                   type="text"
                   name="shipping_country"
@@ -416,13 +410,13 @@ export default function CheckoutPage() {
               </div>
             </form>
           </div>
-
+ 
           {/* ORDER SUMMARY */}
           <div className="rounded-2xl border border-[#A8B39F] bg-white p-6 sm:p-8 h-fit sticky top-8">
             <h2 className="text-lg font-semibold text-[#1D1D1B]">
               Order Summary
             </h2>
-
+ 
             <div className="mt-6 flex flex-col gap-4 border-b border-[#A8B39F] pb-6">
               {cart?.items.map((item) => (
                 <div
@@ -432,34 +426,34 @@ export default function CheckoutPage() {
                   <span className="text-[#3F5144] truncate mr-4">
                     {item.quantity} × {item.product.name}
                   </span>
-
+ 
                   <span className="text-[#1D1D1B] font-medium shrink-0">
                     ₹{Number(item.subtotal).toLocaleString("en-IN")}
                   </span>
                 </div>
               ))}
             </div>
-
+ 
             <div className="mt-6 flex items-center justify-between border-b border-[#A8B39F] pb-6">
               <span className="text-[#3F5144]">
                 Subtotal
               </span>
-
+ 
               <span className="font-semibold text-[#1D1D1B]">
                 ₹{Number(cart?.subtotal || 0).toLocaleString("en-IN")}
               </span>
             </div>
-
+ 
             <div className="mt-6 flex items-center justify-between">
               <span className="font-semibold text-[#1D1D1B]">
                 Total
               </span>
-
+ 
               <span className="text-xl font-bold text-[#A85838]">
                 ₹{Number(cart?.subtotal || 0).toLocaleString("en-IN")}
               </span>
             </div>
-
+ 
             <button
               type="submit"
               form="checkout-form"

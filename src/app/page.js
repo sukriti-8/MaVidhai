@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getProducts } from "@/lib/api";
 import theme from "@/styles/theme";
+import ProductCard from "@/components/Home/ProductCard";
 
 export default async function Home() {
   const data = await getProducts({
@@ -538,100 +539,6 @@ function CategoryCard({ title, description, href, background }) {
         </p>
       </div>
     </Link>
-  );
-}
-
-/* =========================================================
-   PRODUCT CARD
-   ========================================================= */
-
-function ProductCard({ product }) {
-  return (
-    <div
-      className="group overflow-hidden rounded-xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-      style={{ borderColor: theme.colors.sage }}
-    >
-      <div className="relative">
-        <Link href={`/product/${product.slug}`} className="block">
-          {/* IMAGE */}
-          <div
-            className="flex aspect-square items-center justify-center overflow-hidden"
-            style={{ backgroundColor: theme.colors.sage }}
-          >
-            {product.image_url || product.image ? (
-              <img
-                src={product.image_url || product.image}
-                alt={product.name}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-            ) : (
-              <div className="text-center">
-                <div
-                  className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full border text-xl transition-transform duration-300 group-hover:scale-110"
-                  style={{
-                    borderColor: theme.colors.charcoal,
-                    color: theme.colors.charcoal,
-                  }}
-                >
-                  ✦
-                </div>
-
-                <p
-                  className="text-[10px] uppercase tracking-[1.5px]"
-                  style={{ color: theme.colors.charcoal }}
-                >
-                  Product Image
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* DETAILS */}
-          <div className="p-4">
-            <h3
-              className="text-sm font-medium"
-              style={{ color: theme.colors.charcoal }}
-            >
-              {product.name}
-            </h3>
-
-            <p
-              className="mt-2 text-sm font-semibold"
-              style={{ color: theme.colors.terracotta }}
-            >
-              ₹{Number(product.price || 0).toLocaleString("en-IN")}
-            </p>
-          </div>
-        </Link>
-
-        {/* WISHLIST */}
-        <button
-          type="button"
-          aria-label={`Add ${product.name} to wishlist`}
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors"
-          style={{
-            backgroundColor: theme.colors.white,
-            color: theme.colors.charcoal,
-          }}
-        >
-          ♡
-        </button>
-      </div>
-
-      {/* ADD TO CART */}
-      <div className="px-4 pb-4">
-        <button
-          type="button"
-          className="w-full rounded-lg border py-2 text-xs font-medium transition-colors"
-          style={{
-            borderColor: theme.colors.charcoal,
-            color: theme.colors.charcoal,
-          }}
-        >
-          Add to Cart
-        </button>
-      </div>
-    </div>
   );
 }
 
