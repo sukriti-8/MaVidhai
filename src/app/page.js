@@ -1,15 +1,6 @@
 import Link from "next/link";
 import { getProducts } from "@/lib/api";
-
-const colors = {
-  ivory: "#F8F6F2",
-  white: "#FFFFFF",
-  peach: "#F2C9B9",
-  terracotta: "#A85838",
-  sage: "#A8B39F",
-  forest: "#3F5144",
-  charcoal: "#1D1D1B",
-};
+import theme from "@/styles/theme";
 
 export default async function Home() {
   const data = await getProducts({
@@ -23,30 +14,36 @@ export default async function Home() {
     <main
       className="min-h-screen"
       style={{
-        backgroundColor: colors.ivory,
-        color: colors.charcoal,
+        backgroundColor: theme.colors.ivory,
+        color: theme.colors.charcoal,
       }}
     >
+      {/* =========================================================
+          TOP BANNER
+          ========================================================= */}
       <section
         className="px-6 py-3 text-center text-xs font-medium tracking-wide"
         style={{
-          backgroundColor: colors.peach,
-          color: colors.charcoal,
+          backgroundColor: theme.colors.peach,
+          color: theme.colors.charcoal,
         }}
       >
         Made in India. Made thoughtfully. Made for every home.
       </section>
 
+      {/* =========================================================
+          HERO
+          ========================================================= */}
       <section
         className="px-6 py-0 lg:px-10"
-        style={{ backgroundColor: colors.ivory }}
+        style={{ backgroundColor: theme.colors.ivory }}
       >
         <div className="mx-auto grid max-w-[1450px] items-stretch lg:grid-cols-2">
           <div className="flex flex-col justify-center py-16 lg:px-8 lg:py-24">
             <h1
               className="max-w-xl text-4xl font-medium leading-[1.12] tracking-tight sm:text-5xl lg:text-6xl"
               style={{
-                color: colors.charcoal,
+                color: theme.colors.charcoal,
                 fontFamily: "Georgia, serif",
               }}
             >
@@ -59,7 +56,7 @@ export default async function Home() {
 
             <p
               className="mt-7 max-w-lg text-sm leading-7 sm:text-base"
-              style={{ color: colors.charcoal }}
+              style={{ color: theme.colors.charcoal }}
             >
               Handloom sarees, rope storage baskets, and more to come —
               sourced directly from artisans across India, in sustainable
@@ -71,9 +68,9 @@ export default async function Home() {
                 href="/shop"
                 className="inline-flex px-7 py-3.5 text-xs font-semibold uppercase tracking-[1.5px] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md focus:outline-2 focus:outline-offset-2"
                 style={{
-                  backgroundColor: colors.peach,
-                  color: colors.white,
-                  outlineColor: colors.charcoal,
+                  backgroundColor: theme.colors.peach,
+                  color: theme.colors.white,
+                  outlineColor: theme.colors.charcoal,
                 }}
               >
                 Shop Collection
@@ -91,33 +88,37 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* =========================================================
+          CATEGORIES
+          Matches the categories currently available in /shop
+          ========================================================= */}
       <section
         id="categories"
         className="border-y px-6 py-16 lg:px-10"
         style={{
-          backgroundColor: colors.white,
-          borderColor: colors.sage,
+          backgroundColor: theme.colors.white,
+          borderColor: theme.colors.sage,
         }}
       >
         <div className="mx-auto max-w-[1300px]">
           <div className="mb-10 text-center">
             <p
               className="text-xs font-medium uppercase tracking-[3px]"
-              style={{ color: colors.terracotta }}
+              style={{ color: theme.colors.terracotta }}
             >
               Explore
             </p>
 
             <h2
               className="mt-2 text-3xl font-semibold"
-              style={{ color: colors.charcoal }}
+              style={{ color: theme.colors.charcoal }}
             >
               Shop by Category
             </h2>
 
             <p
               className="mx-auto mt-3 max-w-xl text-sm leading-6"
-              style={{ color: colors.charcoal }}
+              style={{ color: theme.colors.charcoal }}
             >
               Everyday pieces thoughtfully chosen for how you live, wear and
               celebrate.
@@ -125,46 +126,52 @@ export default async function Home() {
           </div>
 
           <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-3">
+            {/* SAREES */}
             <CategoryCard
               title="Sarees"
               description="Timeless Indian clothing for every occasion."
               href="/shop?category=sarees"
-              background={colors.peach}
+              background={theme.colors.peach}
             />
 
+            {/* HOME & LIVING */}
             <CategoryCard
-              title="Rope Baskets"
-              description="Handcrafted home pieces with purpose."
+              title="Home & Living"
+              description="Thoughtfully crafted pieces for beautiful everyday spaces."
               href="/shop?category=home-and-living"
-              background={colors.sage}
+              background={theme.colors.sage}
             />
 
+            {/* TOYS */}
             <CategoryCard
-              title="Wooden Toys"
-              description="Thoughtful toys inspired by simple play."
+              title="Toys"
+              description="Thoughtful toys inspired by simple, meaningful play."
               href="/shop?category=toys"
-              background={colors.peach}
+              background={theme.colors.peach}
             />
           </div>
         </div>
       </section>
 
+      {/* =========================================================
+          FEATURED PRODUCTS
+          ========================================================= */}
       <section
         className="mx-auto max-w-[1450px] px-6 py-16 lg:px-10"
-        style={{ backgroundColor: colors.ivory }}
+        style={{ backgroundColor: theme.colors.ivory }}
       >
         <div className="mb-10 flex items-end justify-between">
           <div>
             <p
               className="text-xs font-medium uppercase tracking-[3px]"
-              style={{ color: colors.terracotta }}
+              style={{ color: theme.colors.terracotta }}
             >
               Curated for you
             </p>
 
             <h2
               className="mt-2 text-3xl font-semibold"
-              style={{ color: colors.charcoal }}
+              style={{ color: theme.colors.charcoal }}
             >
               Featured Products
             </h2>
@@ -174,8 +181,8 @@ export default async function Home() {
             href="/shop"
             className="hidden text-sm font-medium transition-colors sm:block focus:outline-2 focus:outline-offset-2"
             style={{
-              color: colors.terracotta,
-              outlineColor: colors.charcoal,
+              color: theme.colors.terracotta,
+              outlineColor: theme.colors.charcoal,
             }}
           >
             View All →
@@ -184,40 +191,40 @@ export default async function Home() {
 
         <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-          />
-        ))}
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
       </section>
 
+      {/* =========================================================
+          CUSTOMER REVIEWS
+          ========================================================= */}
       <section
         className="border-y px-6 py-16 lg:px-10"
         style={{
-          backgroundColor: colors.sage,
-          borderColor: colors.sage,
+          backgroundColor: theme.colors.sage,
+          borderColor: theme.colors.sage,
         }}
       >
         <div className="mx-auto max-w-[1300px]">
           <div className="mb-10 text-center">
             <p
               className="text-xs font-medium uppercase tracking-[3px]"
-              style={{ color: colors.terracotta }}
+              style={{ color: theme.colors.terracotta }}
             >
               Loved by our customers
             </p>
 
             <h2
               className="mt-2 text-3xl font-semibold"
-              style={{ color: colors.charcoal }}
+              style={{ color: theme.colors.charcoal }}
             >
               What Our Customers Say
             </h2>
 
             <p
               className="mx-auto mt-3 max-w-xl text-sm leading-6"
-              style={{ color: colors.charcoal }}
+              style={{ color: theme.colors.charcoal }}
             >
               Experiences from people who have welcomed VRHAZ into their
               everyday lives.
@@ -246,124 +253,130 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* =========================================================
+          ABOUT
+          ========================================================= */}
       <section
-          id="about"
-          className="scroll-mt-24 px-6 py-16 lg:px-10"
-          style={{ backgroundColor: colors.white }}
-        >
-          <div className="mx-auto grid max-w-[1300px] items-center gap-10 lg:grid-cols-2">
-            <div
-              className="flex min-h-[360px] items-center justify-center rounded-2xl"
-              style={{ backgroundColor: colors.peach }}
-            >
-              <div className="text-center">
-                <div
-                  className="mx-auto mb-4 text-4xl"
-                  style={{ color: colors.terracotta }}
-                >
-                  ✦
-                </div>
-
-                <p
-                  className="text-sm font-medium uppercase tracking-[2px]"
-                  style={{ color: colors.charcoal }}
-                >
-                  Our Story
-                </p>
-
-                <p
-                  className="mt-2 text-xs"
-                  style={{ color: colors.charcoal }}
-                >
-                  Made in India
-                </p>
+        id="about"
+        className="scroll-mt-24 px-6 py-16 lg:px-10"
+        style={{ backgroundColor: theme.colors.white }}
+      >
+        <div className="mx-auto grid max-w-[1300px] items-center gap-10 lg:grid-cols-2">
+          <div
+            className="flex min-h-[360px] items-center justify-center rounded-2xl"
+            style={{ backgroundColor: theme.colors.peach }}
+          >
+            <div className="text-center">
+              <div
+                className="mx-auto mb-4 text-4xl"
+                style={{ color: theme.colors.terracotta }}
+              >
+                ✦
               </div>
-            </div>
 
-            <div>
               <p
-                className="text-xs font-medium uppercase tracking-[3px]"
-                style={{ color: colors.terracotta }}
+                className="text-sm font-medium uppercase tracking-[2px]"
+                style={{ color: theme.colors.charcoal }}
               >
                 Our Story
               </p>
 
-              <h2
-                className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl"
-                style={{ color: colors.charcoal }}
-              >
-                Everything we offer is made in India.
-              </h2>
-
               <p
-                className="mt-6 text-sm leading-7"
-                style={{ color: colors.charcoal }}
+                className="mt-2 text-xs"
+                style={{ color: theme.colors.charcoal }}
               >
-                Some pieces are woven and shaped by hand. Others come from small
-                workshops with the tools to finish them beautifully. Both take skill,
-                and we carry them side by side.
-              </p>
-
-              <p
-                className="mt-4 text-sm leading-7"
-                style={{ color: colors.charcoal }}
-              >
-                India&apos;s artisans are everywhere — a weaver in one district, a
-                basket-maker in another, potters and woodworkers in the next. We travel
-                out to find them and bring their work here, sourcing directly so their
-                craft reaches you just as it left their hands.
-              </p>
-
-              <p
-                className="mt-4 text-sm leading-7"
-                style={{ color: colors.charcoal }}
-              >
-                We choose materials that are gentle on the earth: natural fibres,
-                sustainable, and finished with care.
-              </p>
-
-              <p
-                className="mt-4 text-sm leading-7"
-                style={{ color: colors.charcoal }}
-              >
-                We began with handloom sarees and rope storage baskets. Clay, wood and
-                much more will follow.
-              </p>
-
-              <p
-                className="mt-4 text-sm leading-7"
-                style={{ color: colors.charcoal }}
-              >
-                Our promise is simple. We never compromise on quality. A beautiful
-                thing should be able to find a place in any home.
-              </p>
-
-              <p
-                className="mt-5 text-sm font-medium leading-7"
-                style={{ color: colors.terracotta }}
-              >
-                Made in India. Made thoughtfully. Made for every home.
+                Made in India
               </p>
             </div>
           </div>
-        </section>
 
+          <div>
+            <p
+              className="text-xs font-medium uppercase tracking-[3px]"
+              style={{ color: theme.colors.terracotta }}
+            >
+              Our Story
+            </p>
+
+            <h2
+              className="mt-3 text-3xl font-semibold leading-tight sm:text-4xl"
+              style={{ color: theme.colors.charcoal }}
+            >
+              Everything we offer is made in India.
+            </h2>
+
+            <p
+              className="mt-6 text-sm leading-7"
+              style={{ color: theme.colors.charcoal }}
+            >
+              Some pieces are woven and shaped by hand. Others come from small
+              workshops with the tools to finish them beautifully. Both take
+              skill, and we carry them side by side.
+            </p>
+
+            <p
+              className="mt-4 text-sm leading-7"
+              style={{ color: theme.colors.charcoal }}
+            >
+              India&apos;s artisans are everywhere — a weaver in one district,
+              a basket-maker in another, potters and woodworkers in the next.
+              We travel out to find them and bring their work here, sourcing
+              directly so their craft reaches you just as it left their hands.
+            </p>
+
+            <p
+              className="mt-4 text-sm leading-7"
+              style={{ color: theme.colors.charcoal }}
+            >
+              We choose materials that are gentle on the earth: natural
+              fibres, sustainable, and finished with care.
+            </p>
+
+            <p
+              className="mt-4 text-sm leading-7"
+              style={{ color: theme.colors.charcoal }}
+            >
+              We began with handloom sarees and rope storage baskets. Clay,
+              wood and much more will follow.
+            </p>
+
+            <p
+              className="mt-4 text-sm leading-7"
+              style={{ color: theme.colors.charcoal }}
+            >
+              Our promise is simple. We never compromise on quality. A
+              beautiful thing should be able to find a place in any home.
+            </p>
+
+            <p
+              className="mt-5 text-sm font-medium leading-7"
+              style={{ color: theme.colors.terracotta }}
+            >
+              Made in India. Made thoughtfully. Made for every home.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================
+          WHY VRHAZ
+          ========================================================= */}
       <section
         className="px-6 py-16 lg:px-10"
-        style={{ backgroundColor: colors.ivory }}
+        style={{ backgroundColor: theme.colors.ivory }}
       >
         <div className="mx-auto max-w-[1300px]">
           <div className="mb-10 text-center">
             <p
               className="text-xs font-medium uppercase tracking-[3px]"
-              style={{ color: colors.terracotta }}
+              style={{ color: theme.colors.terracotta }}
             >
               Why VRHAZ
             </p>
 
             <h2
               className="mt-2 text-3xl font-semibold"
-              style={{ color: colors.charcoal }}
+              style={{ color: theme.colors.charcoal }}
             >
               Made with meaning
             </h2>
@@ -397,9 +410,12 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* =========================================================
+          BENEFITS
+          ========================================================= */}
       <section
         className="px-6 py-8 lg:px-10"
-        style={{ backgroundColor: colors.sage }}
+        style={{ backgroundColor: theme.colors.sage }}
       >
         <div className="mx-auto grid max-w-[1100px] grid-cols-2 gap-6 text-center md:grid-cols-4">
           <Benefit title="Pan India Delivery" />
@@ -409,25 +425,28 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* =========================================================
+          NEWSLETTER
+          ========================================================= */}
       <section
         className="border-y px-6 py-12 lg:px-10"
         style={{
-          backgroundColor: colors.peach,
-          borderColor: colors.peach,
+          backgroundColor: theme.colors.peach,
+          borderColor: theme.colors.peach,
         }}
       >
         <div className="mx-auto flex max-w-[1100px] flex-col items-center justify-between gap-6 text-center md:flex-row md:text-left">
           <div>
             <p
               className="text-lg font-semibold"
-              style={{ color: colors.charcoal }}
+              style={{ color: theme.colors.charcoal }}
             >
               Stay connected with VRHAZ
             </p>
 
             <p
               className="mt-1 text-sm"
-              style={{ color: colors.charcoal }}
+              style={{ color: theme.colors.charcoal }}
             >
               Be the first to know about new collections and stories.
             </p>
@@ -439,10 +458,10 @@ export default async function Home() {
               placeholder="Enter your email"
               className="min-w-0 flex-1 rounded-lg border px-4 py-3 text-sm outline-none focus:outline-2 focus:outline-offset-2"
               style={{
-                borderColor: colors.charcoal,
-                backgroundColor: colors.white,
-                color: colors.charcoal,
-                outlineColor: colors.charcoal,
+                borderColor: theme.colors.charcoal,
+                backgroundColor: theme.colors.white,
+                color: theme.colors.charcoal,
+                outlineColor: theme.colors.charcoal,
               }}
             />
 
@@ -450,9 +469,9 @@ export default async function Home() {
               type="button"
               className="rounded-lg px-5 py-3 text-sm font-medium transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-2 focus:outline-offset-2"
               style={{
-                backgroundColor: colors.forest,
-                color: colors.white,
-                outlineColor: colors.charcoal,
+                backgroundColor: theme.colors.forest,
+                color: theme.colors.white,
+                outlineColor: theme.colors.charcoal,
               }}
             >
               Subscribe
@@ -464,15 +483,19 @@ export default async function Home() {
   );
 }
 
+/* =========================================================
+   CATEGORY CARD
+   ========================================================= */
+
 function CategoryCard({ title, description, href, background }) {
   return (
     <Link
       href={href}
       className="group block overflow-hidden rounded-xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg focus:outline-2 focus:outline-offset-2"
       style={{
-        borderColor: colors.charcoal,
-        backgroundColor: colors.white,
-        outlineColor: colors.charcoal,
+        borderColor: theme.colors.charcoal,
+        backgroundColor: theme.colors.white,
+        outlineColor: theme.colors.charcoal,
       }}
     >
       <div
@@ -483,8 +506,8 @@ function CategoryCard({ title, description, href, background }) {
           <div
             className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border text-xl transition-transform duration-300 group-hover:scale-110"
             style={{
-              borderColor: colors.charcoal,
-              color: colors.charcoal,
+              borderColor: theme.colors.charcoal,
+              color: theme.colors.charcoal,
             }}
           >
             ✦
@@ -492,7 +515,7 @@ function CategoryCard({ title, description, href, background }) {
 
           <p
             className="text-[10px] uppercase tracking-[2px]"
-            style={{ color: colors.charcoal }}
+            style={{ color: theme.colors.charcoal }}
           >
             Collection
           </p>
@@ -502,14 +525,14 @@ function CategoryCard({ title, description, href, background }) {
       <div className="p-5">
         <h3
           className="text-base font-semibold"
-          style={{ color: colors.charcoal }}
+          style={{ color: theme.colors.charcoal }}
         >
           {title}
         </h3>
 
         <p
           className="mt-2 text-xs leading-5"
-          style={{ color: colors.charcoal }}
+          style={{ color: theme.colors.charcoal }}
         >
           {description}
         </p>
@@ -518,19 +541,22 @@ function CategoryCard({ title, description, href, background }) {
   );
 }
 
+/* =========================================================
+   PRODUCT CARD
+   ========================================================= */
+
 function ProductCard({ product }) {
   return (
     <div
       className="group overflow-hidden rounded-xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-      style={{ borderColor: colors.sage }}
+      style={{ borderColor: theme.colors.sage }}
     >
       <div className="relative">
         <Link href={`/product/${product.slug}`} className="block">
-
           {/* IMAGE */}
           <div
             className="flex aspect-square items-center justify-center overflow-hidden"
-            style={{ backgroundColor: colors.sage }}
+            style={{ backgroundColor: theme.colors.sage }}
           >
             {product.image_url || product.image ? (
               <img
@@ -543,8 +569,8 @@ function ProductCard({ product }) {
                 <div
                   className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full border text-xl transition-transform duration-300 group-hover:scale-110"
                   style={{
-                    borderColor: colors.charcoal,
-                    color: colors.charcoal,
+                    borderColor: theme.colors.charcoal,
+                    color: theme.colors.charcoal,
                   }}
                 >
                   ✦
@@ -552,7 +578,7 @@ function ProductCard({ product }) {
 
                 <p
                   className="text-[10px] uppercase tracking-[1.5px]"
-                  style={{ color: colors.charcoal }}
+                  style={{ color: theme.colors.charcoal }}
                 >
                   Product Image
                 </p>
@@ -564,19 +590,18 @@ function ProductCard({ product }) {
           <div className="p-4">
             <h3
               className="text-sm font-medium"
-              style={{ color: colors.charcoal }}
+              style={{ color: theme.colors.charcoal }}
             >
               {product.name}
             </h3>
 
             <p
               className="mt-2 text-sm font-semibold"
-              style={{ color: colors.terracotta }}
+              style={{ color: theme.colors.terracotta }}
             >
               ₹{Number(product.price || 0).toLocaleString("en-IN")}
             </p>
           </div>
-
         </Link>
 
         {/* WISHLIST */}
@@ -585,8 +610,8 @@ function ProductCard({ product }) {
           aria-label={`Add ${product.name} to wishlist`}
           className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors"
           style={{
-            backgroundColor: colors.white,
-            color: colors.charcoal,
+            backgroundColor: theme.colors.white,
+            color: theme.colors.charcoal,
           }}
         >
           ♡
@@ -599,8 +624,8 @@ function ProductCard({ product }) {
           type="button"
           className="w-full rounded-lg border py-2 text-xs font-medium transition-colors"
           style={{
-            borderColor: colors.charcoal,
-            color: colors.charcoal,
+            borderColor: theme.colors.charcoal,
+            color: theme.colors.charcoal,
           }}
         >
           Add to Cart
@@ -610,18 +635,22 @@ function ProductCard({ product }) {
   );
 }
 
+/* =========================================================
+   REVIEW CARD
+   ========================================================= */
+
 function ReviewCard({ review, name, location }) {
   return (
     <div
       className="rounded-2xl border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
       style={{
-        borderColor: colors.sage,
-        backgroundColor: colors.white,
+        borderColor: theme.colors.sage,
+        backgroundColor: theme.colors.white,
       }}
     >
       <div
         className="flex gap-1"
-        style={{ color: colors.terracotta }}
+        style={{ color: theme.colors.terracotta }}
         aria-label="5 out of 5 stars"
       >
         <span>★</span>
@@ -633,20 +662,20 @@ function ReviewCard({ review, name, location }) {
 
       <p
         className="mt-5 text-sm leading-7"
-        style={{ color: colors.charcoal }}
+        style={{ color: theme.colors.charcoal }}
       >
         “{review}”
       </p>
 
       <div
         className="mt-6 flex items-center gap-3 border-t pt-5"
-        style={{ borderColor: colors.sage }}
+        style={{ borderColor: theme.colors.sage }}
       >
         <div
           className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold"
           style={{
-            backgroundColor: colors.peach,
-            color: colors.charcoal,
+            backgroundColor: theme.colors.peach,
+            color: theme.colors.charcoal,
           }}
         >
           {name.charAt(0)}
@@ -655,14 +684,14 @@ function ReviewCard({ review, name, location }) {
         <div>
           <p
             className="text-sm font-semibold"
-            style={{ color: colors.charcoal }}
+            style={{ color: theme.colors.charcoal }}
           >
             {name}
           </p>
 
           <p
             className="text-xs"
-            style={{ color: colors.charcoal }}
+            style={{ color: theme.colors.charcoal }}
           >
             Verified Customer · {location}
           </p>
@@ -672,20 +701,24 @@ function ReviewCard({ review, name, location }) {
   );
 }
 
+/* =========================================================
+   FEATURE CARD
+   ========================================================= */
+
 function FeatureCard({ icon, title, description }) {
   return (
     <div
       className="rounded-xl border p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
       style={{
-        borderColor: colors.sage,
-        backgroundColor: colors.white,
+        borderColor: theme.colors.sage,
+        backgroundColor: theme.colors.white,
       }}
     >
       <div
         className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border text-xl"
         style={{
-          borderColor: colors.charcoal,
-          color: colors.terracotta,
+          borderColor: theme.colors.charcoal,
+          color: theme.colors.terracotta,
         }}
       >
         {icon}
@@ -693,14 +726,14 @@ function FeatureCard({ icon, title, description }) {
 
       <h3
         className="mt-4 text-sm font-semibold"
-        style={{ color: colors.charcoal }}
+        style={{ color: theme.colors.charcoal }}
       >
         {title}
       </h3>
 
       <p
         className="mt-2 text-xs leading-5"
-        style={{ color: colors.charcoal }}
+        style={{ color: theme.colors.charcoal }}
       >
         {description}
       </p>
@@ -708,12 +741,16 @@ function FeatureCard({ icon, title, description }) {
   );
 }
 
+/* =========================================================
+   BENEFIT
+   ========================================================= */
+
 function Benefit({ title }) {
   return (
     <div>
       <p
         className="text-sm font-semibold"
-        style={{ color: colors.charcoal }}
+        style={{ color: theme.colors.charcoal }}
       >
         {title}
       </p>

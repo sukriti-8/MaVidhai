@@ -3,7 +3,25 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getCart, updateCartItem, removeCartItem, setAuthToken } from "@/lib/api";
+import {
+  getCart,
+  updateCartItem,
+  removeCartItem,
+  setAuthToken,
+} from "@/lib/api";
+
+const colors = {
+  ivory: "#F8F6F2",
+  white: "#FFFFFF",
+  peach: "#F2C9B9",
+  terracotta: "#A85838",
+  sage: "#A8B39F",
+  forest: "#3F5144",
+  charcoal: "#1D1D1B",
+  muted: "#6F6A63",
+  border: "#D9DED4",
+  soft: "#F1EDE7",
+};
 
 export default function CartPage() {
   const router = useRouter();
@@ -48,6 +66,7 @@ export default function CartPage() {
     ) {
       return;
     }
+
     try {
       setUpdatingId(itemId);
       const updatedCart = await updateCartItem(itemId, newQuantity);
@@ -83,33 +102,70 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#fffdf8] flex items-center justify-center">
-        <p className="text-[#a48d69]">Loading your cart...</p>
+      <main
+        className="flex min-h-screen items-center justify-center"
+        style={{ backgroundColor: colors.ivory }}
+      >
+        <p style={{ color: colors.terracotta }}>
+          Loading your cart...
+        </p>
       </main>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center gap-4">
+      <main
+        className="flex min-h-screen flex-col items-center justify-center gap-4"
+        style={{ backgroundColor: colors.ivory }}
+      >
         <p className="text-red-500">{error}</p>
-        <button onClick={loadCart} className="text-[#a48d69] underline">Try again</button>
+
+        <button
+          onClick={loadCart}
+          className="underline transition-colors hover:opacity-70"
+          style={{ color: colors.terracotta }}
+        >
+          Try again
+        </button>
       </main>
     );
   }
 
   if (!cart || cart.items.length === 0) {
     return (
-      <main className="min-h-screen bg-[#fffdf8] px-6 py-16 lg:px-10">
+      <main
+        className="min-h-screen px-6 py-16 lg:px-10"
+        style={{
+          backgroundColor: colors.ivory,
+          color: colors.charcoal,
+        }}
+      >
         <div className="mx-auto max-w-[800px] text-center">
-          <h1 className="text-4xl font-bold text-[#29251f]">Your cart is empty</h1>
-          <p className="mt-4 text-[#756d63]">
+          <h1
+            className="text-4xl font-bold"
+            style={{
+              color: colors.charcoal,
+              fontFamily: "Georgia, serif",
+            }}
+          >
+            Your cart is empty
+          </h1>
+
+          <p
+            className="mt-4"
+            style={{ color: colors.muted }}
+          >
             Discover handcrafted products you&apos;ll love.
           </p>
+
           <div className="mt-8">
             <Link
               href="/shop"
-              className="inline-block rounded-lg bg-[#d1a11c] px-8 py-3.5 text-sm font-medium text-white transition-all hover:bg-[#bd8d0f] hover:shadow-lg"
+              className="inline-block rounded-lg px-8 py-3.5 text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              style={{
+                backgroundColor: colors.forest,
+              }}
             >
               Continue Shopping
             </Link>
@@ -120,51 +176,111 @@ export default function CartPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fffdf8] px-6 py-10 lg:px-10 lg:py-16">
+    <main
+      className="min-h-screen px-6 py-10 lg:px-10 lg:py-16"
+      style={{
+        backgroundColor: colors.ivory,
+        color: colors.charcoal,
+      }}
+    >
       <div className="mx-auto max-w-[1200px]">
-        <h1 className="text-3xl font-bold text-[#29251f] sm:text-4xl">Cart</h1>
-        <p className="mt-2 text-[#756d63]">
+        <h1
+          className="text-3xl font-bold sm:text-4xl"
+          style={{
+            color: colors.charcoal,
+            fontFamily: "Georgia, serif",
+          }}
+        >
+          Cart
+        </h1>
+
+        <p
+          className="mt-2"
+          style={{ color: colors.muted }}
+        >
           Your selected handcrafted products
         </p>
 
         <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_350px]">
-          
+
           {/* CART ITEMS */}
           <div>
-            <div className="hidden grid-cols-[3fr_1fr_1fr] border-b border-[#eee5d2] pb-4 text-xs font-medium uppercase tracking-[2px] text-[#91887c] sm:grid">
+            <div
+              className="hidden grid-cols-[3fr_1fr_1fr] border-b pb-4 text-xs font-medium uppercase tracking-[2px] sm:grid"
+              style={{
+                borderColor: colors.border,
+                color: colors.muted,
+              }}
+            >
               <div>Product</div>
               <div className="text-center">Quantity</div>
               <div className="text-right">Total</div>
             </div>
 
-            <div className="divide-y divide-[#eee5d2]">
+            <div
+              className="divide-y"
+              style={{
+                borderColor: colors.border,
+              }}
+            >
               {cart.items.map((item) => (
-                <div key={item.id} className="grid items-center gap-6 py-8 sm:grid-cols-[3fr_1fr_1fr]">
-                  
+                <div
+                  key={item.id}
+                  className="grid items-center gap-6 py-8 sm:grid-cols-[3fr_1fr_1fr]"
+                  style={{
+                    borderColor: colors.border,
+                  }}
+                >
+
                   {/* PRODUCT INFO */}
                   <div className="flex items-center gap-6">
-                    <div className="flex h-24 w-[4.8rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#eadfca] bg-[#f8f2e6]">
-                      <span className="text-[#c99716]">✦</span>
+                    <div
+                      className="flex h-24 w-[4.8rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border"
+                      style={{
+                        borderColor: colors.border,
+                        backgroundColor: colors.soft,
+                      }}
+                    >
+                      <span
+                        style={{ color: colors.terracotta }}
+                      >
+                        ✦
+                      </span>
                     </div>
+
                     <div>
-                      <h3 className="font-semibold text-[#29251f]">
-                        <Link href={`/product/${item.product.slug}`} className="hover:text-[#a9780d]">
+                      <h3
+                        className="font-semibold"
+                        style={{ color: colors.charcoal }}
+                      >
+                        <Link
+                          href={`/product/${item.product.slug}`}
+                          className="transition-colors hover:opacity-70"
+                        >
                           {item.product.name}
                         </Link>
                       </h3>
-                      <p className="mt-1 text-sm text-[#756d63]">
+
+                      <p
+                        className="mt-1 text-sm"
+                        style={{ color: colors.muted }}
+                      >
                         ₹{item.product.price.toLocaleString("en-IN")}
                       </p>
-                      {!item.product.availability || item.product.stock <= 0 ? (
+
+                      {!item.product.availability ||
+                      item.product.stock <= 0 ? (
                         <p className="mt-1 text-xs text-red-500">
                           Out of Stock
                         </p>
                       ) : null}
+
                       <button
                         type="button"
                         onClick={() => handleRemove(item.id)}
                         disabled={updatingId === item.id}
-                        className="mt-3 text-sm text-[#a9780d] hover:underline disabled:opacity-50"
+                        className="mt-3 text-sm transition-colors hover:underline disabled:opacity-50"
+                        style={{ color: colors.terracotta }}
                       >
                         Remove
                       </button>
@@ -173,33 +289,55 @@ export default function CartPage() {
 
                   {/* QUANTITY */}
                   <div className="flex justify-center">
-                    <div className="flex w-fit items-center rounded-lg border border-[#dfd2bb] bg-white">
+                    <div
+                      className="flex w-fit items-center rounded-lg border bg-white"
+                      style={{
+                        borderColor: colors.border,
+                      }}
+                    >
                       <button
                         type="button"
-                        onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                        onClick={() =>
+                          handleUpdateQuantity(
+                            item.id,
+                            item.quantity - 1
+                          )
+                        }
                         disabled={
                           item.quantity <= 1 ||
                           updatingId === item.id ||
                           !item.product.availability ||
                           item.product.stock <= 0
                         }
-                        className="flex h-9 w-9 items-center justify-center text-[#756d63] hover:text-[#a9780d] disabled:opacity-50"
+                        className="flex h-9 w-9 items-center justify-center transition-colors hover:opacity-70 disabled:opacity-50"
+                        style={{ color: colors.muted }}
                       >
                         −
                       </button>
-                      <span className="w-10 text-center text-sm">
+
+                      <span
+                        className="w-10 text-center text-sm"
+                        style={{ color: colors.charcoal }}
+                      >
                         {item.quantity}
                       </span>
+
                       <button
                         type="button"
-                        onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                        onClick={() =>
+                          handleUpdateQuantity(
+                            item.id,
+                            item.quantity + 1
+                          )
+                        }
                         disabled={
                           updatingId === item.id ||
                           !item.product.availability ||
                           item.product.stock <= 0 ||
                           item.quantity >= item.product.stock
                         }
-                        className="flex h-9 w-9 items-center justify-center text-[#756d63] hover:text-[#a9780d] disabled:opacity-50"
+                        className="flex h-9 w-9 items-center justify-center transition-colors hover:opacity-70 disabled:opacity-50"
+                        style={{ color: colors.muted }}
                       >
                         +
                       </button>
@@ -207,45 +345,83 @@ export default function CartPage() {
                   </div>
 
                   {/* SUBTOTAL */}
-                  <div className="text-right font-semibold text-[#29251f]">
+                  <div
+                    className="text-right font-semibold"
+                    style={{ color: colors.charcoal }}
+                  >
                     ₹{Number(item.subtotal).toLocaleString("en-IN")}
                   </div>
-
                 </div>
               ))}
             </div>
           </div>
 
           {/* ORDER SUMMARY */}
-          <div className="rounded-2xl border border-[#eadfca] bg-white p-6 sm:p-8 h-fit">
-            <h2 className="text-lg font-semibold text-[#29251f]">Order Summary</h2>
-            
-            <div className="mt-6 flex items-center justify-between border-b border-[#eee5d2] pb-6">
-              <span className="text-[#756d63]">Subtotal</span>
-              <span className="font-semibold text-[#29251f]">
+          <div
+            className="h-fit rounded-2xl border p-6 sm:p-8"
+            style={{
+              borderColor: colors.border,
+              backgroundColor: colors.white,
+            }}
+          >
+            <h2
+              className="text-lg font-semibold"
+              style={{ color: colors.charcoal }}
+            >
+              Order Summary
+            </h2>
+
+            <div
+              className="mt-6 flex items-center justify-between border-b pb-6"
+              style={{
+                borderColor: colors.border,
+              }}
+            >
+              <span style={{ color: colors.muted }}>
+                Subtotal
+              </span>
+
+              <span
+                className="font-semibold"
+                style={{ color: colors.charcoal }}
+              >
                 ₹{Number(cart.subtotal).toLocaleString("en-IN")}
               </span>
             </div>
 
             <div className="mt-6 flex items-center justify-between">
-              <span className="font-semibold text-[#29251f]">Total</span>
-              <span className="text-xl font-bold text-[#a9780d]">
+              <span
+                className="font-semibold"
+                style={{ color: colors.charcoal }}
+              >
+                Total
+              </span>
+
+              <span
+                className="text-xl font-bold"
+                style={{ color: colors.terracotta }}
+              >
                 ₹{Number(cart.subtotal).toLocaleString("en-IN")}
               </span>
             </div>
-            
-            <p className="mt-2 text-right text-xs text-[#91887c]">
+
+            <p
+              className="mt-2 text-right text-xs"
+              style={{ color: colors.muted }}
+            >
               Shipping & taxes calculated at checkout
             </p>
 
             <Link
               href="/checkout"
-              className="mt-8 flex w-full justify-center rounded-lg bg-[#29251f] py-4 text-sm font-medium text-white transition-all hover:bg-[#1a1714] hover:shadow-lg"
+              className="mt-8 flex w-full justify-center rounded-lg py-4 text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              style={{
+                backgroundColor: colors.forest,
+              }}
             >
               Proceed to Checkout
             </Link>
           </div>
-
         </div>
       </div>
     </main>

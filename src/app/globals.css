@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F8F6F2;
-  --foreground: #1D1D1B;
+  /* =========================================================
+     VRHAZ THEME
+     ========================================================= */
 
-  /* VRHAZ Theme */
-  --vrhaz-ivory: #F8F6F2;
-  --vrhaz-white: #FFFFFF;
-  --vrhaz-peach: #F2C9B9;
-  --vrhaz-terracotta: #A85838;
-  --vrhaz-sage: #A8B39F;
-  --vrhaz-forest: #3F5144;
-  --vrhaz-charcoal: #1D1D1B;
+  --vrhaz-ivory: #f8f6f2;
+  --vrhaz-white: #ffffff;
+  --vrhaz-peach: #f2c9b9;
+  --vrhaz-terracotta: #a85838;
+  --vrhaz-sage: #a8b39f;
+  --vrhaz-forest: #3f5144;
+  --vrhaz-charcoal: #1d1d1b;
+
+  --background: var(--vrhaz-ivory);
+  --foreground: var(--vrhaz-charcoal);
 }
 
 @theme inline {
@@ -42,37 +45,37 @@ body {
 }
 
 /* =========================================================
-   OLD BACKGROUND COLOURS → NEW THEME
+   OLD BACKGROUND COLOURS
+   Existing pages using these colours automatically change.
    ========================================================= */
 
-/* Old cream backgrounds → Ivory */
 [class~="bg-[#FAF8F3]"],
 [class~="bg-[#fffdf8]"] {
   background-color: var(--vrhaz-ivory) !important;
 }
 
-/* Old image placeholder beige → White */
 [class~="bg-[#f1e8d7]"] {
   background-color: var(--vrhaz-white) !important;
 }
 
-/* Old pale gold hover background → Peach */
 [class~="bg-[#fff8e8]"] {
   background-color: var(--vrhaz-peach) !important;
 }
 
 /* =========================================================
-   OLD GOLD → PEACH
+   OLD GOLD BACKGROUNDS → PEACH
    ========================================================= */
 
 [class~="bg-[#C9A227]"],
-[class~="bg-[#c99716]"] {
+[class~="bg-[#c99716]"],
+[class~="bg-[#d1a11c]"] {
   background-color: var(--vrhaz-peach) !important;
   color: var(--vrhaz-charcoal) !important;
 }
 
-[class~="hover:bg-[#B8860B]"]:hover {
-  background-color: #E5B09F !important;
+[class~="hover:bg-[#B8860B]"]:hover,
+[class~="hover:bg-[#bd8d0f]"]:hover {
+  background-color: #e5b09f !important;
 }
 
 /* =========================================================
@@ -95,7 +98,7 @@ body {
 }
 
 /* =========================================================
-   OLD DARK TEXT → CHARCOAL
+   DARK TEXT → CHARCOAL
    ========================================================= */
 
 [class~="text-[#2B2B2B]"],
@@ -106,7 +109,7 @@ body {
 }
 
 /* =========================================================
-   OLD MUTED TEXT → CHARCOAL
+   MUTED TEXT
    ========================================================= */
 
 [class~="text-[#6B6B6B]"],
@@ -115,23 +118,28 @@ body {
 [class~="text-[#81786d]"],
 [class~="text-[#a99d8b]"],
 [class~="text-[#9b8a70]"],
-[class~="text-[#a48d69]"] {
+[class~="text-[#a48d69]"],
+[class~="text-[#91887c]"] {
   color: var(--vrhaz-charcoal) !important;
 }
 
 /* =========================================================
-   OLD BORDERS → SAGE / PEACH
+   OLD BORDERS → SAGE
    ========================================================= */
 
 [class~="border-[#e3d4b5]"],
 [class~="border-[#dfd2bb]"],
 [class~="border-[#eadfca]"],
 [class~="border-[#eee5d2]"],
-[class~="border-[#d9bf7c]"] {
+[class~="border-[#d9bf7c]"],
+[class~="border-[#e1d7c6]"] {
   border-color: var(--vrhaz-sage) !important;
 }
 
-/* Gold border hover → Terracotta */
+/* =========================================================
+   BORDER HOVER
+   ========================================================= */
+
 [class~="hover:border-[#d1a11c]"]:hover,
 [class~="hover:border-[#A85838]"]:hover {
   border-color: var(--vrhaz-terracotta) !important;
@@ -149,13 +157,16 @@ body {
   color: var(--vrhaz-charcoal) !important;
 }
 
-/* Keep placeholders softer */
+/* =========================================================
+   PLACEHOLDER
+   ========================================================= */
+
 [class~="placeholder:text-gray-400"]::placeholder {
-  color: #77736E !important;
+  color: #77736e !important;
 }
 
 /* =========================================================
-   FOCUS OUTLINE — REQUIRED BY NEW THEME
+   FOCUS
    ========================================================= */
 
 a:focus-visible,
@@ -168,21 +179,21 @@ textarea:focus-visible {
 }
 
 /* =========================================================
-   ERROR / SUCCESS STATES SHOULD STAY SEMANTIC
+   SEMANTIC STATES
+   Don't turn errors/success into brand colours.
    ========================================================= */
 
 [class~="text-red-600"],
 [class~="text-red-500"] {
-  color: #B42318 !important;
+  color: #b42318 !important;
 }
 
 [class~="text-green-700"] {
-  color: #28653B !important;
+  color: #28653b !important;
 }
 
 /* =========================================================
-   VRHAZ UTILITY CLASSES
-   These can be used directly in future pages.
+   DIRECT THEME UTILITY CLASSES
    ========================================================= */
 
 .vrhaz-ivory {
