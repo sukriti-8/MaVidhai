@@ -54,26 +54,29 @@ PRODUCTS = [
         "price": Decimal("999.00"),
 
         "description": (
-            "Handwoven cotton saree in Rani pink with a deep "
-            "purple border, featuring woven paisley rows across "
-            "the body and a checked pattern in the pallu."
+            "A handwoven cotton saree in Rani pink with "
+            "a deep purple border, featuring traditional "
+            "paisley motifs and a checked pallu."
         ),
 
         "details": (
-              "Woven paisley rows run across the body, with a "
-              "checked pattern in the pallu. Deep purple border "
-              "with a traditional peacock design."
-          ),
+            "100% cotton saree with a Rani pink body and "
+            "deep purple border. The body features paisley "
+            "motifs, while the pallu has a checked pattern "
+            "and the border features a traditional peacock design."
+        ),
 
         "material": "100% Cotton",
         "dimensions": "5.5 m",
         "colour": "Rani Pink with Deep Purple",
-       
+        "care": None,
+        "badge": None,
 
         "availability": True,
         "stock": 20,
 
-        "image_url": "/sarees/saree-1.png",
+        # We will add the actual image URL later.
+        "image_url": None,
     },
 
     {
@@ -84,19 +87,24 @@ PRODUCTS = [
         # Temporary because founder has not provided the price yet.
         "price": Decimal("0.00"),
 
-        "description": None,
-        "details": None,
-        "material": None,
-        "dimensions": None,
-        "colour": None,
-        "care": None,
+        "description": (
+            "Cylindrical woven basket with a decorative lion face, "
+            "soft white fringe detailing, and a matching removable lid."
+        ),
+        "details": (
+            "Ideal for storing toys, baby essentials, clothes, books, "
+            "kids' rooms, bedrooms, or living spaces."
+        ),
+        "material": "Cotton Rope",
+        "dimensions": "Medium — 24 cm (H) × 27 cm (D)",
+        "colour": "Red",
+        "care": "Wipe clean with a dry or slightly damp cloth. Keep dry.",
         "badge": None,
 
         "availability": True,
         "stock": 20,
 
-        # We will add the actual image URL later.
-        "image_url": None,
+        "image_url": "/rope-basket/basket-1.jpeg",
     },
 
     {
