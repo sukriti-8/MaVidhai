@@ -13,14 +13,25 @@ import {
 export default function ProductPage() {
   const { slug } = useParams();
   const router = useRouter();
-
+  const productImages =
+    slug?.toLowerCase().includes("basket")
+      ? [
+          "/rope-basket/basket-1.jpeg",
+          "/rope-basket/basket-2.jpeg",
+          "/rope-basket/basket-3.jpeg",
+          "/rope-basket/basket-4.jpeg",
+        ]
+      : [
+          "/sarees/saree1.jpeg",
+          "/sarees/saree2.jpeg",
+        ];
   const [product, setProduct] = useState(null);
   const [otherProducts, setOtherProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const [quantity, setQuantity] = useState(1);
-
+  const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
 
@@ -222,58 +233,40 @@ export default function ProductPage() {
           ================================================== */}
 
           <div className="grid gap-4 sm:grid-cols-[90px_1fr]">
-            {/* THUMBNAILS */}
 
+            {/* THUMBNAILS */}
             <div className="order-2 flex max-w-full gap-3 overflow-x-auto pb-1 sm:order-1 sm:flex-col sm:overflow-visible sm:pb-0">
 
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl border-2 border-[#d1a11c] bg-[#f1e8d7]">
-
-                <span className="text-lg text-[#c99716]">
-                  ✦
-                </span>
-
-              </div>
-
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-[#eadfca] bg-[#f1e8d7]">
-
-                <span className="text-lg text-[#c99716]">
-                  ✦
-                </span>
-
-              </div>
-
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-[#eadfca] bg-[#f1e8d7]">
-
-                <span className="text-lg text-[#c99716]">
-                  ✦
-                </span>
-
-              </div>
+              {productImages.map((image, index) => (
+                <button
+                  key={image}
+                  type="button"
+                  onClick={() => setSelectedImage(index)}
+                  className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#f1e8d7] transition-all ${
+                    selectedImage === index
+                      ? "border-2 border-[#d1a11c]"
+                      : "border border-[#eadfca] hover:border-[#d1a11c]"
+                  }`}
+                  aria-label={`View product image ${index + 1}`}
+                >
+                  <img
+                    src={image}
+                    alt={`${product.name} image ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ))}
 
             </div>
 
             {/* MAIN IMAGE */}
-
             <div className="relative order-1 aspect-[4/5] overflow-hidden rounded-2xl bg-[#f8f2e6] sm:order-2">
-              {product.image_url || product.image ? (
-                <img
-                  src={product.image_url || product.image}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center">
-                  <div className="text-center">
-                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-[#d1a11c] text-3xl text-[#c99716]">
-                      ✦
-                    </div>
 
-                    <p className="text-xs uppercase tracking-[2px] text-[#9b8a70]">
-                      Product Image
-                    </p>
-                  </div>
-                </div>
-              )}
+              <img
+                src={productImages[selectedImage]}
+                alt={product.name}
+                className="h-full w-full object-cover"
+              />
 
               {/* WISHLIST */}
               <button
@@ -289,7 +282,9 @@ export default function ProductPage() {
               >
                 {isWishlisted ? "♥" : "♡"}
               </button>
+
             </div>
+
           </div>
 
           {/* PRODUCT INFORMATION */}

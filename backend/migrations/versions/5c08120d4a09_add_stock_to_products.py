@@ -21,23 +21,20 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Add stock column to products."""
-    op.add_column(
-        "products",
-        sa.Column(
-            "stock",
-            sa.Integer(),
-            nullable=False,
-            server_default="20",
-        ),
-    )
+    with op.batch_alter_table("products") as batch_op:
+        batch_op.add_column(
+            sa.Column("stock", sa.Integer(), server_default="0", nullable=False)
+        )
 
-    op.alter_column(
-        "products",
-        "stock",
-        server_default=None,
-    )
+    # 3. Remove the server default from the column so it doesn't apply to future inserts automatically
+    with op.batch_alter_table("products") as batch_op:
+        batch_op.alter_column(
+            "stock",
+            server_default=None
+        )
 
 
 def downgrade() -> None:
     """Remove stock column from products."""
-    op.drop_column("products", "stock")
+    with op.batch_alter_table("products") as batch_op:
+        batch_op.drop_column("stock")

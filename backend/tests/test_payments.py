@@ -25,6 +25,10 @@ def auth_headers_user1(test_db: Session) -> Dict[str, str]:
     # Clear orders and payments for clean state
     user = test_db.query(User).filter(User.email == "userpay1@example.com").first()
     if user:
+        from app.models.inventory_audit import InventoryAudit
+        from app.models.order import OrderItem
+        test_db.query(InventoryAudit).filter(InventoryAudit.order.has(user_id=user.id)).delete(synchronize_session=False)
+        test_db.query(OrderItem).filter(OrderItem.order.has(user_id=user.id)).delete(synchronize_session=False)
         test_db.query(Payment).filter(Payment.order.has(user_id=user.id)).delete(synchronize_session=False)
         test_db.query(Order).filter(Order.user_id == user.id).delete(synchronize_session=False)
         test_db.commit()

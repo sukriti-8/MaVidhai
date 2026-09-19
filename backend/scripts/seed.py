@@ -1,187 +1,361 @@
 import os
 import sys
+from decimal import Decimal
 
 # Add the backend directory to sys.path so we can import 'app'
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(
+    0,
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..")
+    ),
+)
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
+
 from app.database.connection import SessionLocal
 from app.models.category import Category
 from app.models.product import Product
 
+
+# ============================================================
+# HELPERS
+# ============================================================
+
 def slugify(text: str) -> str:
-    return text.lower().replace(" ", "-")
+    return (
+        text.lower()
+        .replace(" ", "-")
+        .replace("&", "and")
+    )
+
+
+# ============================================================
+# CATEGORIES
+# ============================================================
 
 CATEGORIES = [
-  "Living",
-  "Kitchen",
-  "Decor",
-  "Personal Care",
-  "Gifting",
-  "Clothing"
+    "Sarees",
+    "Home & Living",
+    "Toys",
 ]
 
+
+# ============================================================
+# PRODUCTS
+# ============================================================
+
 PRODUCTS = [
-  {
-    "slug": "handcrafted-brass-lamp",
-    "name": "Handcrafted Brass Lamp",
-    "category": "Living",
-    "price": 2499,
-    "description": "A thoughtfully crafted brass lamp that brings warmth, character and a touch of heritage into your space.",
-    "details": "Designed with traditional craftsmanship and a contemporary sensibility, this piece is made to become part of your everyday surroundings.",
-    "material": "Brass",
-    "dimensions": "12 × 8 inches",
-    "colour": "Antique Gold",
-    "care": "Wipe gently with a soft, dry cloth.",
-    "badge": "Bestseller",
-  },
-  {
-    "slug": "handwoven-table-runner",
-    "name": "Handwoven Table Runner",
-    "category": "Decor",
-    "price": 1299,
-    "badge": "New",
-  },
-  {
-    "slug": "artisan-ceramic-mug",
-    "name": "Artisan Ceramic Mug",
-    "category": "Kitchen",
-    "price": 699,
-  },
-  {
-    "slug": "heritage-candle-set",
-    "name": "Heritage Candle Set",
-    "category": "Living",
-    "price": 999,
-  },
-  {
-    "slug": "natural-body-care-set",
-    "name": "Natural Body Care Set",
-    "category": "Personal Care",
-    "price": 1599,
-    "badge": "Popular",
-  },
-  {
-    "slug": "artisan-gift-box",
-    "name": "Artisan Gift Box",
-    "category": "Gifting",
-    "price": 1899,
-    "badge": "Gift Pick",
-  },
-  {
-    "slug": "handcrafted-cotton-kurta",
-    "name": "Handcrafted Cotton Kurta",
-    "category": "Clothing",
-    "price": 2199,
-  },
-  {
-    "slug": "wooden-serving-tray",
-    "name": "Handcrafted Wooden Tray",
-    "category": "Kitchen",
-    "price": 1499,
-  },
-  {
-    "slug": "woven-storage-basket",
-    "name": "Woven Storage Basket",
-    "category": "Living",
-    "price": 1199,
-  },
-  {
-    "slug": "hand-painted-vase",
-    "name": "Hand-Painted Ceramic Vase",
-    "category": "Decor",
-    "price": 1799,
-    "badge": "Artisan Pick",
-  },
-  {
-    "slug": "wellness-gifting-set",
-    "name": "Wellness Gifting Set",
-    "category": "Gifting",
-    "price": 2299,
-  },
-  {
-    "slug": "everyday-handloom-shirt",
-    "name": "Everyday Handloom Shirt",
-    "category": "Clothing",
-    "price": 1999,
-  }
+    {
+        "slug": "handwoven-cotton-saree-pink-deep-purple",
+        "name": "Handwoven Cotton Saree – Pink & Deep Purple",
+        "category": "Sarees",
+
+        "price": Decimal("999.00"),
+
+        "description": (
+            "A handwoven cotton saree in Rani pink with "
+            "a deep purple border, featuring traditional "
+            "paisley motifs and a checked pallu."
+        ),
+
+        "details": (
+            "100% cotton saree with a Rani pink body and "
+            "deep purple border. The body features paisley "
+            "motifs, while the pallu has a checked pattern "
+            "and the border features a traditional peacock design."
+        ),
+
+        "material": "100% Cotton",
+        "dimensions": "5.5 m",
+        "colour": "Rani Pink with Deep Purple",
+        "care": None,
+        "badge": None,
+
+        "availability": True,
+        "stock": 20,
+
+        # We will add the actual image URL later.
+        "image_url": None,
+    },
+
+    {
+        "slug": "rope-storage-basket",
+        "name": "Rope Storage Basket",
+        "category": "Home & Living",
+
+        # Temporary because founder has not provided the price yet.
+        "price": Decimal("0.00"),
+
+        "description": None,
+        "details": None,
+        "material": None,
+        "dimensions": None,
+        "colour": None,
+        "care": None,
+        "badge": None,
+
+        "availability": True,
+        "stock": 20,
+
+        # We will add the actual image URL later.
+        "image_url": None,
+    },
+
+    {
+        "slug": "wooden-toy",
+        "name": "Wooden Toy",
+        "category": "Toys",
+
+        # Temporary because founder has not provided the price yet.
+        "price": Decimal("0.00"),
+
+        "description": None,
+        "details": None,
+        "material": None,
+        "dimensions": None,
+        "colour": None,
+        "care": None,
+        "badge": None,
+
+        "availability": True,
+        "stock": 20,
+
+        "image_url": None,
+    },
 ]
+
+
+# ============================================================
+# DATABASE SEED
+# ============================================================
 
 def seed_database():
     db: Session = SessionLocal()
+
     try:
-        print("Seeding MaVidhai catalog...")
-        
-        # 1. Seed Categories
-        category_by_slug = {}
-        for cat_name in CATEGORIES:
-            cat_slug = slugify(cat_name)
-            cat = db.execute(select(Category).where(Category.slug == cat_slug)).scalar_one_or_none()
-            if not cat:
-                cat = Category(name=cat_name, slug=cat_slug)
-                db.add(cat)
-                db.commit()
-                db.refresh(cat)
-            category_by_slug[cat_name] = cat
-        
-        print(f"Categories: {len(category_by_slug)}")
-        
-        # 2. Seed Products
-        products_updated = 0
+        print("========================================")
+        print("MaVidhai Catalog Seed")
+        print("========================================")
+
+        # ----------------------------------------------------
+        # 1. REMOVE OLD PRODUCTS
+        # ----------------------------------------------------
+
+        existing_products = db.execute(
+            select(Product)
+        ).scalars().all()
+
+        print(
+            f"\nExisting products found: "
+            f"{len(existing_products)}"
+        )
+
+        for product in existing_products:
+            db.delete(product)
+
+        db.commit()
+
+        print(
+            f"Old products removed: "
+            f"{len(existing_products)}"
+        )
+
+        # ----------------------------------------------------
+        # 2. REMOVE OLD CATEGORIES
+        # ----------------------------------------------------
+
+        existing_categories = db.execute(
+            select(Category)
+        ).scalars().all()
+
+        print(
+            f"Existing categories found: "
+            f"{len(existing_categories)}"
+        )
+
+        for category in existing_categories:
+            db.delete(category)
+
+        db.commit()
+
+        print(
+            f"Old categories removed: "
+            f"{len(existing_categories)}"
+        )
+
+        # ----------------------------------------------------
+        # 3. CREATE THE 3 NEW CATEGORIES
+        # ----------------------------------------------------
+
+        category_by_name = {}
+
+        for category_name in CATEGORIES:
+            category = Category(
+                name=category_name,
+                slug=slugify(category_name),
+            )
+
+            db.add(category)
+            db.commit()
+            db.refresh(category)
+
+            category_by_name[category_name] = category
+
+            print(
+                f"Created category: "
+                f"{category_name}"
+            )
+
+        # ----------------------------------------------------
+        # 4. CREATE THE 3 NEW PRODUCTS
+        # ----------------------------------------------------
+
         products_created = 0
-        for p_data in PRODUCTS:
-            product = db.execute(select(Product).where(Product.slug == p_data["slug"])).scalar_one_or_none()
-            cat = category_by_slug.get(p_data["category"])
-            if not cat:
-                print(f"Warning: Category {p_data['category']} not found for product {p_data['name']}")
+
+        for product_data in PRODUCTS:
+
+            category = category_by_name.get(
+                product_data["category"]
+            )
+
+            if not category:
+                print(
+                    f"WARNING: Category "
+                    f"'{product_data['category']}' "
+                    f"not found for "
+                    f"'{product_data['name']}'"
+                )
                 continue
 
-            if product:
-                # Update existing
-                product.category_id = cat.id
-                product.name = p_data["name"]
-                product.price = p_data["price"]
-                product.description = p_data.get("description")
-                product.details = p_data.get("details")
-                product.material = p_data.get("material")
-                product.dimensions = p_data.get("dimensions")
-                product.colour = p_data.get("colour")
-                product.care = p_data.get("care")
-                product.badge = p_data.get("badge")
-                product.availability = True
-                products_updated += 1
-            else:
-                # Create new
-                product = Product(
-                    category_id=cat.id,
-                    name=p_data["name"],
-                    slug=p_data["slug"],
-                    price=p_data["price"],
-                    description=p_data.get("description"),
-                    details=p_data.get("details"),
-                    material=p_data.get("material"),
-                    dimensions=p_data.get("dimensions"),
-                    colour=p_data.get("colour"),
-                    care=p_data.get("care"),
-                    badge=p_data.get("badge"),
-                    availability=True,
-                    image_url=None
+            product = Product(
+                category_id=category.id,
+
+                name=product_data["name"],
+                slug=product_data["slug"],
+
+                price=product_data["price"],
+
+                description=product_data.get(
+                    "description"
+                ),
+
+                details=product_data.get(
+                    "details"
+                ),
+
+                material=product_data.get(
+                    "material"
+                ),
+
+                dimensions=product_data.get(
+                    "dimensions"
+                ),
+
+                colour=product_data.get(
+                    "colour"
+                ),
+
+                care=product_data.get(
+                    "care"
+                ),
+
+                badge=product_data.get(
+                    "badge"
+                ),
+
+                availability=product_data.get(
+                    "availability",
+                    True,
+                ),
+
+                stock=product_data.get(
+                    "stock",
+                    0,
+                ),
+
+                image_url=product_data.get(
+                    "image_url"
+                ),
+            )
+
+            db.add(product)
+            products_created += 1
+
+            print(
+                f"Created product: "
+                f"{product_data['name']}"
+            )
+
+        db.commit()
+
+        # ----------------------------------------------------
+        # 5. VERIFY DATABASE
+        # ----------------------------------------------------
+
+        final_categories = db.execute(
+            select(Category)
+        ).scalars().all()
+
+        final_products = db.execute(
+            select(Product)
+        ).scalars().all()
+
+        print("\n========================================")
+        print("CATALOG SEED COMPLETED")
+        print("========================================")
+
+        print(
+            f"Categories in DB: "
+            f"{len(final_categories)}"
+        )
+
+        print(
+            f"Products created: "
+            f"{products_created}"
+        )
+
+        print(
+            f"Products in DB: "
+            f"{len(final_products)}"
+        )
+
+        print("\nFINAL CATALOG:")
+
+        for product in final_products:
+            category = db.execute(
+                select(Category).where(
+                    Category.id == product.category_id
                 )
-                db.add(product)
-                products_created += 1
-                
-        if products_created > 0 or products_updated > 0:
-            db.commit()
-            
-        total_products = db.execute(select(Product)).scalars().all()
-        print(f"Products created: {products_created}")
-        print(f"Products updated: {products_updated}")
-        print(f"Total Products in DB: {len(total_products)}")
-        print("\nCatalog seeding completed successfully.")
+            ).scalar_one_or_none()
+
+            print(
+                f"- {category.name} "
+                f"-> {product.name} "
+                f"-> ₹{product.price}"
+            )
+
+        print("\nNo old products remain.")
+        print("No extra categories remain.")
+        print("No extra toy products were added.")
+
+    except Exception as error:
+        db.rollback()
+
+        print("\n========================================")
+        print("SEED FAILED")
+        print("========================================")
+        print(error)
+
+        raise
 
     finally:
         db.close()
+
+
+# ============================================================
+# RUN
+# ============================================================
 
 if __name__ == "__main__":
     seed_database()

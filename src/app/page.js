@@ -128,14 +128,14 @@ export default async function Home() {
             <CategoryCard
               title="Sarees"
               description="Timeless Indian clothing for every occasion."
-              href="/shop?category=clothing"
+              href="/shop?category=sarees"
               background={colors.peach}
             />
 
             <CategoryCard
               title="Rope Baskets"
               description="Handcrafted home pieces with purpose."
-              href="/shop?category=home-living"
+              href="/shop?category=home-and-living"
               background={colors.sage}
             />
 
@@ -184,13 +184,11 @@ export default async function Home() {
 
         <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              title={product.name}
-              price={`₹${Number(product.price).toLocaleString("en-IN")}`}
-              href={`/product/${product.slug}`}
-            />
-          ))}
+          <ProductCard
+            key={product.id}
+            product={product}
+          />
+        ))}
         </div>
       </section>
 
@@ -520,77 +518,89 @@ function CategoryCard({ title, description, href, background }) {
   );
 }
 
-function ProductCard({ title, price, href }) {
+function ProductCard({ product }) {
   return (
     <div
       className="group overflow-hidden rounded-xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
       style={{ borderColor: colors.sage }}
     >
       <div className="relative">
-        <Link href={href} className="block">
+        <Link href={`/product/${product.slug}`} className="block">
+
+          {/* IMAGE */}
           <div
-            className="flex aspect-square items-center justify-center"
+            className="flex aspect-square items-center justify-center overflow-hidden"
             style={{ backgroundColor: colors.sage }}
           >
-            <div className="text-center">
-              <div
-                className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full border text-xl transition-transform duration-300 group-hover:scale-110"
-                style={{
-                  borderColor: colors.charcoal,
-                  color: colors.charcoal,
-                }}
-              >
-                ✦
-              </div>
+            {product.image_url || product.image ? (
+              <img
+                src={product.image_url || product.image}
+                alt={product.name}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <div className="text-center">
+                <div
+                  className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full border text-xl transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    borderColor: colors.charcoal,
+                    color: colors.charcoal,
+                  }}
+                >
+                  ✦
+                </div>
 
-              <p
-                className="text-[10px] uppercase tracking-[1.5px]"
-                style={{ color: colors.charcoal }}
-              >
-                Product Image
-              </p>
-            </div>
+                <p
+                  className="text-[10px] uppercase tracking-[1.5px]"
+                  style={{ color: colors.charcoal }}
+                >
+                  Product Image
+                </p>
+              </div>
+            )}
           </div>
 
+          {/* DETAILS */}
           <div className="p-4">
             <h3
               className="text-sm font-medium"
               style={{ color: colors.charcoal }}
             >
-              {title}
+              {product.name}
             </h3>
 
             <p
               className="mt-2 text-sm font-semibold"
               style={{ color: colors.terracotta }}
             >
-              {price}
+              ₹{Number(product.price || 0).toLocaleString("en-IN")}
             </p>
           </div>
+
         </Link>
 
+        {/* WISHLIST */}
         <button
           type="button"
-          aria-label="Add to wishlist"
-          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors focus:outline-2 focus:outline-offset-2"
+          aria-label={`Add ${product.name} to wishlist`}
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-colors"
           style={{
             backgroundColor: colors.white,
             color: colors.charcoal,
-            outlineColor: colors.charcoal,
           }}
         >
           ♡
         </button>
       </div>
 
+      {/* ADD TO CART */}
       <div className="px-4 pb-4">
         <button
           type="button"
-          className="w-full rounded-lg border py-2 text-xs font-medium transition-colors focus:outline-2 focus:outline-offset-2"
+          className="w-full rounded-lg border py-2 text-xs font-medium transition-colors"
           style={{
             borderColor: colors.charcoal,
             color: colors.charcoal,
-            outlineColor: colors.charcoal,
           }}
         >
           Add to Cart
