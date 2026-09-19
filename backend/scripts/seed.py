@@ -87,19 +87,24 @@ PRODUCTS = [
         # Temporary because founder has not provided the price yet.
         "price": Decimal("0.00"),
 
-        "description": None,
-        "details": None,
-        "material": None,
-        "dimensions": None,
-        "colour": None,
-        "care": None,
+        "description": (
+            "Cylindrical woven basket with a decorative lion face, "
+            "soft white fringe detailing, and a matching removable lid."
+        ),
+        "details": (
+            "Ideal for storing toys, baby essentials, clothes, books, "
+            "kids' rooms, bedrooms, or living spaces."
+        ),
+        "material": "Cotton Rope",
+        "dimensions": "Medium — 24 cm (H) × 27 cm (D)",
+        "colour": "Red",
+        "care": "Wipe clean with a dry or slightly damp cloth. Keep dry.",
         "badge": None,
 
         "availability": True,
         "stock": 20,
 
-        # We will add the actual image URL later.
-        "image_url": None,
+        "image_url": "/rope-basket/basket-1.jpeg",
     },
 
     {
