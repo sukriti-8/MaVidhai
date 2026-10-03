@@ -179,12 +179,27 @@ export default function ProductPage() {
     );
   }
 
-  const productImages =
-    product.images && product.images.length > 0
-      ? product.images
-      : product.image_url
-        ? [product.image_url]
-        : [];
+  const productGalleryImages = {
+  "handwoven-cotton-saree-pink-deep-purple": [
+    "/sarees/saree1.jpeg",
+    "/sarees/saree2.jpeg",
+  ],
+
+  "rope-storage-basket": [
+    "/rope-basket/basket-1.jpeg",
+    "/rope-basket/basket-2.jpeg",
+    "/rope-basket/basket-3.jpeg",
+    "/rope-basket/basket-4.jpeg",
+  ],
+};
+
+const productImages =
+  productGalleryImages[product.slug] ||
+  (product.images && product.images.length > 0
+    ? product.images
+    : product.image_url
+      ? [product.image_url]
+      : []);
 
   return (
     <main className="min-h-screen bg-[#fffdf8]">
