@@ -1,6 +1,6 @@
 from decimal import Decimal
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text, Integer, CheckConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, Text, Integer, CheckConstraint, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database.base import Base
 
@@ -16,6 +16,9 @@ class Product(Base):
     slug: Mapped[str] = mapped_column(String(200), unique=True, index=True, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    # Original / list price shown struck through next to `price` when the
+    # item is on offer. Null means "no MRP set, just show `price`".
+    mrp: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
     details: Mapped[str | None] = mapped_column(Text, nullable=True)
     material: Mapped[str | None] = mapped_column(String(255), nullable=True)
     dimensions: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -25,6 +28,11 @@ class Product(Base):
     availability: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     stock: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
     image_url: Mapped[str | None] = mapped_column(String(500))
+    # Full ordered gallery for the product detail page, e.g.
+    # ["/rope-basket/basket-1.jpeg", "/rope-basket/basket-2.jpeg", ...].
+    # `image_url` above stays as the single cover photo used on
+    # listing/card views so existing code doesn't need to change.
+    images: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
