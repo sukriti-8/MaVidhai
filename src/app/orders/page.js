@@ -43,7 +43,7 @@ function OrdersContent() {
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
-    router.push(`/orders?page=${newPage}`, undefined, { shallow: true });
+    router.push(`/orders?page=${newPage}`);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

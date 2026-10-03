@@ -55,7 +55,7 @@ export default function Footer() {
 
               <li>
                 <Link
-                  href="/shop?category=clothing"
+                  href="/shop?category=sarees"
                   className="transition-colors hover:text-[#F2C9B9]"
                 >
                   Sarees
@@ -64,7 +64,7 @@ export default function Footer() {
 
               <li>
                 <Link
-                  href="/shop?category=home-living"
+                  href="/shop?category=home-and-living"
                   className="transition-colors hover:text-[#F2C9B9]"
                 >
                   Baskets

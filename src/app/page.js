@@ -133,6 +133,7 @@ export default async function Home() {
               description="Timeless Indian clothing for every occasion."
               href="/shop?category=sarees"
               background={theme.colors.peach}
+              image="/sarees/saree1.jpeg"
             />
 
             {/* HOME & LIVING */}
@@ -141,6 +142,7 @@ export default async function Home() {
               description="Thoughtfully crafted pieces for beautiful everyday spaces."
               href="/shop?category=home-and-living"
               background={theme.colors.sage}
+              image="/rope-basket/basket-1.jpeg"
             />
 
             {/* TOYS */}
@@ -488,7 +490,7 @@ export default async function Home() {
    CATEGORY CARD
    ========================================================= */
 
-function CategoryCard({ title, description, href, background }) {
+function CategoryCard({ title, description, href, background, image }) {
   return (
     <Link
       href={href}
@@ -500,28 +502,38 @@ function CategoryCard({ title, description, href, background }) {
       }}
     >
       <div
-        className="flex aspect-[4/3] items-center justify-center"
-        style={{ backgroundColor: background }}
-      >
-        <div className="text-center">
-          <div
-            className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border text-xl transition-transform duration-300 group-hover:scale-110"
-            style={{
-              borderColor: theme.colors.charcoal,
-              color: theme.colors.charcoal,
-            }}
-          >
-            ✦
-          </div>
+          className="relative aspect-[4/3] overflow-hidden"
+          style={{ backgroundColor: background }}
+        >
+          {image ? (
+            <img
+              src={image}
+              alt={title}
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="text-center">
+                <div
+                  className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border text-xl"
+                  style={{
+                    borderColor: theme.colors.charcoal,
+                    color: theme.colors.charcoal,
+                  }}
+                >
+                  ✦
+                </div>
 
-          <p
-            className="text-[10px] uppercase tracking-[2px]"
-            style={{ color: theme.colors.charcoal }}
-          >
-            Collection
-          </p>
+                <p
+                  className="text-[10px] uppercase tracking-[2px]"
+                  style={{ color: theme.colors.charcoal }}
+                >
+                  Coming Soon
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
 
       <div className="p-5">
         <h3

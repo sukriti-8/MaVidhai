@@ -33,6 +33,24 @@ function ShopContent() {
     maxPrice: "",
     available: false,
   });
+  // Keep the category filter synchronized with the URL.
+// This is important when navigating between category links
+// without a full page reload.
+useEffect(() => {
+  setFilters((prev) => {
+    if (prev.category === categoryFromUrl) return prev;
+
+    return {
+      ...prev,
+      category: categoryFromUrl,
+    };
+  });
+
+  setPagination((prev) => ({
+    ...prev,
+    page: 1,
+  }));
+}, [categoryFromUrl]);
 
   // Search input + debounce (HEAD behaviour)
   const [searchInput, setSearchInput] = useState("");
