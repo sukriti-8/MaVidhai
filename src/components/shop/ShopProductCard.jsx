@@ -137,9 +137,16 @@ function ShopProductCard({ product }) {
             </span>
           </div>
 
-          <p className="mt-3 text-sm font-semibold text-[#a9780d]">
-            ₹{product.price.toLocaleString("en-IN")}
-          </p>
+          <div className="mt-3 flex items-baseline gap-2">
+            {product.mrp && Number(product.mrp) > Number(product.price) && (
+              <span className="text-xs text-gray-400 line-through">
+                ₹{Number(product.mrp).toLocaleString("en-IN")}
+              </span>
+            )}
+            <span className="text-sm font-semibold text-[#a9780d]">
+              ₹{product.price.toLocaleString("en-IN")}
+            </span>
+          </div>
         </div>
       </Link>
 

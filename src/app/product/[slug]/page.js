@@ -18,18 +18,6 @@ export default function ProductPage() {
   const goToLogin = () => {
     router.push(`/login?next=${encodeURIComponent(pathname)}`);
   };
-  const productImages =
-    slug?.toLowerCase().includes("basket")
-      ? [
-          "/rope-basket/basket-1.jpeg",
-          "/rope-basket/basket-2.jpeg",
-          "/rope-basket/basket-3.jpeg",
-          "/rope-basket/basket-4.jpeg",
-        ]
-      : [
-          "/sarees/saree1.jpeg",
-          "/sarees/saree2.jpeg",
-        ];
   const [product, setProduct] = useState(null);
   const [otherProducts, setOtherProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -191,6 +179,13 @@ export default function ProductPage() {
     );
   }
 
+  const productImages =
+    product.images && product.images.length > 0
+      ? product.images
+      : product.image_url
+        ? [product.image_url]
+        : [];
+
   return (
     <main className="min-h-screen bg-[#fffdf8]">
       {/* BREADCRUMB */}
@@ -266,11 +261,20 @@ export default function ProductPage() {
             {/* MAIN IMAGE */}
             <div className="relative order-1 aspect-[4/5] overflow-hidden rounded-2xl bg-[#f8f2e6] sm:order-2">
 
-              <img
-                src={productImages[selectedImage]}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
+              {productImages.length > 0 ? (
+                <img
+                  src={productImages[selectedImage]}
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-[#a48d69]">
+                  <span className="text-2xl">✦</span>
+                  <span className="text-xs uppercase tracking-[1.5px]">
+                    Product Image
+                  </span>
+                </div>
+              )}
 
               {/* WISHLIST */}
               <button
@@ -329,9 +333,16 @@ export default function ProductPage() {
             </div>
 
             {/* PRICE */}
-            <p className="mt-6 text-2xl font-semibold text-[#a9780d]">
-              ₹{Number(product.price || 0).toLocaleString("en-IN")}
-            </p>
+            <div className="mt-6 flex items-baseline gap-3">
+              {product.mrp && Number(product.mrp) > Number(product.price) && (
+                <span className="text-lg text-gray-400 line-through">
+                  ₹{Number(product.mrp).toLocaleString("en-IN")}
+                </span>
+              )}
+              <span className="text-2xl font-semibold text-[#a9780d]">
+                ₹{Number(product.price || 0).toLocaleString("en-IN")}
+              </span>
+            </div>
 
             {isOutOfStock && (
               <p className="mt-3 text-sm font-medium text-red-600">
@@ -705,9 +716,16 @@ function RecommendationCard({ product }) {
           {product.name}
         </h3>
 
-        <p className="mt-2 text-sm font-semibold text-[#a9780d]">
-          ₹{Number(product.price || 0).toLocaleString("en-IN")}
-        </p>
+        <div className="mt-2 flex items-baseline gap-2">
+          {product.mrp && Number(product.mrp) > Number(product.price) && (
+            <span className="text-xs text-gray-400 line-through">
+              ₹{Number(product.mrp).toLocaleString("en-IN")}
+            </span>
+          )}
+          <span className="text-sm font-semibold text-[#a9780d]">
+            ₹{Number(product.price || 0).toLocaleString("en-IN")}
+          </span>
+        </div>
       </div>
     </Link>
   );

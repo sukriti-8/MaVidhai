@@ -112,12 +112,19 @@ export default function ProductCard({ product }) {
               {product.name}
             </h3>
 
-            <p
-              className="mt-2 text-sm font-semibold"
-              style={{ color: theme.colors.terracotta }}
-            >
-              ₹{Number(product.price || 0).toLocaleString("en-IN")}
-            </p>
+            <div className="mt-2 flex items-baseline gap-2">
+              {product.mrp && Number(product.mrp) > Number(product.price) && (
+                <span className="text-xs text-gray-400 line-through">
+                  ₹{Number(product.mrp).toLocaleString("en-IN")}
+                </span>
+              )}
+              <span
+                className="text-sm font-semibold"
+                style={{ color: theme.colors.terracotta }}
+              >
+                ₹{Number(product.price || 0).toLocaleString("en-IN")}
+              </span>
+            </div>
           </div>
         </Link>
 
