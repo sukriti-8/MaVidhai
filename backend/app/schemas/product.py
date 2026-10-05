@@ -2,7 +2,6 @@ from datetime import datetime
 from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 from app.schemas.category import CategoryResponse
-
 class ProductCreate(BaseModel):
     category_id: int
     name: str = Field(..., min_length=1, max_length=200)
@@ -61,7 +60,7 @@ class ProductResponse(BaseModel):
     stock: int
     image_url: str | None = None
     images: list[str] | None = None
-    
+
     category: CategoryResponse | None = None
 
     created_at: datetime

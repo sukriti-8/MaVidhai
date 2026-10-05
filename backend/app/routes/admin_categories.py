@@ -21,7 +21,7 @@ def get_admin_categories(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_super_admin),
 ):
-    stmt = select(Category)
+    stmt = select(Category).where(Category.is_active == True)
     categories = db.execute(stmt).scalars().all()
     return categories
 
@@ -35,36 +35,82 @@ def create_category(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_super_admin),
 ):
-    stmt = select(Category).where(func.lower(Category.slug) == request.slug.lower())
-    if db.execute(stmt).scalar_one_or_none():
+    # Check if slug already exists
+    stmt = select(Category).where(
+        func.lower(Category.slug) == request.slug.lower()
+    )
+    existing_category = db.execute(stmt).scalar_one_or_none()
+
+    if existing_category:
+        if not existing_category.is_active:
+            existing_category.name = request.name
+            existing_category.is_active = True
+
+            log_admin_action(
+                db=db,
+                admin_id=current_admin.id,
+                action="CATEGORY_REACTIVATED",
+                entity_type="CATEGORY",
+                entity_id=existing_category.slug,
+                details={"name": existing_category.name},
+            )
+
+            db.commit()
+            db.refresh(existing_category)
+            return existing_category
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Category slug already exists",
         )
-        
-    stmt_name = select(Category).where(func.lower(Category.name) == request.name.lower())
-    if db.execute(stmt_name).scalar_one_or_none():
+
+    # Check if category name already exists
+    stmt_name = select(Category).where(
+        func.lower(Category.name) == request.name.lower()
+    )
+    existing_name = db.execute(stmt_name).scalar_one_or_none()
+
+    if existing_name:
+        if not existing_name.is_active:
+            existing_name.slug = request.slug
+            existing_name.is_active = True
+
+            log_admin_action(
+                db=db,
+                admin_id=current_admin.id,
+                action="CATEGORY_REACTIVATED",
+                entity_type="CATEGORY",
+                entity_id=existing_name.slug,
+                details={"name": existing_name.name},
+            )
+
+            db.commit()
+            db.refresh(existing_name)
+            return existing_name
+
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Category name already exists",
         )
-        
+
+    # Create a completely new category
     category = Category(
         name=request.name,
         slug=request.slug,
         is_active=True,
     )
+
     db.add(category)
-    
+
     log_admin_action(
         db=db,
         admin_id=current_admin.id,
         action="CATEGORY_CREATED",
         entity_type="CATEGORY",
         entity_id=request.slug,
-        details={"name": request.name}
+        details={"name": request.name},
     )
-    
+
     db.commit()
     db.refresh(category)
     return category
