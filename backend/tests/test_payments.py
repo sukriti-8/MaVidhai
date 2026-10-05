@@ -95,6 +95,14 @@ def test_unauthenticated_payment():
     response = client.post("/api/payments/create", json={"order_number": "MVD-TEST-123"})
     assert response.status_code == 401
 
+def test_unauthenticated_payment_bearer_null():
+    response = client.post("/api/payments/create", json={"order_number": "MVD-TEST-123"}, headers={"Authorization": "Bearer null"})
+    assert response.status_code == 401
+
+def test_unauthenticated_payment_bearer_undefined():
+    response = client.post("/api/payments/create", json={"order_number": "MVD-TEST-123"}, headers={"Authorization": "Bearer undefined"})
+    assert response.status_code == 401
+
 @patch("app.services.payment_service.payment_provider.create_payment_link")
 def test_create_payment_success(mock_create, auth_headers_user1, sample_pending_order, test_db: Session):
     mock_create.return_value = {

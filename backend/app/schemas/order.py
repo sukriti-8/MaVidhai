@@ -1,17 +1,17 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, EmailStr
 from typing import List, Optional
 from datetime import datetime
 
 class OrderCreate(BaseModel):
-    shipping_full_name: str = Field(..., min_length=1)
-    shipping_email: str = Field(..., min_length=1)
-    shipping_phone: str = Field(..., min_length=1)
-    shipping_address_line1: str = Field(..., min_length=1)
-    shipping_address_line2: Optional[str] = None
-    shipping_city: str = Field(..., min_length=1)
-    shipping_state: str = Field(..., min_length=1)
-    shipping_postal_code: str = Field(..., min_length=1)
-    shipping_country: str = Field(..., min_length=1)
+    shipping_full_name: str = Field(..., min_length=1, max_length=100)
+    shipping_email: EmailStr
+    shipping_phone: str = Field(..., min_length=1, max_length=20)
+    shipping_address_line1: str = Field(..., min_length=1, max_length=255)
+    shipping_address_line2: Optional[str] = Field(None, max_length=255)
+    shipping_city: str = Field(..., min_length=1, max_length=100)
+    shipping_state: str = Field(..., min_length=1, max_length=100)
+    shipping_postal_code: str = Field(..., min_length=1, max_length=20)
+    shipping_country: str = Field(..., min_length=1, max_length=100)
 
 
 class OrderItemResponse(BaseModel):

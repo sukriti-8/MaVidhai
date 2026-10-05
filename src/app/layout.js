@@ -1,9 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar/Navbar";
-import Footer from "@/components/Footer/Footer";
 import { LanguageProvider } from "@/context/LanguageContext";
-import Chatbot from "@/components/chatbot/Chatbot";
+import LayoutShell from "@/components/LayoutShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "VRHAZ",
-  description: "Premium ethnic wear and handcrafted fashion.",
+  title: "VRHAZ - Empowering Rural Women Artisans",
+  description: "Marketplace for authentic handmade crafts and sarees",
 };
 
 export default function RootLayout({ children }) {
@@ -28,12 +26,7 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <LanguageProvider>
-          <Navbar />
-          <Chatbot />
-
-          {children}
-
-          <Footer />
+          <LayoutShell>{children}</LayoutShell>
         </LanguageProvider>
       </body>
     </html>
