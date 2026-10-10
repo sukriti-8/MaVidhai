@@ -52,31 +52,30 @@ PRODUCTS = [
         "category": "Sarees",
 
         "price": Decimal("999.00"),
+        "mrp": Decimal("1099.00"),
 
         "description": (
-            "A handwoven cotton saree in Rani pink with "
-            "a deep purple border, featuring traditional "
-            "paisley motifs and a checked pallu."
+            "Woven paisley rows run across the body, with a checked "
+            "pattern in the pallu. Deep purple border with a "
+            "traditional peacock design."
         ),
 
-        "details": (
-            "100% cotton saree with a Rani pink body and "
-            "deep purple border. The body features paisley "
-            "motifs, while the pallu has a checked pattern "
-            "and the border features a traditional peacock design."
-        ),
+        "details": None,
 
         "material": "100% Cotton",
-        "dimensions": "5.5 m",
-        "colour": "Rani Pink with Deep Purple",
+        "dimensions": "5.5 m saree · No blouse piece",
+        "colour": "Rani Pink with Deep Purple Border",
         "care": None,
         "badge": None,
 
         "availability": True,
         "stock": 20,
 
-        # We will add the actual image URL later.
-        "image_url": None,
+        "image_url": "/sarees/saree1.jpeg",
+        "images": [
+            "/sarees/saree1.jpeg",
+            "/sarees/saree2.jpeg",
+        ],
     },
 
     {
@@ -105,6 +104,12 @@ PRODUCTS = [
         "stock": 20,
 
         "image_url": "/rope-basket/basket-1.jpeg",
+        "images": [
+            "/rope-basket/basket-1.jpeg",
+            "/rope-basket/basket-2.jpeg",
+            "/rope-basket/basket-3.jpeg",
+            "/rope-basket/basket-4.jpeg",
+        ],
     },
 
     {
@@ -240,6 +245,7 @@ def seed_database():
                 slug=product_data["slug"],
 
                 price=product_data["price"],
+                mrp=product_data.get("mrp"),
 
                 description=product_data.get(
                     "description"
@@ -281,6 +287,10 @@ def seed_database():
 
                 image_url=product_data.get(
                     "image_url"
+                ),
+
+                images=product_data.get(
+                    "images"
                 ),
             )
 
