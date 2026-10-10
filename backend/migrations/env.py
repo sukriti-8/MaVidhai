@@ -22,6 +22,11 @@ if os.getenv("MAVIDHAI_TEST") == "1":
 else:
     database_url = os.getenv("DATABASE_URL")
 
+if not database_url:
+    # Same fallback as app/database/connection.py, so `alembic upgrade head`
+    # works on a fresh machine with no .env DATABASE_URL (local SQLite file).
+    database_url = "sqlite:///./test.db"
+
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 
