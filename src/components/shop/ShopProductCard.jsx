@@ -12,9 +12,19 @@ function ShopProductCard({ product }) {
   const [addingToCart, setAddingToCart] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [cartError, setCartError] = useState("");
-
   const [isWishlisting, setIsWishlisting] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
+
+  const hasPrice =
+    product.price != null &&
+    Number.isFinite(Number(product.price)) &&
+    Number(product.price) > 0;
+
+  const isPurchasable =
+    hasPrice &&
+    product.is_active !== false &&
+    product.availability !== false &&
+    Number(product.stock ?? 0) > 0;
 
   const goToLogin = () => {
     router.push(`/login?next=${encodeURIComponent(pathname)}`);
@@ -22,7 +32,8 @@ function ShopProductCard({ product }) {
 
   const handleQuickAdd = async (e) => {
     e.preventDefault();
-    if (addingToCart) return;
+
+    if (!isPurchasable || addingToCart) return;
 
     setAddingToCart(true);
     setAddedToCart(false);
@@ -38,7 +49,6 @@ function ShopProductCard({ product }) {
         goToLogin();
         return;
       }
-
       setCartError("Unable to add to cart");
     } finally {
       setAddingToCart(false);
@@ -47,7 +57,8 @@ function ShopProductCard({ product }) {
 
   const handleWishlist = async (e) => {
     e.preventDefault();
-    if (isWishlisting) return;
+
+    if (!isPurchasable || isWishlisting) return;
 
     setIsWishlisting(true);
 
@@ -60,7 +71,6 @@ function ShopProductCard({ product }) {
         goToLogin();
         return;
       }
-      // No inline error slot for this button; fail quietly.
     } finally {
       setIsWishlisting(false);
     }
@@ -68,10 +78,7 @@ function ShopProductCard({ product }) {
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-[#eadfca] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-
-      {/* IMAGE */}
       <div className="relative aspect-[4/5] overflow-hidden bg-[#f1e8d7]">
-
         <Link href={`/product/${product.slug}`}>
           {product.image_url || product.image ? (
             <img
@@ -82,10 +89,9 @@ function ShopProductCard({ product }) {
           ) : (
             <div className="flex h-full items-center justify-center">
               <div className="text-center">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-[#d1a11c] text-xl text-[#c99716] transition-transform duration-300 group-hover:scale-110">
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-[#d1a11c] text-xl text-[#c99716]">
                   ✦
                 </div>
-
                 <p className="text-[10px] uppercase tracking-[2px] text-[#9b8a70]">
                   Product Image
                 </p>
@@ -94,28 +100,24 @@ function ShopProductCard({ product }) {
           )}
         </Link>
 
-        {/* BADGE */}
         {product.badge && (
           <span className="absolute left-3 top-3 rounded-full bg-[#d1a11c] px-3 py-1 text-[10px] font-medium text-white">
             {product.badge}
           </span>
         )}
 
-        {/* WISHLIST */}
         <button
           type="button"
           onClick={handleWishlist}
-          disabled={isWishlisting}
+          disabled={!isPurchasable || isWishlisting}
           aria-label={`Add ${product.name} to wishlist`}
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-lg shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-lg shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
           style={{ color: isWishlisted ? "#c99716" : "#81786d" }}
         >
           {isWishlisted ? "♥" : "♡"}
         </button>
-
       </div>
 
-      {/* DETAILS */}
       <Link href={`/product/${product.slug}`}>
         <div className="p-4">
           <p className="text-[10px] font-medium uppercase tracking-[1.5px] text-[#b5965c]">
@@ -126,43 +128,54 @@ function ShopProductCard({ product }) {
             {product.name}
           </h3>
 
-          {/* RATING */}
           <div className="mt-2 flex items-center gap-1.5">
             <span className="text-xs text-[#d1a11c]">★</span>
             <span className="text-xs font-medium text-[#5f584f]">
-              {product.rating}
+              {product.rating ?? "—"}
             </span>
             <span className="text-[11px] text-[#a99d8b]">
-              ({product.reviews})
+              ({product.reviews ?? 0})
             </span>
           </div>
 
-          <div className="mt-3 flex items-baseline gap-2">
-            {product.mrp && Number(product.mrp) > Number(product.price) && (
-              <span className="text-xs text-gray-400 line-through">
-                ₹{Number(product.mrp).toLocaleString("en-IN")}
+          <div className="mt-3 flex min-h-5 flex-wrap items-baseline gap-2">
+            {hasPrice ? (
+              <>
+                {product.mrp != null &&
+                  Number(product.mrp) > Number(product.price) && (
+                    <span className="text-xs text-gray-400 line-through">
+                      ₹{Number(product.mrp).toLocaleString("en-IN")}
+                    </span>
+                  )}
+                <span className="text-sm font-semibold text-[#a9780d]">
+                  ₹{Number(product.price).toLocaleString("en-IN")}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm font-semibold text-[#a9780d]">
+                {product.badge === "Coming Soon"
+                  ? "Coming Soon"
+                  : "Price coming soon"}
               </span>
             )}
-            <span className="text-sm font-semibold text-[#a9780d]">
-              ₹{product.price.toLocaleString("en-IN")}
-            </span>
           </div>
         </div>
       </Link>
 
-      {/* QUICK ADD */}
       <div className="px-4 pb-4">
         <button
           type="button"
           onClick={handleQuickAdd}
-          disabled={addingToCart}
+          disabled={!isPurchasable || addingToCart}
           className="block w-full rounded-lg border border-[#d9bf7c] py-2.5 text-center text-xs font-medium text-[#9b6d0d] transition-colors hover:bg-[#fff8e8] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {addingToCart
-            ? "Adding..."
-            : addedToCart
-              ? "✓ Added to Cart"
-              : "Quick Add"}
+          {!isPurchasable
+            ? "Coming Soon"
+            : addingToCart
+              ? "Adding..."
+              : addedToCart
+                ? "✓ Added to Cart"
+                : "Quick Add"}
         </button>
 
         {cartError && (
@@ -171,7 +184,6 @@ function ShopProductCard({ product }) {
           </p>
         )}
       </div>
-
     </div>
   );
 }
