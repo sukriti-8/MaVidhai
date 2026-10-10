@@ -39,10 +39,15 @@ def create_order(db: Session, user: User, order_data: OrderCreate) -> Order:
                 detail=f"Product with id {cart_item.product_id} no longer exists"
             )
             
-        if not product.availability:
+        if (
+            not product.is_active
+            or not product.availability
+            or product.stock <= 0
+            or product.price is None
+        ):
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Product '{product.name}' is currently unavailable"
+                status_code=409,
+                detail=f"{product.name} is not available for purchase",
             )
             
         if cart_item.quantity > product.stock:

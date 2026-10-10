@@ -1,11 +1,14 @@
+
 from decimal import Decimal
 from typing import Tuple, List
+
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, func
 from fastapi import HTTPException, status
 
 from app.models.product import Product
 from app.models.category import Category
+
 
 def get_products(
     db: Session,
@@ -16,49 +19,55 @@ def get_products(
     available: bool | None = None,
     low_stock: bool | None = None,
     page: int = 1,
-    limit: int = 20
+    limit: int = 20,
 ) -> Tuple[List[Product], int]:
-    
+
     if min_price is not None and max_price is not None:
         if min_price > max_price:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail="min_price cannot be greater than max_price"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="min_price cannot be greater than max_price",
             )
 
-    stmt = select(Product).options(selectinload(Product.category))
-    
+    stmt = (
+        select(Product)
+        .join(Category, Product.category_id == Category.id)
+        .options(selectinload(Product.category))
+        .where(
+            Product.show_in_catalogue.is_(True),
+            Category.is_active.is_(True),
+        )
+    )
+
     if search:
         search_term = f"%{search.strip()}%"
         stmt = stmt.where(
             Product.name.ilike(search_term)
             | Product.description.ilike(search_term)
         )
-    
+
     if category:
-        stmt = stmt.join(Category, Product.category_id == Category.id).where(Category.slug == category)
-        
+        stmt = stmt.where(Category.slug == category)
+
     if min_price is not None:
         stmt = stmt.where(Product.price >= min_price)
-    
+
     if max_price is not None:
         stmt = stmt.where(Product.price <= max_price)
-        
+
     if available is not None:
         stmt = stmt.where(Product.availability == available)
-        
+
     if low_stock:
         stmt = stmt.where(Product.stock <= 10)
-        
-    # Count total matching products
+
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = db.execute(count_stmt).scalar_one()
-    
-    # Pagination & Deterministic Ordering
+
     stmt = stmt.order_by(Product.id.asc())
     offset = (page - 1) * limit
     stmt = stmt.offset(offset).limit(limit)
-    
+
     items = db.execute(stmt).scalars().all()
-    
+
     return items, total

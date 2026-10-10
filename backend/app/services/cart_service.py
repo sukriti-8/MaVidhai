@@ -10,6 +10,17 @@ def _build_cart_response(cart: Cart) -> CartResponse:
     item_count = 0
     subtotal = 0
     for item in cart.items:
+        if (
+            item.product.price is None
+            or not item.product.is_active
+            or not item.product.availability
+            or item.product.stock <= 0
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail=f"{item.product.name} is no longer available for purchase. Remove it from your cart.",
+            )
+
         item_subtotal = item.product.price * item.quantity
         items_response.append(CartItemResponse(
             id=item.id,
@@ -41,8 +52,16 @@ def add_item(db: Session, user_id: int, item_in: CartItemCreate) -> CartResponse
     product = db.execute(select(Product).where(Product.id == item_in.product_id)).scalar_one_or_none()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    if not product.availability or product.stock <= 0:
-        raise HTTPException(status_code=400, detail="Product is not available")
+    if (
+        not product.is_active
+        or not product.availability
+        or product.stock <= 0
+        or product.price is None
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Product is not available for purchase",
+        )
         
     cart_item = db.execute(
         select(CartItem).where(CartItem.cart_id == cart.id, CartItem.product_id == item_in.product_id)
@@ -81,8 +100,16 @@ def update_item(db: Session, user_id: int, item_id: int, item_update: CartItemUp
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
         
-    if not product.availability or product.stock <= 0:
-        raise HTTPException(status_code=400, detail="Product is not available")
+    if (
+        not product.is_active
+        or not product.availability
+        or product.stock <= 0
+        or product.price is None
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Product is not available for purchase",
+        )
         
     if item_update.quantity > product.stock:
         raise HTTPException(status_code=400, detail="Not enough stock available")

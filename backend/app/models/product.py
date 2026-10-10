@@ -15,7 +15,10 @@ class Product(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     slug: Mapped[str] = mapped_column(String(200), unique=True, index=True, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    price: Mapped[Decimal | None] = mapped_column(
+        Numeric(10, 2),
+        nullable=True,
+    )
     # Original / list price shown struck through next to `price` when the
     # item is on offer. Null means "no MRP set, just show `price`".
     mrp: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
@@ -26,6 +29,18 @@ class Product(Base):
     care: Mapped[str | None] = mapped_column(String(500), nullable=True)
     badge: Mapped[str | None] = mapped_column(String(100), nullable=True)
     availability: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+        server_default="true",
+    )
+    show_in_catalogue: Mapped[bool] = mapped_column(
+    Boolean,
+    nullable=False,
+    default=True,
+    server_default="true",
+)
     stock: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
     image_url: Mapped[str | None] = mapped_column(String(500))
     # Full ordered gallery for the product detail page, e.g.
