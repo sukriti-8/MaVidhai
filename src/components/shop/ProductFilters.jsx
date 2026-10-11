@@ -1,8 +1,8 @@
 "use client";
 
 export default function ProductFilters({
-  filters,
   categories = [],
+  filters,
   onCategoryChange,
   onPriceChange,
   onAvailabilityChange,
@@ -15,17 +15,13 @@ export default function ProductFilters({
   return (
     <aside className="w-full shrink-0 lg:w-[230px]">
       <div className="rounded-2xl border border-[#eadfca] bg-white p-5">
-
         {/* CATEGORY */}
         <div>
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-[#29251f]">
               Categories
             </h3>
-
-            <span className="text-xs text-[#b5965c]">
-              Filter
-            </span>
+            <span className="text-xs text-[#b5965c]">Filter</span>
           </div>
 
           <div className="mt-5 space-y-1">
@@ -46,6 +42,7 @@ export default function ProductFilters({
                 key={category.id ?? category.slug}
                 type="button"
                 onClick={() => onCategoryChange(category.slug)}
+                aria-pressed={isCategorySelected(category.slug)}
                 className={`w-full rounded-lg px-3 py-3 text-left text-sm transition-colors ${
                   isCategorySelected(category.slug)
                     ? "bg-[#fff3d8] text-[#9b6d0d]"
@@ -63,92 +60,32 @@ export default function ProductFilters({
 
         {/* PRICE */}
         <div>
-          <h3 className="text-sm font-semibold text-[#29251f]">
-            Price
-          </h3>
+          <h3 className="text-sm font-semibold text-[#29251f]">Price</h3>
 
           <div className="mt-4 space-y-3">
-
-            <button
-              type="button"
+            <PriceOption
+              label="All Prices"
+              selected={isPriceSelected("", "")}
               onClick={() => onPriceChange("", "")}
-              className="flex items-center gap-3 text-sm text-[#5f584f]"
-            >
-              <span
-                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                  isPriceSelected("", "")
-                    ? "border-[#d1a11c]"
-                    : "border-[#a9a29a]"
-                }`}
-              >
-                {isPriceSelected("", "") && (
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#d1a11c]" />
-                )}
-              </span>
+            />
 
-              All Prices
-            </button>
-
-            <button
-              type="button"
+            <PriceOption
+              label="Under ₹1,000"
+              selected={isPriceSelected("", "999")}
               onClick={() => onPriceChange("", "999")}
-              className="flex items-center gap-3 text-sm text-[#5f584f]"
-            >
-              <span
-                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                  isPriceSelected("", "999")
-                    ? "border-[#d1a11c]"
-                    : "border-[#a9a29a]"
-                }`}
-              >
-                {isPriceSelected("", "999") && (
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#d1a11c]" />
-                )}
-              </span>
+            />
 
-              Under ₹1,000
-            </button>
-
-            <button
-              type="button"
+            <PriceOption
+              label="₹1,000 – ₹2,000"
+              selected={isPriceSelected("1000", "2000")}
               onClick={() => onPriceChange("1000", "2000")}
-              className="flex items-center gap-3 text-sm text-[#5f584f]"
-            >
-              <span
-                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                  isPriceSelected("1000", "2000")
-                    ? "border-[#d1a11c]"
-                    : "border-[#a9a29a]"
-                }`}
-              >
-                {isPriceSelected("1000", "2000") && (
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#d1a11c]" />
-                )}
-              </span>
+            />
 
-              ₹1,000 – ₹2,000
-            </button>
-
-            <button
-              type="button"
+            <PriceOption
+              label="Above ₹2,000"
+              selected={isPriceSelected("2000", "")}
               onClick={() => onPriceChange("2000", "")}
-              className="flex items-center gap-3 text-sm text-[#5f584f]"
-            >
-              <span
-                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-                  isPriceSelected("2000", "")
-                    ? "border-[#d1a11c]"
-                    : "border-[#a9a29a]"
-                }`}
-              >
-                {isPriceSelected("2000", "") && (
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#d1a11c]" />
-                )}
-              </span>
-
-              Above ₹2,000
-            </button>
-
+            />
           </div>
         </div>
 
@@ -159,9 +96,8 @@ export default function ProductFilters({
         <div>
           <button
             type="button"
-            onClick={() =>
-              onAvailabilityChange(!filters.available)
-            }
+            onClick={() => onAvailabilityChange(!filters.available)}
+            aria-pressed={Boolean(filters.available)}
             className="flex items-center gap-3 text-sm text-[#5f584f]"
           >
             <span
@@ -179,8 +115,30 @@ export default function ProductFilters({
             In stock only
           </button>
         </div>
-
       </div>
     </aside>
+  );
+}
+
+function PriceOption({ label, selected, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className="flex items-center gap-3 text-sm text-[#5f584f]"
+    >
+      <span
+        className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+          selected ? "border-[#d1a11c]" : "border-[#a9a29a]"
+        }`}
+      >
+        {selected && (
+          <span className="h-2.5 w-2.5 rounded-full bg-[#d1a11c]" />
+        )}
+      </span>
+
+      {label}
+    </button>
   );
 }

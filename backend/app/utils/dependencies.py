@@ -47,3 +47,12 @@ def get_super_admin(current_user: User = Depends(get_current_user)) -> User:
             detail="Admin access required",
         )
     return current_user
+
+def get_catalog_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Allow Super Admins and Sub-Admins to manage store operations."""
+    if current_user.role not in {"SUPER_ADMIN", "SUB_ADMIN"}:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Store administrator access required",
+        )
+    return current_user

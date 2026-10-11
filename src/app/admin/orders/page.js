@@ -17,82 +17,59 @@ import {
   Package,
 } from "lucide-react";
 
-/*
- * PREVIEW DATA ONLY
- *
- * These orders are for the founder/UI demonstration.
- * They are NOT stored in the database.
- *
- * Later:
- * GET /api/admin/orders
- * will provide the real order data.
- */
-
-const INITIAL_ORDERS = [
-  {
-    id: "ORD-P001",
-    customer: "Preview Customer 01",
-    email: "customer01@example.com",
-    items: [
-      {
-        name: "Handwoven Cotton Saree – Pink & Deep Purple",
-        qty: 1,
-        price: 999,
-      },
-    ],
-    total: 999,
-    status: "Processing",
-    paymentMethod: "Preview Payment",
-    date: "2026-09-23",
-    address: "Preview Address",
-  },
-  {
-    id: "ORD-P002",
-    customer: "Preview Customer 02",
-    email: "customer02@example.com",
-    items: [
-      {
-        name: "Lion Face Rope Storage Basket with Lid – Green",
-        qty: 1,
-        price: 299,
-      },
-    ],
-    total: 299,
-    status: "Delivered",
-    paymentMethod: "Preview Payment",
-    date: "2026-09-22",
-    address: "Preview Address",
-  },
-  {
-    id: "ORD-P003",
-    customer: "Preview Customer 03",
-    email: "customer03@example.com",
-    items: [
-      {
-        name: "Handwoven Cotton Saree – Pink & Deep Purple",
-        qty: 1,
-        price: 999,
-      },
-      {
-        name: "Lion Face Rope Storage Basket with Lid – Green",
-        qty: 1,
-        price: 299,
-      },
-    ],
-    total: 1298,
-    status: "Shipped",
-    paymentMethod: "Preview Payment",
-    date: "2026-09-21",
-    address: "Preview Address",
-  },
-];
-
 const STATUS_OPTIONS = [
   "All",
+  "Pending",
   "Processing",
   "Shipped",
   "Delivered",
+  "Cancelled",
+  "Inventory Issue",
 ];
+
+const API_STATUS = {
+  Processing: "confirmed",
+  Shipped: "shipped",
+  Delivered: "delivered",
+};
+
+function normalizeOrder(order) {
+  const statusLabels = {
+    pending: "Pending",
+    confirmed: "Processing",
+    inventory_conflict: "Inventory Issue",
+    shipped: "Shipped",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
+  };
+  const paymentStatus = order.payment?.status || order.payment_status || "pending";
+  const address = [
+    order.shipping_address_line1,
+    order.shipping_address_line2,
+    order.shipping_city,
+    order.shipping_state,
+    order.shipping_postal_code,
+    order.shipping_country,
+  ].filter(Boolean).join(", ");
+
+  return {
+    ...order,
+    id: order.order_number || String(order.id),
+    backendId: order.id,
+    customer: order.shipping_full_name || order.customer || "Customer",
+    email: order.shipping_email || order.email || "",
+    items: (order.items || []).map((item) => ({
+      name: item.product_name || item.name || "Product",
+      qty: Number(item.quantity ?? item.qty ?? 1),
+      price: Number(item.unit_price ?? item.price ?? 0),
+    })),
+    total: Number(order.total_amount ?? order.total ?? 0),
+    status: statusLabels[order.status] || order.status || "Pending",
+    paymentMethod: paymentStatus === "captured" ? "Paid" : paymentStatus,
+    date: order.created_at ? new Date(order.created_at).toLocaleDateString() : order.date || "—",
+    address: address || order.address || "Address unavailable",
+  };
+}
 
 function getStatusBadge(status) {
   switch (status) {
@@ -123,7 +100,7 @@ function getStatusBadge(status) {
 }
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
+  const [orders, setOrders] = useState([]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -133,9 +110,7 @@ export default function OrdersPage() {
   const loadOrders = async () => {
     try {
       const data = await get("/api/admin/orders");
-      if (data?.items && data.items.length > 0) {
-  setOrders(data.items);
-}
+      setOrders((data?.items || []).map(normalizeOrder));
     } catch (error) {
       console.error("Failed to load orders:", error);
     }
@@ -149,8 +124,9 @@ export default function OrdersPage() {
       const search = searchQuery.toLowerCase();
 
       const matchesSearch =
-        order.id.toLowerCase().includes(search) ||
-        order.customer.toLowerCase().includes(search);
+        String(order.id || "").toLowerCase().includes(search) ||
+        String(order.customer || "").toLowerCase().includes(search) ||
+        String(order.email || "").toLowerCase().includes(search);
 
       const matchesStatus =
         statusFilter === "All" ||
@@ -169,33 +145,20 @@ export default function OrdersPage() {
    */
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-  await patch(`/api/admin/orders/${orderId}/status`, {
-    status: newStatus,
-  });
+      const order = orders.find((item) => item.id === orderId);
+      if (!order?.backendId || !API_STATUS[newStatus]) return;
+      const updated = await patch(`/api/admin/orders/${order.backendId}/status`, {
+        status: API_STATUS[newStatus],
+      });
+      const normalized = normalizeOrder(updated);
+      setOrders((current) => current.map((item) => item.id === orderId ? normalized : item));
+      setSelectedOrder((current) => current?.id === orderId ? normalized : current);
+      return;
 } catch (error) {
   console.error("Failed to update order status:", error);
   alert(error.message || "Failed to update order status.");
   return;
 }
-    setOrders((current) =>
-      current.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              status: newStatus,
-            }
-          : order
-      )
-    );
-
-    setSelectedOrder((current) =>
-      current?.id === orderId
-        ? {
-            ...current,
-            status: newStatus,
-          }
-        : current
-    );
   };
 
   return (
@@ -449,23 +412,6 @@ export default function OrdersPage() {
           </div>
 
         )}
-
-      </div>
-
-      {/* ================= PREVIEW NOTICE ================= */}
-
-      <div className="rounded-xl border border-[#E8DFC8] bg-[#FFFDF8] px-4 py-3">
-
-        <p className="text-xs leading-5 text-stone-500">
-
-          <span className="font-semibold text-stone-700">
-            Preview mode:
-          </span>{" "}
-          Orders shown here are sample UI data. Status
-          changes are currently local and will later connect
-          to the admin order API.
-
-        </p>
 
       </div>
 

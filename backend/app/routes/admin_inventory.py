@@ -8,7 +8,7 @@ from app.models.user import User
 from app.models.product import Product
 from app.models.category import Category
 from app.models.inventory_audit import InventoryAudit
-from app.utils.dependencies import get_super_admin
+from app.utils.dependencies import get_catalog_admin
 from app.schemas.admin_inventory import (
     PaginatedAdminInventoryProductResponse,
     PaginatedInventoryAuditResponse,
@@ -34,7 +34,7 @@ def get_inventory(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin)
+    current_admin: User = Depends(get_catalog_admin)
 ):
     query = db.query(Product)
     
@@ -94,7 +94,7 @@ def get_inventory_audit(
     page: int = Query(1, ge=1),
     size: int = Query(50, ge=1, le=100),
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin)
+    current_admin: User = Depends(get_catalog_admin)
 ):
     query = db.query(InventoryAudit)
     
@@ -128,7 +128,7 @@ def get_inventory_audit(
 @router.get("/summary", response_model=InventorySummaryResponse)
 def get_inventory_summary(
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin)
+    current_admin: User = Depends(get_catalog_admin)
 ):
     total_stock = db.query(func.sum(Product.stock)).scalar() or 0
     low_stock = db.query(Product).filter(Product.stock <= LOW_STOCK_THRESHOLD, Product.stock > 0).count()
@@ -148,7 +148,7 @@ def get_inventory_summary(
 def bulk_adjust_inventory(
     request: BulkInventoryAdjustmentRequest,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin)
+    current_admin: User = Depends(get_catalog_admin)
 ):
     result = admin_bulk_adjust_stock(db, request.items, current_admin.id)
     

@@ -10,7 +10,7 @@ from app.models.category import Category
 from app.models.user import User
 from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse, PaginatedProductResponse, ProductStockUpdate
 from app.schemas.admin_catalog import BulkAvailabilityRequest, BulkCategoryRequest
-from app.utils.dependencies import get_super_admin
+from app.utils.dependencies import get_catalog_admin
 from app.services import product_service, inventory_service, catalog_service
 from app.services.audit_service import log_admin_action
 
@@ -30,7 +30,7 @@ def get_admin_products(
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     items, total = product_service.get_products(
         db=db,
@@ -62,7 +62,7 @@ def get_admin_products(
 def create_product(
     request: ProductCreate,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     stmt = select(Product).where(Product.slug == request.slug)
     if db.execute(stmt).scalar_one_or_none():
@@ -125,7 +125,7 @@ def update_product(
     product_id: int,
     request: ProductUpdate,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     product = db.get(Product, product_id)
     if not product:
@@ -178,7 +178,7 @@ def update_product(
 def deactivate_product(
     product_id: int,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     product = db.get(Product, product_id)
     if not product:
@@ -208,7 +208,7 @@ def adjust_product_stock(
     product_id: int,
     request: ProductStockUpdate,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     inventory_service.admin_adjust_stock(db, product_id, request.delta, current_admin.id, request.reason)
     db.commit()
@@ -222,7 +222,7 @@ def adjust_product_stock(
 def bulk_update_availability(
     request: BulkAvailabilityRequest,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     catalog_service.bulk_update_availability(db, request.product_ids, request.availability, current_admin.id)
     return {"status": "success", "updated_count": len(request.product_ids)}
@@ -234,7 +234,7 @@ def bulk_update_availability(
 def bulk_update_category(
     request: BulkCategoryRequest,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     catalog_service.bulk_update_category(db, request.product_ids, request.category_id, current_admin.id)
     return {"status": "success", "updated_count": len(request.product_ids)}

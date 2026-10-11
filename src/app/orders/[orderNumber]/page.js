@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Script from "next/script";
 import { getOrder, setAuthToken } from "@/lib/api";
 import OrderStatus from "@/components/OrderStatus/OrderStatus";
 import { useRazorpayPayment } from "@/hooks/useRazorpayPayment";
 
-export default function OrderDetailsPage({ params }) {
+export default function OrderDetailsPage() {
   const router = useRouter();
+  const params = useParams();
   const orderNumber = params.orderNumber;
   
   const [order, setOrder] = useState(null);
