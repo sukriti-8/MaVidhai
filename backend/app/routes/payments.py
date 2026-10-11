@@ -1,4 +1,3 @@
-
 import json
 import os
 
@@ -25,7 +24,6 @@ from app.schemas.payment import (
 )
 from app.services import payment_service, payment_webhook_service
 from app.utils.dependencies import get_current_user
-
 
 router = APIRouter(prefix="/api/payments", tags=["Payments"])
 
@@ -72,12 +70,7 @@ def mock_confirm_payment(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Complete a local demo payment through the webhook processing service.
-
-    This endpoint is available only when running without a configured
-    Razorpay client and outside production.
-    """
+    """Complete a local demo payment through the webhook service."""
     if (
         os.getenv("ENVIRONMENT", "development").lower() == "production"
         or payment_provider.client is not None
@@ -116,7 +109,6 @@ def mock_confirm_payment(
         )
 
     event_id = f"evt_mock_{payment.id}"
-
     payload = {
         "id": event_id,
         "event": "payment_link.paid",
@@ -130,9 +122,8 @@ def mock_confirm_payment(
         },
     }
 
-    # NOTE:
-    # This signature must be accepted by the webhook service/provider
-    # in local demo mode. Do not use this mock flow in production.
+    # This depends on the webhook service explicitly supporting this
+    # local-demo signature. Never enable this mock flow in production.
     return payment_webhook_service.process_webhook(
         db=db,
         raw_body=json.dumps(payload).encode("utf-8"),
@@ -150,8 +141,7 @@ async def webhook(
     signature = request.headers.get("x-razorpay-signature")
     event_id = request.headers.get("x-razorpay-event-id")
 
-    # Razorpay event IDs are commonly included in the JSON payload.
-    # Use the payload ID as a fallback when the header is absent.
+    # Fall back to the event ID in the JSON payload when necessary.
     if not event_id:
         try:
             payload = json.loads(raw_body.decode("utf-8"))
