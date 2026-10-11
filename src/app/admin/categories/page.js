@@ -32,9 +32,24 @@ export default function AdminCategoriesPage() {
   useEffect(() => {
   const loadCategories = async () => {
     try {
-      const data = await get("/api/admin/categories");
-
-      setCategories(Array.isArray(data) ? data : data.items || []);
+      const [categoryData, productData] = await Promise.all([
+        get("/api/admin/categories"),
+        get("/api/products?limit=100"),
+      ]);
+      const productCounts = new Map();
+      for (const product of productData.items || []) {
+        productCounts.set(
+          product.category_id,
+          (productCounts.get(product.category_id) || 0) + 1,
+        );
+      }
+      const categoryItems = Array.isArray(categoryData)
+        ? categoryData
+        : categoryData.items || [];
+      setCategories(categoryItems.map((category) => ({
+        ...category,
+        productCount: productCounts.get(category.id) || 0,
+      })));
     } catch (error) {
       console.error("Failed to load categories:", error);
     }

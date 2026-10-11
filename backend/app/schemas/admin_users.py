@@ -25,7 +25,7 @@ class UserUpdateRequest(BaseModel):
     email: Optional[EmailStr] = None
 
 class UserRoleUpdateRequest(BaseModel):
-    role: str = Field(..., description="Role must be one of the supported roles like CUSTOMER or SUPER_ADMIN")
+    role: str = Field(..., description="Role must be CUSTOMER, SUB_ADMIN, or SUPER_ADMIN")
 
 class UserStatusUpdateRequest(BaseModel):
     is_active: bool

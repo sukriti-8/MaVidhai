@@ -4,7 +4,8 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { getProducts, getCategories } from "@/lib/api";
+
+import { getCategories, getProducts } from "@/lib/api";
 
 import ProductSearch from "@/components/shop/ProductSearch";
 import ProductFilters from "@/components/shop/ProductFilters";
@@ -12,19 +13,18 @@ import ProductGrid from "@/components/shop/ProductGrid";
 import Pagination from "@/components/shop/Pagination";
 
 function ShopContent() {
-  /*** State ***/
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams?.get("category") || "";
+
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
     total: 0,
     pages: 0,
   });
-
-  // Initialise the category filter from the URL (origin/main behaviour)
-  const searchParams = useSearchParams();
-  const categoryFromUrl = searchParams?.get("category") || "";
 
   const [filters, setFilters] = useState({
     search: "",
@@ -33,66 +33,83 @@ function ShopContent() {
     maxPrice: "",
     available: false,
   });
-  // Keep the category filter synchronized with the URL.
-// This is important when navigating between category links
-// without a full page reload.
-useEffect(() => {
-  setFilters((prev) => {
-    if (prev.category === categoryFromUrl) return prev;
 
-    return {
-      ...prev,
-      category: categoryFromUrl,
-    };
-  });
-
-  setPagination((prev) => ({
-    ...prev,
-    page: 1,
-  }));
-}, [categoryFromUrl]);
-
-  // Search input + debounce (HEAD behaviour)
   const [searchInput, setSearchInput] = useState("");
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // =========================================================
-  // LOAD CATEGORIES FROM BACKEND (once)
-  // =========================================================
+  // Keep the category filter synchronized with the URL.
+  useEffect(() => {
+    setFilters((prev) => {
+      if (prev.category === categoryFromUrl) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        category: categoryFromUrl,
+      };
+    });
+
+    setPagination((prev) => ({
+      ...prev,
+      page: 1,
+    }));
+  }, [categoryFromUrl]);
+
+  // Load categories once.
   useEffect(() => {
     const controller = new AbortController();
 
-    getCategories(controller.signal)
-      .then((data) => setCategories(data.items || data || []))
-      .catch((err) => {
+    async function loadCategories() {
+      try {
+        const data = await getCategories(controller.signal);
+
+        if (controller.signal.aborted) return;
+
+        const items = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.items)
+            ? data.items
+            : [];
+
+        setCategories(items);
+      } catch (err) {
         if (err.name !== "AbortError") {
-          console.error("Failed to load categories:", err);
+          console.error("Failed to load shop categories:", err);
         }
-      });
+      }
+    }
+
+    loadCategories();
 
     return () => controller.abort();
   }, []);
 
-  // =========================================================
-  // LOAD PRODUCTS FROM BACKEND
-  // =========================================================
-
-  // Debounce search input (HEAD)
+  // Debounce search input.
   useEffect(() => {
     const timer = setTimeout(() => {
       setFilters((prev) => {
-        if (prev.search === searchInput) return prev;
-        return { ...prev, search: searchInput };
+        if (prev.search === searchInput) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          search: searchInput,
+        };
       });
-      setPagination((prev) => ({ ...prev, page: 1 }));
+
+      setPagination((prev) => ({
+        ...prev,
+        page: 1,
+      }));
     }, 300);
 
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Fetch products whenever filters or page changes
+  // Load products whenever filters or pagination change.
   useEffect(() => {
     const controller = new AbortController();
 
@@ -110,14 +127,16 @@ useEffect(() => {
           controller.signal
         );
 
-        setProducts(data.items);
+        if (controller.signal.aborted) return;
+
+        setProducts(Array.isArray(data?.items) ? data.items : []);
 
         setPagination((prev) => ({
           ...prev,
-          page: data.page,
-          limit: data.limit,
-          total: data.total,
-          pages: data.pages,
+          page: data?.page ?? prev.page,
+          limit: data?.limit ?? prev.limit,
+          total: data?.total ?? 0,
+          pages: data?.pages ?? 0,
         }));
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -136,10 +155,7 @@ useEffect(() => {
     return () => controller.abort();
   }, [filters, pagination.page, pagination.limit]);
 
-  // =========================================================
-  // FILTER HANDLERS
-  // =========================================================
-
+  // Filter handlers.
   const handleCategoryChange = (slug) => {
     setFilters((prev) => ({
       ...prev,
@@ -184,10 +200,9 @@ useEffect(() => {
     }));
   };
 
-  const isPriceSelected = (min, max) =>
-    filters.minPrice === min && filters.maxPrice === max;
-
   const clearFilters = () => {
+    setSearchInput("");
+
     setFilters({
       search: "",
       category: "",
@@ -216,8 +231,8 @@ useEffect(() => {
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-7 text-[#1D1D1B]">
-            Explore thoughtfully crafted products for your home, everyday life,
-            gifting and more.
+            Explore thoughtfully crafted products for your home, everyday
+            life, gifting and more.
           </p>
         </div>
       </section>
@@ -227,8 +242,8 @@ useEffect(() => {
         <div className="flex flex-col gap-8 lg:flex-row">
           {/* FILTER SIDEBAR */}
           <ProductFilters
-            filters={filters}
             categories={categories}
+            filters={filters}
             onCategoryChange={handleCategoryChange}
             onPriceChange={handlePriceChange}
             onAvailabilityChange={handleAvailabilityChange}
@@ -252,27 +267,23 @@ useEffect(() => {
                   products
                 </p>
 
-                <button
-                  type="button"
-                  className="rounded-lg border border-[#D8D4CC] bg-white px-4 py-2.5 text-sm text-[#1D1D1B] transition-colors hover:border-[#A85838]"
-                >
-                  Sort by: Featured ▾
-                </button>
+                <span className="rounded-lg border border-[#D8D4CC] bg-white px-4 py-2.5 text-sm text-[#1D1D1B]">
+                  Sort by: Featured
+                </span>
               </div>
             </div>
 
             {/* PRODUCT GRID */}
             {loading ? (
               <div className="flex h-64 items-center justify-center">
-                <p className="text-[#3F5144]">
-                  Loading products...
-                </p>
+                <p className="text-[#3F5144]">Loading products...</p>
               </div>
             ) : error ? (
               <div className="flex h-64 flex-col items-center justify-center gap-4">
                 <p className="text-red-600">{error}</p>
 
                 <button
+                  type="button"
                   onClick={() => window.location.reload()}
                   className="text-[#A85838] underline"
                 >
@@ -290,10 +301,8 @@ useEffect(() => {
                 </p>
 
                 <button
-                  onClick={() => {
-                    setSearchInput("");
-                    clearFilters();
-                  }}
+                  type="button"
+                  onClick={clearFilters}
                   className="mt-4 text-sm text-[#A85838] hover:underline"
                 >
                   Clear all filters
@@ -320,7 +329,13 @@ useEffect(() => {
 
 export default function ShopPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[#F8F6F2]">
+          <p className="text-[#3F5144]">Loading shop...</p>
+        </main>
+      }
+    >
       <ShopContent />
     </Suspense>
   );

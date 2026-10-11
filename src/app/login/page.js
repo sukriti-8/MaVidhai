@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
@@ -26,17 +26,12 @@ function LoginContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [successMessage, setSuccessMessage] = useState("");
-  const [registeredMessage, setRegisteredMessage] = useState("");
+  const registeredMessage =
+    searchParams.get("registered") === "true"
+      ? "Account created successfully. Please log in to continue."
+      : "";
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-
-  useEffect(() => {
-    if (searchParams.get("registered") === "true") {
-      setRegisteredMessage(
-        "Account created successfully. Please log in to continue."
-      );
-    }
-  }, [searchParams]);
 
   const handleLogin = async () => {
     let valid = true;

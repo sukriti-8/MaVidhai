@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { get } from "@/lib/api";
 import {
@@ -14,11 +15,23 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
   const [dashboardData, setDashboardData] = useState(null);
   const [productCount, setProductCount] = useState(0);
   const [lowStock, setLowStock] = useState([]);
+  const [dashboardError, setDashboardError] = useState("");
 
   useEffect(() => {
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("mavidhai_user") || "null");
+      if (currentUser?.role === "SUB_ADMIN") {
+        router.replace("/admin/products");
+        return;
+      }
+    } catch {
+      // Continue to the dashboard; the API will report authentication issues inline.
+    }
+
     const loadDashboard = async () => {
       try {
         // Dashboard data
@@ -47,12 +60,12 @@ export default function AdminDashboardPage() {
           inventoryItems.filter((item) => item?.is_low_stock === true)
         );
       } catch (error) {
-        console.error("Failed to load dashboard:", error);
+        setDashboardError(error.message || "Unable to load the dashboard.");
       }
     };
 
     loadDashboard();
-  }, []);
+  }, [router]);
 
   const stats = [
     {
@@ -90,10 +103,31 @@ export default function AdminDashboardPage() {
     },
   ];
 
-  const recentOrders = dashboardData?.recent_orders ?? [];
+  const recentOrders = (dashboardData?.recent_orders ?? []).map((order) => ({
+    ...order,
+    displayId: order.order_number || order.id,
+    displayTotal: Number(order.total_amount ?? 0),
+    displayStatus: ({
+      pending: "Pending",
+      confirmed: "Processing",
+      inventory_conflict: "Inventory Issue",
+      shipped: "Shipped",
+      delivered: "Delivered",
+      cancelled: "Cancelled",
+    })[order.order_status] || order.order_status || "Pending",
+    displayDate: order.created_at
+      ? new Date(order.created_at).toLocaleDateString()
+      : "—",
+  }));
 
   return (
     <div className="space-y-8">
+      {dashboardError && (
+        <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+          {dashboardError}
+        </p>
+      )}
+
       {/* Header Banner */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -220,11 +254,11 @@ export default function AdminDashboardPage() {
                 ) : (
                   recentOrders.map((order) => (
                     <tr
-                      key={order.id}
+                      key={order.order_number || order.id}
                       className="hover:bg-amber-50/30 transition-colors"
                     >
                       <td className="py-3.5 font-bold text-stone-900">
-                        {order.id}
+                        {order.displayId}
                       </td>
 
                       <td className="py-3.5 text-stone-700">
@@ -232,25 +266,25 @@ export default function AdminDashboardPage() {
                       </td>
 
                       <td className="py-3.5 font-semibold text-stone-900">
-                        {order.total}
+                        ₹{order.displayTotal.toLocaleString("en-IN")}
                       </td>
 
                       <td className="py-3.5">
                         <span
                           className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${
-                            order.status === "Delivered"
+                            order.displayStatus === "Delivered"
                               ? "bg-emerald-50 text-emerald-700"
-                              : order.status === "Shipped"
+                              : order.displayStatus === "Shipped"
                               ? "bg-blue-50 text-blue-700"
                               : "bg-amber-50 text-amber-700"
                           }`}
                         >
-                          {order.status}
+                          {order.displayStatus}
                         </span>
                       </td>
 
                       <td className="py-3.5 text-right text-stone-400">
-                        {order.date}
+                        {order.displayDate}
                       </td>
                     </tr>
                   ))

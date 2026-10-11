@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+
 import {
   getProductBySlug,
   getProducts,
@@ -11,33 +12,43 @@ import {
 } from "@/lib/api";
 
 export default function ProductPage() {
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = params?.slug;
   const router = useRouter();
   const pathname = usePathname();
 
-  const goToLogin = () => {
-    router.push(`/login?next=${encodeURIComponent(pathname)}`);
-  };
   const [product, setProduct] = useState(null);
   const [otherProducts, setOtherProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [cartAdded, setCartAdded] = useState(false);
-
   const [isWishlisting, setIsWishlisting] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
+  const goToLogin = () => {
+    router.push(
+      `/login?next=${encodeURIComponent(pathname || "/shop")}`
+    );
+  };
+
   useEffect(() => {
+    let cancelled = false;
+
     async function loadProduct() {
       try {
         setLoading(true);
         setError(null);
+        setProduct(null);
+        setOtherProducts([]);
+        setSelectedImage(0);
+        setQuantity(1);
 
         const data = await getProductBySlug(slug);
+
+        if (cancelled) return;
 
         if (!data) {
           setError(404);
@@ -46,17 +57,26 @@ export default function ProductPage() {
 
         setProduct(data);
 
-        // Load recommendations from the real backend catalog.
         try {
           const productsData = await getProducts({
             page: 1,
             limit: 10,
           });
 
-          const items = productsData?.items || [];
+          if (cancelled) return;
+
+          const items = Array.isArray(productsData)
+            ? productsData
+            : productsData?.items ||
+              productsData?.products ||
+              [];
 
           const recommendations = items
-            .filter((item) => item.id !== data.id)
+            .filter(
+              (item) =>
+                item.id !== data.id &&
+                item.slug !== data.slug
+            )
             .slice(0, 4);
 
           setOtherProducts(recommendations);
@@ -66,26 +86,84 @@ export default function ProductPage() {
             recommendationError
           );
 
-          setOtherProducts([]);
+          if (!cancelled) {
+            setOtherProducts([]);
+          }
         }
       } catch (err) {
         console.error("Failed to load product:", err);
-        setError(500);
+
+        if (!cancelled) {
+          setError(err?.status === 404 ? 404 : 500);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     if (slug) {
       loadProduct();
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   const isOutOfStock =
-    product?.availability === false || product?.stock <= 0;
+    product?.availability === false ||
+    (product?.stock != null &&
+      Number(product.stock) <= 0);
+
+  const reviewCount = Number(
+    product?.reviews ?? product?.review_count ?? 0
+  );
+
+  const hasReviews =
+    reviewCount > 0 && Number(product?.rating) > 0;
+
+  const productGalleryImages = {
+    "handwoven-cotton-saree-pink-deep-purple": [
+      "/sarees/saree1.jpeg",
+      "/sarees/saree2.jpeg",
+    ],
+    "rope-storage-basket": [
+      "/rope-basket/basket-1.jpeg",
+      "/rope-basket/basket-2.jpeg",
+      "/rope-basket/basket-3.jpeg",
+      "/rope-basket/basket-4.jpeg",
+    ],
+  };
+
+  const productImages = product
+    ? productGalleryImages[product.slug] ||
+      (Array.isArray(product.images) &&
+      product.images.length > 0
+        ? product.images
+        : product.image_url || product.image
+          ? [product.image_url || product.image]
+          : [])
+    : [];
+
+  const safeSelectedImage = Math.min(
+    selectedImage,
+    Math.max(productImages.length - 1, 0)
+  );
+
+  const canIncreaseQuantity =
+    product?.stock == null ||
+    quantity < Number(product.stock);
 
   const handleAddToCart = async () => {
-    if (isAddingToCart || isOutOfStock) return;
+    if (
+      !product ||
+      isAddingToCart ||
+      isOutOfStock
+    ) {
+      return;
+    }
 
     setIsAddingToCart(true);
 
@@ -93,18 +171,42 @@ export default function ProductPage() {
       await addToCart(product.id, quantity);
 
       setCartAdded(true);
-
       window.dispatchEvent(new Event("cart-updated"));
 
       setTimeout(() => {
         setCartAdded(false);
       }, 3000);
     } catch (err) {
-      if (err.message === "Unauthorized") {
+      if (err?.message === "Unauthorized") {
         goToLogin();
-        return;
       } else {
-        alert(err.message || "Unable to add to cart");
+        alert(err?.message || "Unable to add to cart");
+      }
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    if (
+      !product ||
+      isAddingToCart ||
+      isOutOfStock
+    ) {
+      return;
+    }
+
+    setIsAddingToCart(true);
+
+    try {
+      await addToCart(product.id, quantity);
+      window.dispatchEvent(new Event("cart-updated"));
+      router.push("/checkout");
+    } catch (err) {
+      if (err?.message === "Unauthorized") {
+        goToLogin();
+      } else {
+        alert(err?.message || "Unable to proceed to checkout");
       }
     } finally {
       setIsAddingToCart(false);
@@ -118,15 +220,13 @@ export default function ProductPage() {
 
     try {
       await addToWishlist(product.id);
-
       setIsWishlisted(true);
-
       window.dispatchEvent(new Event("wishlist-updated"));
     } catch (err) {
-      if (err.message === "Unauthorized") {
+      if (err?.message === "Unauthorized") {
         goToLogin();
       } else {
-        alert(err.message || "Unable to add to wishlist");
+        alert(err?.message || "Unable to add to wishlist");
       }
     } finally {
       setIsWishlisting(false);
@@ -136,7 +236,9 @@ export default function ProductPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-[#fffdf8] flex items-center justify-center">
-        <p className="text-[#a48d69]">Loading product...</p>
+        <p className="text-[#a48d69]">
+          Loading product...
+        </p>
       </main>
     );
   }
@@ -149,8 +251,8 @@ export default function ProductPage() {
         </p>
 
         <p className="text-[#756d63] text-sm text-center">
-          The product you&apos;re looking for doesn&apos;t exist or may have been
-          removed.
+          The product you&apos;re looking for doesn&apos;t exist
+          or may have been removed.
         </p>
 
         <Link
@@ -165,8 +267,10 @@ export default function ProductPage() {
 
   if (error === 500 || !product) {
     return (
-      <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center gap-4">
-        <p className="text-red-500">Failed to fetch product</p>
+      <main className="min-h-screen bg-[#fffdf8] flex flex-col items-center justify-center gap-4 px-6">
+        <p className="text-red-500">
+          Failed to fetch product
+        </p>
 
         <button
           type="button"
@@ -178,28 +282,6 @@ export default function ProductPage() {
       </main>
     );
   }
-
-  const productGalleryImages = {
-  "handwoven-cotton-saree-pink-deep-purple": [
-    "/sarees/saree1.jpeg",
-    "/sarees/saree2.jpeg",
-  ],
-
-  "rope-storage-basket": [
-    "/rope-basket/basket-1.jpeg",
-    "/rope-basket/basket-2.jpeg",
-    "/rope-basket/basket-3.jpeg",
-    "/rope-basket/basket-4.jpeg",
-  ],
-};
-
-const productImages =
-  productGalleryImages[product.slug] ||
-  (product.images && product.images.length > 0
-    ? product.images
-    : product.image_url
-      ? [product.image_url]
-      : []);
 
   return (
     <main className="min-h-screen bg-[#fffdf8]">
@@ -232,36 +314,25 @@ const productImages =
         </div>
       </div>
 
-
-      {/* =====================================================
-          PRODUCT SECTION
-      ====================================================== */}
-
+      {/* PRODUCT SECTION */}
       <section className="mx-auto max-w-[1300px] px-5 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-16">
-
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
-
-
-          {/* =================================================
-              PRODUCT IMAGES
-          ================================================== */}
-
+          {/* PRODUCT IMAGES */}
           <div className="grid gap-4 sm:grid-cols-[90px_1fr]">
-
             {/* THUMBNAILS */}
             <div className="order-2 flex max-w-full gap-3 overflow-x-auto pb-1 sm:order-1 sm:flex-col sm:overflow-visible sm:pb-0">
-
               {productImages.map((image, index) => (
                 <button
-                  key={image}
+                  key={`${image}-${index}`}
                   type="button"
                   onClick={() => setSelectedImage(index)}
                   className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#f1e8d7] transition-all ${
-                    selectedImage === index
+                    safeSelectedImage === index
                       ? "border-2 border-[#d1a11c]"
                       : "border border-[#eadfca] hover:border-[#d1a11c]"
                   }`}
                   aria-label={`View product image ${index + 1}`}
+                  aria-pressed={safeSelectedImage === index}
                 >
                   <img
                     src={image}
@@ -270,15 +341,13 @@ const productImages =
                   />
                 </button>
               ))}
-
             </div>
 
             {/* MAIN IMAGE */}
             <div className="relative order-1 aspect-[4/5] overflow-hidden rounded-2xl bg-[#f8f2e6] sm:order-2">
-
               {productImages.length > 0 ? (
                 <img
-                  src={productImages[selectedImage]}
+                  src={productImages[safeSelectedImage]}
                   alt={product.name}
                   className="h-full w-full object-cover"
                 />
@@ -296,8 +365,13 @@ const productImages =
                 type="button"
                 onClick={handleWishlist}
                 disabled={isWishlisting}
-                aria-label="Add to wishlist"
-                className={`absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-md transition-colors hover:text-[#c99716] ${
+                aria-label={
+                  isWishlisted
+                    ? "Remove from wishlist"
+                    : "Add to wishlist"
+                }
+                aria-pressed={isWishlisted}
+                className={`absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl shadow-md transition-colors hover:text-[#c99716] disabled:opacity-60 ${
                   isWishlisted
                     ? "text-[#c99716]"
                     : "text-[#81786d]"
@@ -305,57 +379,68 @@ const productImages =
               >
                 {isWishlisted ? "♥" : "♡"}
               </button>
-
             </div>
-
           </div>
 
           {/* PRODUCT INFORMATION */}
           <div className="flex flex-col justify-center">
-            {/* CATEGORY */}
             <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
-              {product.category?.name || product.category || "Collection"}
+              {product.category?.name ||
+                product.category ||
+                "Collection"}
             </p>
-
-            {/* NAME */}
 
             <h1 className="mt-3 text-3xl font-semibold leading-tight text-[#29251f] sm:text-4xl lg:text-[2.65rem]">
               {product.name}
             </h1>
 
             {/* RATING */}
-
             <div className="mt-5 flex items-center gap-3">
+              {hasReviews ? (
+                <>
+                  <span
+                    className="text-[#d1a11c]"
+                    aria-label="Rated"
+                  >
+                    ★
+                  </span>
 
-              <div className="flex gap-1 text-[#d1a11c]">
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-                <span>★</span>
-              </div>
+                  <span className="text-sm font-medium text-[#5f584f]">
+                    {product.rating}
+                  </span>
 
-              <span className="text-sm font-medium text-[#5f584f]">
-                {product.rating || "4.8"}
-              </span>
-
-              <Link
-                href="#reviews"
-                className="text-sm text-[#91887c] underline-offset-4 hover:underline"
-              >
-                {product.reviews || 0} reviews
-              </Link>
+                  <Link
+                    href="#reviews"
+                    className="text-sm text-[#91887c] underline-offset-4 hover:underline"
+                  >
+                    {reviewCount} reviews
+                  </Link>
+                </>
+              ) : (
+                <span className="text-sm text-[#91887c]">
+                  No reviews yet
+                </span>
+              )}
             </div>
 
             {/* PRICE */}
             <div className="mt-6 flex items-baseline gap-3">
-              {product.mrp && Number(product.mrp) > Number(product.price) && (
-                <span className="text-lg text-gray-400 line-through">
-                  ₹{Number(product.mrp).toLocaleString("en-IN")}
-                </span>
-              )}
+              {product.mrp &&
+                Number(product.mrp) >
+                  Number(product.price) && (
+                  <span className="text-lg text-gray-400 line-through">
+                    ₹
+                    {Number(product.mrp).toLocaleString(
+                      "en-IN"
+                    )}
+                  </span>
+                )}
+
               <span className="text-2xl font-semibold text-[#a9780d]">
-                ₹{Number(product.price || 0).toLocaleString("en-IN")}
+                ₹
+                {Number(product.price || 0).toLocaleString(
+                  "en-IN"
+                )}
               </span>
             </div>
 
@@ -408,9 +493,13 @@ const productImages =
                 <button
                   type="button"
                   onClick={() =>
-                    setQuantity((q) => Math.max(1, q - 1))
+                    setQuantity((current) =>
+                      Math.max(1, current - 1)
+                    )
                   }
-                  className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d]"
+                  disabled={quantity <= 1}
+                  aria-label="Decrease quantity"
+                  className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   −
                 </button>
@@ -422,13 +511,19 @@ const productImages =
                 <button
                   type="button"
                   onClick={() =>
-                    setQuantity((q) =>
-                      product.stock !== undefined && product.stock !== null
-                        ? Math.min(q + 1, product.stock)
-                        : q + 1
+                    setQuantity((current) =>
+                      product.stock != null
+                        ? Math.min(
+                            current + 1,
+                            Number(product.stock)
+                          )
+                        : current + 1
                     )
                   }
-                  disabled={isOutOfStock || (product.stock !== undefined && product.stock !== null && quantity >= product.stock)}
+                  disabled={
+                    isOutOfStock || !canIncreaseQuantity
+                  }
+                  aria-label="Increase quantity"
                   className="flex h-10 w-10 items-center justify-center text-[#756d63] hover:text-[#a9780d] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   +
@@ -437,9 +532,7 @@ const productImages =
             </div>
 
             {/* ACTIONS */}
-
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-
               <button
                 type="button"
                 onClick={handleAddToCart}
@@ -457,17 +550,28 @@ const productImages =
 
               <button
                 type="button"
-                className="flex-[2] rounded-lg border border-[#d1a11c] bg-[#fffaf0] px-6 py-3.5 text-sm font-medium text-[#9b6d0d] transition-colors hover:bg-[#fff3d6]"
+                onClick={handleBuyNow}
+                disabled={isAddingToCart || isOutOfStock}
+                className="flex-[2] rounded-lg border border-[#d1a11c] bg-[#fffaf0] px-6 py-3.5 text-sm font-medium text-[#9b6d0d] transition-colors hover:bg-[#fff3d6] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Buy Now
+                {isAddingToCart ? "Please wait..." : "Buy Now"}
               </button>
 
               <button
                 type="button"
                 onClick={handleWishlist}
                 disabled={isWishlisting}
-                className={`flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-lg border border-[#d9bf7c] bg-white text-xl transition-colors hover:text-[#c99716] ${isWishlisted ? "text-[#c99716]" : "text-[#81786d]"}`}
-                aria-label="Add to wishlist"
+                className={`flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-lg border border-[#d9bf7c] bg-white text-xl transition-colors hover:text-[#c99716] disabled:opacity-60 ${
+                  isWishlisted
+                    ? "text-[#c99716]"
+                    : "text-[#81786d]"
+                }`}
+                aria-label={
+                  isWishlisted
+                    ? "Remove from wishlist"
+                    : "Add to wishlist"
+                }
+                aria-pressed={isWishlisted}
               >
                 {isWishlisted ? "♥" : "♡"}
               </button>
@@ -522,9 +626,7 @@ const productImages =
                 )}
               </div>
 
-
               <div className="rounded-2xl border border-[#eee5d2] bg-[#fffdf8] p-5 sm:p-6">
-
                 {product.material && (
                   <DetailRow
                     label="Material"
@@ -561,35 +663,18 @@ const productImages =
       {/* REVIEWS */}
       <section
         id="reviews"
-        className="bg-[#f8f2e6] px-6 py-14 lg:px-10"
+        className="bg-[#f8f2e6] px-6 py-10 lg:px-10"
       >
-        <div className="mx-auto max-w-[1100px]">
-          <div className="text-center">
-            <p className="text-xs font-medium uppercase tracking-[3px] text-[#c99716]">
-              Customer feedback
-            </p>
+        <div className="mx-auto max-w-[1100px] text-center">
+          <h2 className="text-xl font-semibold text-[#29251f]">
+            Customer reviews
+          </h2>
 
-            <h2 className="mt-2 text-2xl font-semibold text-[#29251f]">
-              What customers say
-            </h2>
-          </div>
-
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            <Review
-              name="Ananya R."
-              review="Beautiful craftsmanship and even better in person."
-            />
-
-            <Review
-              name="Meera S."
-              review="The quality feels premium and the packaging was lovely."
-            />
-
-            <Review
-              name="Riya K."
-              review="A beautiful addition to my home. Would definitely recommend."
-            />
-          </div>
+          <p className="mt-2 text-sm text-[#756d63]">
+            {hasReviews
+              ? `${reviewCount} customer reviews`
+              : "No customer reviews yet."}
+          </p>
         </div>
       </section>
 
@@ -615,24 +700,27 @@ const productImages =
             </Link>
           </div>
 
-          <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-            {otherProducts.map((item) => (
-              <RecommendationCard
-                key={item.id}
-                product={item}
-              />
-            ))}
-          </div>
+          {otherProducts.length > 0 ? (
+            <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+              {otherProducts.map((item) => (
+                <RecommendationCard
+                  key={item.id || item._id || item.slug}
+                  product={item}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-6 text-sm text-[#91887c]">
+              Explore our shop to discover more products.
+            </p>
+          )}
         </div>
       </section>
     </main>
   );
 }
 
-/* =========================================================
-   DETAIL ROW
-========================================================= */
-
+/* DETAIL ROW */
 function DetailRow({ label, value }) {
   return (
     <div className="flex justify-between gap-5 border-b border-[#eee5d2] py-4 last:border-b-0">
@@ -647,10 +735,7 @@ function DetailRow({ label, value }) {
   );
 }
 
-/* =========================================================
-   TRUST ITEM
-========================================================= */
-
+/* TRUST ITEM */
 function TrustItem({ icon, title, description }) {
   return (
     <div className="text-center">
@@ -669,55 +754,27 @@ function TrustItem({ icon, title, description }) {
   );
 }
 
-/* =========================================================
-   REVIEW
-========================================================= */
-
-function Review({ name, review }) {
-  return (
-    <div className="rounded-xl border border-[#eadfca] bg-white p-5">
-      <div className="flex gap-1 text-xs text-[#d1a11c]">
-        ★ ★ ★ ★ ★
-      </div>
-
-      <p className="mt-4 text-sm leading-6 text-[#686159]">
-        “{review}”
-      </p>
-
-      <p className="mt-4 text-xs font-semibold text-[#3b342b]">
-        {name}
-      </p>
-
-      <p className="mt-1 text-[10px] text-[#91887c]">
-        Verified Customer
-      </p>
-    </div>
-  );
-}
-
-/* =========================================================
-   RECOMMENDATION CARD
-========================================================= */
-
+/* RECOMMENDATION CARD */
 function RecommendationCard({ product }) {
+  const image = product.image_url || product.image;
+
   return (
     <Link
-      href={`/product/${product.slug || product.id}`}
+      href={`/product/${product.slug || product.id || product._id}`}
       className="group overflow-hidden rounded-xl border border-[#eadfca] bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
     >
       <div className="flex aspect-[4/5] items-center justify-center bg-[#f1e8d7]">
-        {product.image_url || product.image ? (
+        {image ? (
           <img
-            src={product.image_url || product.image}
+            src={image}
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="text-center">
-
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-[#d1a11c] text-[#c99716]">
-            ✦
-          </div>
+            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-[#d1a11c] text-[#c99716]">
+              ✦
+            </div>
 
             <p className="text-[9px] uppercase tracking-[1.5px] text-[#9b8a70]">
               Product Image
@@ -732,13 +789,18 @@ function RecommendationCard({ product }) {
         </h3>
 
         <div className="mt-2 flex items-baseline gap-2">
-          {product.mrp && Number(product.mrp) > Number(product.price) && (
-            <span className="text-xs text-gray-400 line-through">
-              ₹{Number(product.mrp).toLocaleString("en-IN")}
-            </span>
-          )}
+          {product.mrp &&
+            Number(product.mrp) >
+              Number(product.price) && (
+              <span className="text-xs text-gray-400 line-through">
+                ₹
+                {Number(product.mrp).toLocaleString("en-IN")}
+              </span>
+            )}
+
           <span className="text-sm font-semibold text-[#a9780d]">
-            ₹{Number(product.price || 0).toLocaleString("en-IN")}
+            ₹
+            {Number(product.price || 0).toLocaleString("en-IN")}
           </span>
         </div>
       </div>

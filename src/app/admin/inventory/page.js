@@ -42,14 +42,20 @@ export default function AdminInventoryPage() {
   useEffect(() => {
   const loadInventory = async () => {
     try {
-      const data = await get("/api/admin/inventory");
-      console.log("INVENTORY API DATA:", data);
+      const [data, categoryData] = await Promise.all([
+        get("/api/admin/inventory"),
+        get("/api/categories"),
+      ]);
+      const categoryNames = new Map(
+        (Array.isArray(categoryData) ? categoryData : categoryData.items || [])
+          .map((category) => [category.id, category.name]),
+      );
       setInventory(
   (Array.isArray(data) ? data : data.items || []).map((item) => ({
     id: item.id,
     name: item.name,
     sku: item.slug,
-    category: `Category ${item.category_id}`,
+    category: categoryNames.get(item.category_id) || "Uncategorized",
     currentStock: item.stock,
     minThreshold: 5,
     lastUpdated: "-",
