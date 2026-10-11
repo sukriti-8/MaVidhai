@@ -21,7 +21,7 @@ from app.services.audit_service import log_admin_action
 
 router = APIRouter(prefix="/api/admin/users", tags=["admin_users"])
 
-VALID_ROLES = ["CUSTOMER", "SUPER_ADMIN"]
+VALID_ROLES = ["CUSTOMER", "SUB_ADMIN", "SUPER_ADMIN"]
 
 @router.get("", response_model=PaginatedUserResponse)
 def get_users(
@@ -77,6 +77,7 @@ def get_user(
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
     return user
 
 @router.put("/{user_id}", response_model=UserAdminResponse)
@@ -130,6 +131,19 @@ def update_user_role(
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    if user.role == "SUPER_ADMIN" and request.role != "SUPER_ADMIN" and user.is_active:
+        active_super_admins = db.execute(
+            select(func.count()).select_from(User).where(
+                User.role == "SUPER_ADMIN",
+                User.is_active.is_(True),
+            )
+        ).scalar_one()
+        if active_super_admins <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot remove the last active Super Admin",
+            )
         
     if user.id == current_admin.id and request.role != "SUPER_ADMIN":
         raise HTTPException(status_code=400, detail="Cannot demote yourself")
@@ -162,6 +176,19 @@ def update_user_status(
         
     if user.id == current_admin.id and request.is_active is False:
         raise HTTPException(status_code=400, detail="Cannot deactivate yourself")
+
+    if user.role == "SUPER_ADMIN" and request.is_active is False and user.is_active:
+        active_super_admins = db.execute(
+            select(func.count()).select_from(User).where(
+                User.role == "SUPER_ADMIN",
+                User.is_active.is_(True),
+            )
+        ).scalar_one()
+        if active_super_admins <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot deactivate the last active Super Admin",
+            )
         
     user.is_active = request.is_active
     

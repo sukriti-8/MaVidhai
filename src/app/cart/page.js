@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
 import {
   getCart,
   updateCartItem,
@@ -25,6 +26,7 @@ const colors = {
 
 export default function CartPage() {
   const router = useRouter();
+
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,6 +35,8 @@ export default function CartPage() {
   const loadCart = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+
       const data = await getCart();
       setCart(data);
     } catch (err) {
@@ -40,8 +44,8 @@ export default function CartPage() {
         setAuthToken(null);
         router.push("/login");
       } else {
-        console.error(err);
-        setError("Failed to load cart");
+        console.error("Failed to load cart:", err);
+        setError("Failed to load cart. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -54,7 +58,9 @@ export default function CartPage() {
   }, [loadCart]);
 
   const handleUpdateQuantity = async (itemId, newQuantity) => {
-    const item = cart?.items.find((cartItem) => cartItem.id === itemId);
+    const item = cart?.items?.find(
+      (cartItem) => cartItem.id === itemId
+    );
 
     if (!item) return;
 
@@ -69,6 +75,8 @@ export default function CartPage() {
 
     try {
       setUpdatingId(itemId);
+      setError(null);
+
       const updatedCart = await updateCartItem(itemId, newQuantity);
       setCart(updatedCart);
     } catch (err) {
@@ -76,7 +84,8 @@ export default function CartPage() {
         setAuthToken(null);
         router.push("/login");
       } else {
-        alert("Failed to update quantity");
+        console.error("Failed to update quantity:", err);
+        setError("Failed to update quantity. Please try again.");
       }
     } finally {
       setUpdatingId(null);
@@ -86,6 +95,8 @@ export default function CartPage() {
   const handleRemove = async (itemId) => {
     try {
       setUpdatingId(itemId);
+      setError(null);
+
       const updatedCart = await removeCartItem(itemId);
       setCart(updatedCart);
     } catch (err) {
@@ -93,7 +104,8 @@ export default function CartPage() {
         setAuthToken(null);
         router.push("/login");
       } else {
-        alert("Failed to remove item");
+        console.error("Failed to remove item:", err);
+        setError("Failed to remove item. Please try again.");
       }
     } finally {
       setUpdatingId(null);
@@ -113,18 +125,24 @@ export default function CartPage() {
     );
   }
 
-  if (error) {
+  if (error && !cart) {
     return (
       <main
-        className="flex min-h-screen flex-col items-center justify-center gap-4"
+        className="flex min-h-screen flex-col items-center justify-center gap-4 px-6"
         style={{ backgroundColor: colors.ivory }}
       >
-        <p className="text-red-500">{error}</p>
+        <p
+          className="text-center"
+          style={{ color: colors.terracotta }}
+        >
+          {error}
+        </p>
 
         <button
+          type="button"
           onClick={loadCart}
-          className="underline transition-colors hover:opacity-70"
-          style={{ color: colors.terracotta }}
+          className="underline transition-opacity hover:opacity-70"
+          style={{ color: colors.forest }}
         >
           Try again
         </button>
@@ -132,7 +150,7 @@ export default function CartPage() {
     );
   }
 
-  if (!cart || cart.items.length === 0) {
+  if (!cart || !cart.items || cart.items.length === 0) {
     return (
       <main
         className="min-h-screen px-6 py-16 lg:px-10"
@@ -152,10 +170,7 @@ export default function CartPage() {
             Your cart is empty
           </h1>
 
-          <p
-            className="mt-4"
-            style={{ color: colors.muted }}
-          >
+          <p className="mt-4" style={{ color: colors.muted }}>
             Discover handcrafted products you&apos;ll love.
           </p>
 
@@ -163,9 +178,7 @@ export default function CartPage() {
             <Link
               href="/shop"
               className="inline-block rounded-lg px-8 py-3.5 text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
-              style={{
-                backgroundColor: colors.forest,
-              }}
+              style={{ backgroundColor: colors.forest }}
             >
               Continue Shopping
             </Link>
@@ -194,15 +207,25 @@ export default function CartPage() {
           Cart
         </h1>
 
-        <p
-          className="mt-2"
-          style={{ color: colors.muted }}
-        >
+        <p className="mt-2" style={{ color: colors.muted }}>
           Your selected handcrafted products
         </p>
 
-        <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_350px]">
+        {error && (
+          <div
+            role="alert"
+            className="mt-6 rounded-lg border px-4 py-3 text-sm"
+            style={{
+              borderColor: colors.peach,
+              backgroundColor: colors.white,
+              color: colors.terracotta,
+            }}
+          >
+            {error}
+          </div>
+        )}
 
+        <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_350px]">
           {/* CART ITEMS */}
           <div>
             <div
@@ -219,140 +242,159 @@ export default function CartPage() {
 
             <div
               className="divide-y"
-              style={{
-                borderColor: colors.border,
-              }}
+              style={{ borderColor: colors.border }}
             >
-              {cart.items.map((item) => (
-                <div
-                  key={item.id}
-                  className="grid items-center gap-6 py-8 sm:grid-cols-[3fr_1fr_1fr]"
-                  style={{
-                    borderColor: colors.border,
-                  }}
-                >
+              {cart.items.map((item) => {
+                const image =
+                  item.product.image_url || item.product.image;
 
-                  {/* PRODUCT INFO */}
-                  <div className="flex items-center gap-6">
-                    <div
-                      className="flex h-24 w-[4.8rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border"
-                      style={{
-                        borderColor: colors.border,
-                        backgroundColor: colors.soft,
-                      }}
-                    >
-                      <span
-                        style={{ color: colors.terracotta }}
-                      >
-                        ✦
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3
-                        className="font-semibold"
-                        style={{ color: colors.charcoal }}
-                      >
-                        <Link
-                          href={`/product/${item.product.slug}`}
-                          className="transition-colors hover:opacity-70"
-                        >
-                          {item.product.name}
-                        </Link>
-                      </h3>
-
-                      <p
-                        className="mt-1 text-sm"
-                        style={{ color: colors.muted }}
-                      >
-                        ₹{item.product.price.toLocaleString("en-IN")}
-                      </p>
-
-                      {!item.product.availability ||
-                      item.product.stock <= 0 ? (
-                        <p className="mt-1 text-xs text-red-500">
-                          Out of Stock
-                        </p>
-                      ) : null}
-
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(item.id)}
-                        disabled={updatingId === item.id}
-                        className="mt-3 text-sm transition-colors hover:underline disabled:opacity-50"
-                        style={{ color: colors.terracotta }}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* QUANTITY */}
-                  <div className="flex justify-center">
-                    <div
-                      className="flex w-fit items-center rounded-lg border bg-white"
-                      style={{
-                        borderColor: colors.border,
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleUpdateQuantity(
-                            item.id,
-                            item.quantity - 1
-                          )
-                        }
-                        disabled={
-                          item.quantity <= 1 ||
-                          updatingId === item.id ||
-                          !item.product.availability ||
-                          item.product.stock <= 0
-                        }
-                        className="flex h-9 w-9 items-center justify-center transition-colors hover:opacity-70 disabled:opacity-50"
-                        style={{ color: colors.muted }}
-                      >
-                        −
-                      </button>
-
-                      <span
-                        className="w-10 text-center text-sm"
-                        style={{ color: colors.charcoal }}
-                      >
-                        {item.quantity}
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleUpdateQuantity(
-                            item.id,
-                            item.quantity + 1
-                          )
-                        }
-                        disabled={
-                          updatingId === item.id ||
-                          !item.product.availability ||
-                          item.product.stock <= 0 ||
-                          item.quantity >= item.product.stock
-                        }
-                        className="flex h-9 w-9 items-center justify-center transition-colors hover:opacity-70 disabled:opacity-50"
-                        style={{ color: colors.muted }}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* SUBTOTAL */}
+                return (
                   <div
-                    className="text-right font-semibold"
-                    style={{ color: colors.charcoal }}
+                    key={item.id}
+                    className="grid items-center gap-6 py-8 sm:grid-cols-[3fr_1fr_1fr]"
+                    style={{ borderColor: colors.border }}
                   >
-                    ₹{Number(item.subtotal).toLocaleString("en-IN")}
+                    {/* PRODUCT INFO */}
+                    <div className="flex items-center gap-4 sm:gap-6">
+                      <div
+                        className="flex h-24 w-[4.8rem] shrink-0 items-center justify-center overflow-hidden rounded-xl border"
+                        style={{
+                          borderColor: colors.border,
+                          backgroundColor: colors.soft,
+                        }}
+                      >
+                        {image ? (
+                          <img
+                            src={image}
+                            alt={item.product.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span
+                            aria-hidden="true"
+                            className="text-2xl"
+                            style={{ color: colors.terracotta }}
+                          >
+                            ✦
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="min-w-0">
+                        <h3
+                          className="font-semibold"
+                          style={{ color: colors.charcoal }}
+                        >
+                          <Link
+                            href={`/product/${item.product.slug}`}
+                            className="transition-opacity hover:opacity-70"
+                          >
+                            {item.product.name}
+                          </Link>
+                        </h3>
+
+                        <p
+                          className="mt-1 text-sm"
+                          style={{ color: colors.muted }}
+                        >
+                          ₹
+                          {Number(item.product.price).toLocaleString(
+                            "en-IN"
+                          )}
+                        </p>
+
+                        {!item.product.availability ||
+                        item.product.stock <= 0 ? (
+                          <p className="mt-1 text-xs text-red-500">
+                            Out of Stock
+                          </p>
+                        ) : null}
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemove(item.id)}
+                          disabled={updatingId === item.id}
+                          className="mt-3 text-sm transition-opacity hover:opacity-70 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                          style={{ color: colors.terracotta }}
+                        >
+                          {updatingId === item.id
+                            ? "Updating..."
+                            : "Remove"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* QUANTITY */}
+                    <div className="flex justify-center">
+                      <div
+                        className="flex w-fit items-center rounded-lg border"
+                        style={{
+                          borderColor: colors.border,
+                          backgroundColor: colors.white,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          aria-label={`Decrease quantity of ${item.product.name}`}
+                          onClick={() =>
+                            handleUpdateQuantity(
+                              item.id,
+                              item.quantity - 1
+                            )
+                          }
+                          disabled={
+                            item.quantity <= 1 ||
+                            updatingId === item.id ||
+                            !item.product.availability ||
+                            item.product.stock <= 0
+                          }
+                          className="flex h-9 w-9 items-center justify-center transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
+                          style={{ color: colors.muted }}
+                        >
+                          −
+                        </button>
+
+                        <span
+                          className="w-10 text-center text-sm"
+                          style={{ color: colors.charcoal }}
+                        >
+                          {item.quantity}
+                        </span>
+
+                        <button
+                          type="button"
+                          aria-label={`Increase quantity of ${item.product.name}`}
+                          onClick={() =>
+                            handleUpdateQuantity(
+                              item.id,
+                              item.quantity + 1
+                            )
+                          }
+                          disabled={
+                            updatingId === item.id ||
+                            !item.product.availability ||
+                            item.product.stock <= 0 ||
+                            item.quantity >= item.product.stock
+                          }
+                          className="flex h-9 w-9 items-center justify-center transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
+                          style={{ color: colors.muted }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* ITEM SUBTOTAL */}
+                    <div
+                      className="text-right font-semibold"
+                      style={{ color: colors.charcoal }}
+                    >
+                      ₹
+                      {Number(item.subtotal).toLocaleString("en-IN")}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -373,19 +415,16 @@ export default function CartPage() {
 
             <div
               className="mt-6 flex items-center justify-between border-b pb-6"
-              style={{
-                borderColor: colors.border,
-              }}
+              style={{ borderColor: colors.border }}
             >
-              <span style={{ color: colors.muted }}>
-                Subtotal
-              </span>
+              <span style={{ color: colors.muted }}>Subtotal</span>
 
               <span
                 className="font-semibold"
                 style={{ color: colors.charcoal }}
               >
-                ₹{Number(cart.subtotal).toLocaleString("en-IN")}
+                ₹
+                {Number(cart.subtotal).toLocaleString("en-IN")}
               </span>
             </div>
 
@@ -401,7 +440,8 @@ export default function CartPage() {
                 className="text-xl font-bold"
                 style={{ color: colors.terracotta }}
               >
-                ₹{Number(cart.subtotal).toLocaleString("en-IN")}
+                ₹
+                {Number(cart.subtotal).toLocaleString("en-IN")}
               </span>
             </div>
 
@@ -409,15 +449,13 @@ export default function CartPage() {
               className="mt-2 text-right text-xs"
               style={{ color: colors.muted }}
             >
-              Shipping & taxes calculated at checkout
+              Shipping &amp; taxes calculated at checkout
             </p>
 
             <Link
               href="/checkout"
               className="mt-8 flex w-full justify-center rounded-lg py-4 text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
-              style={{
-                backgroundColor: colors.forest,
-              }}
+              style={{ backgroundColor: colors.forest }}
             >
               Proceed to Checkout
             </Link>

@@ -8,7 +8,7 @@ from app.models.category import Category
 from app.models.product import Product
 from app.models.user import User
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
-from app.utils.dependencies import get_super_admin
+from app.utils.dependencies import get_catalog_admin
 from app.services.audit_service import log_admin_action
 
 router = APIRouter(prefix="/api/admin/categories", tags=["admin_categories"])
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/api/admin/categories", tags=["admin_categories"])
 )
 def get_admin_categories(
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     stmt = select(Category).where(Category.is_active == True)
     categories = db.execute(stmt).scalars().all()
@@ -33,7 +33,7 @@ def get_admin_categories(
 def create_category(
     request: CategoryCreate,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     # Check if slug already exists
     stmt = select(Category).where(
@@ -123,7 +123,7 @@ def update_category(
     category_id: int,
     request: CategoryUpdate,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     category = db.get(Category, category_id)
     if not category:
@@ -172,7 +172,7 @@ def update_category(
 def deactivate_category(
     category_id: int,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     category = db.get(Category, category_id)
     if not category:

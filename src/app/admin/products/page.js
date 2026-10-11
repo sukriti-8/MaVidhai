@@ -11,24 +11,16 @@ import {
   Image as ImageIcon,
   AlertCircle,
   X,
-  UploadCloud,
 } from "lucide-react";
 
-import { get, put, del } from "@/lib/api";
-
-const CATEGORIES = ["All", "Clothing", "Home & Living", "Toys"];
-
-const CATEGORY_IDS = {
-  Clothing: 1,
-  "Home & Living": 2,
-  Toys: 3,
-};
+import { get, post, put, del } from "@/lib/api";
 
 const EMPTY_FORM = {
   name: "",
   category: "Clothing",
   price: "",
   image: "",
+  stock: 20,
   isAvailable: true,
 };
 
@@ -85,6 +77,8 @@ function normalizeProduct(product) {
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -105,36 +99,47 @@ export default function AdminProductsPage() {
   // Load products from backend
   // ------------------------------------------------------------
 
-  const loadProducts = async () => {
-    try {
-      setLoading(true);
-      setError("");
+  useEffect(() => {
+    let active = true;
 
-      const data = await get(
-        "/api/admin/products?page=1&limit=100"
-      );
+    async function fetchProducts() {
+      try {
+        const [data, categoryData] = await Promise.all([
+          get("/api/admin/products?page=1&limit=100"),
+          get("/api/admin/categories"),
+        ]);
+        if (!active) return;
 
-      const items = Array.isArray(data?.items)
-        ? data.items
-        : Array.isArray(data)
-          ? data
-          : [];
+        const items = Array.isArray(data?.items)
+          ? data.items
+          : Array.isArray(data)
+            ? data
+            : [];
 
-      setProducts(items.map(normalizeProduct));
-    } catch (err) {
-      console.error("Failed to load admin products:", err);
-
-      setError(
-        err.message || "Failed to load products."
-      );
-    } finally {
-      setLoading(false);
+        setProducts(items.map(normalizeProduct));
+        setCategories(Array.isArray(categoryData) ? categoryData : []);
+      } catch (err) {
+        if (!active) return;
+        console.error("Failed to load admin products:", err);
+        setError(err.message || "Failed to load products.");
+      } finally {
+        if (active) setLoading(false);
+      }
     }
+
+    void fetchProducts();
+    return () => {
+      active = false;
+    };
+  }, [reloadKey]);
+
+  const handleReloadProducts = () => {
+    setError("");
+    setLoading(true);
+    setReloadKey((current) => current + 1);
   };
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  const categoryNames = ["All", ...categories.map((category) => category.name)];
 
   // ------------------------------------------------------------
   // Filtering
@@ -167,9 +172,10 @@ export default function AdminProductsPage() {
 
     setFormData({
       name: "",
-      category: "Clothing",
+      category: categories[0]?.name || "",
       price: "",
       image: "",
+      stock: 20,
       isAvailable: true,
     });
 
@@ -201,26 +207,10 @@ export default function AdminProductsPage() {
         product.availability ??
         product.isAvailable ??
         false,
+      stock: product.stock ?? 0,
     });
 
     setIsModalOpen(true);
-  };
-
-  // ------------------------------------------------------------
-  // Image preview
-  // ------------------------------------------------------------
-
-  const handleImageFileChange = (event) => {
-    const file = event.target.files?.[0];
-
-    if (!file) return;
-
-    const previewUrl = URL.createObjectURL(file);
-
-    setFormData((current) => ({
-      ...current,
-      image: previewUrl,
-    }));
   };
 
   // ------------------------------------------------------------
@@ -230,30 +220,22 @@ export default function AdminProductsPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    /*
-     * Add Product API will be connected after we verify
-     * its exact Swagger request schema.
-     */
-    if (!editingProduct) {
-      alert(
-        "Add Product API integration will be connected next."
-      );
-      return;
-    }
-
     try {
       setSaving(true);
 
       const categoryId =
-        CATEGORY_IDS[formData.category] ||
-        editingProduct.category?.id ||
-        editingProduct.category_id;
+        categories.find((category) => category.name === formData.category)?.id ||
+        editingProduct?.category?.id ||
+        editingProduct?.category_id;
 
       if (!categoryId) {
         throw new Error(
           "Could not determine the product category."
         );
       }
+
+      const productSlug = editingProduct?.slug || makeSlug(formData.name);
+      if (!productSlug) throw new Error("Enter a product name with letters or numbers.");
 
       const payload = {
         category_id: Number(categoryId),
@@ -264,74 +246,61 @@ export default function AdminProductsPage() {
          * Keep the existing slug when possible.
          * Otherwise generate one from the product name.
          */
-        slug:
-          editingProduct.slug ||
-          makeSlug(formData.name),
+        slug: productSlug,
 
         price: Number(formData.price),
 
         description:
-          editingProduct.description || "",
+          editingProduct?.description || "",
 
         details:
-          editingProduct.details || "",
+          editingProduct?.details || "",
 
         material:
-          editingProduct.material || "",
+          editingProduct?.material || "",
 
         dimensions:
-          editingProduct.dimensions ||
-          editingProduct.size ||
+          editingProduct?.dimensions ||
+          editingProduct?.size ||
           "",
 
         colour:
-          editingProduct.colour || "",
+          editingProduct?.colour || "",
 
         care:
-          editingProduct.care || "",
+          editingProduct?.care || "",
 
         badge:
-          editingProduct.badge || "",
+          editingProduct?.badge || "",
 
         availability:
           Boolean(formData.isAvailable),
 
         image_url:
           formData.image ||
-          editingProduct.image_url ||
-          editingProduct.image ||
+          editingProduct?.image_url ||
+          editingProduct?.image ||
           "",
       };
 
-      console.log(
-        "Updating product with payload:",
-        payload
-      );
+      if (!editingProduct) payload.stock = Number(formData.stock);
 
-      const updatedProduct = await put(
-        `/api/admin/products/${editingProduct.id}`,
-        payload
-      );
+      const savedProduct = editingProduct
+        ? await put(`/api/admin/products/${editingProduct.id}`, payload)
+        : await post("/api/admin/products", payload);
+      const normalizedProduct = normalizeProduct(savedProduct);
 
-      const normalizedUpdatedProduct =
-        normalizeProduct(updatedProduct);
-
-      setProducts((current) =>
-        current.map((product) =>
-          product.id === editingProduct.id
-            ? normalizedUpdatedProduct
-            : product
-        )
-      );
+      setProducts((current) => editingProduct
+        ? current.map((product) => product.id === editingProduct.id
+          ? normalizedProduct
+          : product)
+        : [normalizedProduct, ...current]);
 
       closeModal();
 
-      alert("Product updated successfully.");
+      alert(editingProduct ? "Product updated successfully." : "Product created successfully.");
     } catch (err) {
-      console.error(
-        "Update product failed:",
-        err
-      );
+      console.error("Save product failed:", err);
 
       alert(
         err.message ||
@@ -435,7 +404,7 @@ export default function AdminProductsPage() {
               </p>
 
               <button
-                onClick={loadProducts}
+                onClick={handleReloadProducts}
                 className="mt-2 font-semibold underline"
               >
                 Try again
@@ -469,7 +438,7 @@ export default function AdminProductsPage() {
           {/* Category tabs */}
           <div className="flex flex-wrap gap-2">
 
-            {CATEGORIES.map((category) => (
+            {categoryNames.map((category) => (
               <button
                 key={category}
                 onClick={() =>
@@ -749,6 +718,7 @@ export default function AdminProductsPage() {
                   </label>
 
                   <select
+                    required
                     value={formData.category}
                     onChange={(event) =>
                       setFormData({
@@ -759,17 +729,11 @@ export default function AdminProductsPage() {
                     className="w-full rounded-xl border border-[#E8E2D9] px-3 py-2 text-sm outline-none focus:border-[#C9A227]"
                   >
 
-                    <option value="Clothing">
-                      Clothing
-                    </option>
-
-                    <option value="Home & Living">
-                      Home & Living
-                    </option>
-
-                    <option value="Toys">
-                      Toys
-                    </option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))}
 
                   </select>
 
@@ -784,7 +748,8 @@ export default function AdminProductsPage() {
                   <input
                     type="number"
                     required
-                    min="0"
+                    min="0.01"
+                    step="0.01"
                     value={formData.price}
                     onChange={(event) =>
                       setFormData({
@@ -829,22 +794,9 @@ export default function AdminProductsPage() {
 
                   </div>
 
-                  <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-[#C9A227] bg-[#FAF8F3] px-3 py-2.5 text-xs font-medium text-[#A85838] transition hover:bg-[#F2E7C2]/40">
-
-                    <UploadCloud size={16} />
-
-                    <span>
-                      Upload device image
-                    </span>
-
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageFileChange}
-                      className="hidden"
-                    />
-
-                  </label>
+                  <p className="text-xs text-[#77736D]">
+                    Enter a path to an image already in the site&apos;s public folder.
+                  </p>
 
                 </div>
 
@@ -858,10 +810,30 @@ export default function AdminProductsPage() {
                     })
                   }
                   className="mt-2 w-full rounded-xl border border-[#E8E2D9] px-3.5 py-1.5 text-xs outline-none focus:border-[#C9A227]"
-                  placeholder="Or enter path: /products/saree-pink-purple-1.jpeg"
+                  placeholder="/products/saree-pink-purple-1.jpeg"
                 />
 
               </div>
+
+              {!editingProduct && (
+                <div>
+                  <label className="mb-1 block text-xs font-semibold text-[#55514B]">
+                    Starting stock
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    step="1"
+                    value={formData.stock}
+                    onChange={(event) => setFormData({
+                      ...formData,
+                      stock: event.target.value,
+                    })}
+                    className="w-full rounded-xl border border-[#E8E2D9] px-3.5 py-2 text-sm outline-none focus:border-[#C9A227]"
+                  />
+                </div>
+              )}
 
               {/* Availability */}
               <div className="flex items-center gap-2 pt-1">
@@ -884,7 +856,7 @@ export default function AdminProductsPage() {
                   htmlFor="availability"
                   className="text-sm text-[#55514B]"
                 >
-                  Mark as In Stock / Active
+                  Available on storefront
                 </label>
 
               </div>

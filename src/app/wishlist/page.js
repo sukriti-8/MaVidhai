@@ -156,17 +156,27 @@ export default function WishlistPage() {
                 href={`/product/${item.product.slug}`}
                 className="group"
               >
-                <div className="flex aspect-square items-center justify-center rounded-xl bg-[#A8B39F]">
-                  <div className="text-center">
-                    <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-[#3F5144] text-[#3F5144]">
-                      ✦
-                    </div>
-
-                    <p className="text-[9px] uppercase tracking-[1.5px] text-[#3F5144]">
-                      Product Image
-                    </p>
-                  </div>
-                </div>
+  <div className="aspect-square overflow-hidden rounded-xl bg-[#A8B39F]">
+  {item.product.image_url || item.product.image ? (
+    <img
+      src={item.product.image_url || item.product.image}
+      alt={item.product.name || "Product"}
+      className="h-full w-full object-cover"
+      loading="lazy"
+    />
+  ) : (
+    <div className="flex h-full items-center justify-center">
+      <div className="text-center">
+        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-[#3F5144] text-[#3F5144]">
+          ✦
+        </div>
+        <p className="text-[9px] uppercase tracking-[1.5px] text-[#3F5144]">
+          Product Image
+        </p>
+      </div>
+    </div>
+  )}
+</div>
               </Link>
 
               <div className="mt-4 flex-1">

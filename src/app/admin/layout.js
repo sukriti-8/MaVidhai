@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Package,
@@ -12,23 +13,54 @@ import {
   Bell,
   Search,
   ExternalLink,
+  Users,
 } from "lucide-react";
-import { setAuthToken } from "@/lib/api";
+import { getAuthToken, getCurrentUser, setAuthToken } from "@/lib/api";
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const readUser = () => {
+      try {
+        setUser(JSON.parse(localStorage.getItem("mavidhai_user") || "null"));
+      } catch {
+        setUser(null);
+      }
+    };
+    readUser();
+    if (getAuthToken()) {
+      getCurrentUser()
+        .then((currentUser) => {
+          setUser(currentUser);
+          localStorage.setItem("mavidhai_user", JSON.stringify(currentUser));
+        })
+        .catch(() => setUser(null));
+    }
+    window.addEventListener("mavidhai-auth-changed", readUser);
+    return () => window.removeEventListener("mavidhai-auth-changed", readUser);
+  }, []);
+
+  useEffect(() => {
+    if (user?.role === "SUB_ADMIN" && (pathname === "/admin" || pathname.startsWith("/admin/users"))) {
+      router.replace("/admin/products");
+    }
+  }, [pathname, router, user]);
 
   const navItems = [
-    { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    ...(user?.role === "SUB_ADMIN" ? [] : [{ label: "Dashboard", href: "/admin", icon: LayoutDashboard }]),
     { label: "Products", href: "/admin/products", icon: Package },
     { label: "Categories", href: "/admin/categories", icon: FolderTree },
     { label: "Inventory", href: "/admin/inventory", icon: Boxes },
     { label: "Orders", href: "/admin/orders", icon: ClipboardList },
+    ...(user?.role === "SUPER_ADMIN" ? [{ label: "Users", href: "/admin/users", icon: Users }] : []),
   ];
 
   const handleLogout = () => {
     setAuthToken(null);
+    localStorage.removeItem("mavidhai_user");
     router.push("/login");
   };
 
@@ -43,7 +75,7 @@ export default function AdminLayout({ children }) {
               VRHAZ
             </span>
             <span className="text-[11px] font-semibold tracking-wider uppercase text-amber-700/70">
-              Super Admin Portal
+              {user?.role === "SUB_ADMIN" ? "Sub-Admin Portal" : "Super Admin Portal"}
             </span>
           </Link>
         </div>
@@ -125,8 +157,8 @@ export default function AdminLayout({ children }) {
                 SA
               </div>
               <div className="text-left hidden md:block">
-                <p className="text-xs font-bold text-stone-800">Super Admin</p>
-                <p className="text-[10px] text-stone-500">admin@vrhaz.org</p>
+                <p className="text-xs font-bold text-stone-800">{user?.role === "SUB_ADMIN" ? "Sub-Admin" : "Super Admin"}</p>
+                <p className="text-[10px] text-stone-500">{user?.email || ""}</p>
               </div>
             </div>
           </div>

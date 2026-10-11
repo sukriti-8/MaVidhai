@@ -107,8 +107,12 @@ export default function Navbar() {
    * and listen for login/logout changes.
    */
   useEffect(() => {
-    loadUser();
-    loadCounts();
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      loadUser();
+      loadCounts();
+    });
 
     const handleAuthChange = () => {
       loadUser();
@@ -128,6 +132,7 @@ export default function Navbar() {
     window.addEventListener("wishlist-updated", handleWishlistUpdate);
 
     return () => {
+      active = false;
       window.removeEventListener(AUTH_EVENT, handleAuthChange);
       window.removeEventListener("cart-updated", handleCartUpdate);
       window.removeEventListener("wishlist-updated", handleWishlistUpdate);

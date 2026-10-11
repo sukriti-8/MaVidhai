@@ -14,7 +14,7 @@ from app.schemas.admin_orders import (
     AdminPaymentDetail,
     PaymentHistoryItem
 )
-from app.utils.dependencies import get_super_admin
+from app.utils.dependencies import get_catalog_admin
 from app.services import order_service
 from datetime import date, timedelta
 
@@ -59,7 +59,7 @@ def get_orders(
     limit: int = Query(20, ge=1, le=100),
     sort: str = Query("desc"),
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     if min_amount is not None and max_amount is not None and min_amount > max_amount:
         raise HTTPException(status_code=400, detail="min_amount cannot be greater than max_amount")
@@ -117,7 +117,7 @@ def get_orders(
 def get_order(
     order_id: int,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     order = db.get(Order, order_id)
     if not order:
@@ -130,7 +130,7 @@ def update_order_status(
     order_id: int,
     request: AdminOrderStatusUpdate,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_super_admin),
+    current_admin: User = Depends(get_catalog_admin),
 ):
     order = order_service.admin_update_order_status(db, order_id, request.status, current_admin.id)
     return build_admin_order_response(order)

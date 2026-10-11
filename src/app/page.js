@@ -4,12 +4,18 @@ import theme from "@/styles/theme";
 import ProductCard from "@/components/Home/ProductCard";
 
 export default async function Home() {
-  const data = await getProducts({
-    page: 1,
-    limit: 4,
-  });
+  let products = [];
 
-  const products = data.items || data;
+  try {
+    const data = await getProducts({
+      page: 1,
+      limit: 4,
+    });
+
+    products = data?.items || data?.products || (Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error("Failed to load featured products:", error);
+  }
 
   return (
     <main
@@ -19,9 +25,7 @@ export default async function Home() {
         color: theme.colors.charcoal,
       }}
     >
-      {/* =========================================================
-          TOP BANNER
-          ========================================================= */}
+      {/* TOP BANNER */}
       <section
         className="px-6 py-3 text-center text-xs font-medium tracking-wide"
         style={{
@@ -32,15 +36,20 @@ export default async function Home() {
         Made in India. Made thoughtfully. Made for every home.
       </section>
 
-      {/* =========================================================
-          HERO
-          ========================================================= */}
+      {/* HERO */}
       <section
         className="px-6 py-0 lg:px-10"
         style={{ backgroundColor: theme.colors.ivory }}
       >
         <div className="mx-auto grid max-w-[1450px] items-stretch lg:grid-cols-2">
           <div className="flex flex-col justify-center py-16 lg:px-8 lg:py-24">
+            <p
+              className="mb-4 text-xs font-medium uppercase tracking-[3px]"
+              style={{ color: theme.colors.terracotta }}
+            >
+              Rooted in tradition
+            </p>
+
             <h1
               className="max-w-xl text-4xl font-medium leading-[1.12] tracking-tight sm:text-5xl lg:text-6xl"
               style={{
@@ -64,38 +73,51 @@ export default async function Home() {
               materials, finished with care.
             </p>
 
-            <div className="mt-8">
+            <div className="mt-8 flex flex-wrap gap-4">
               <Link
                 href="/shop"
                 className="inline-flex px-7 py-3.5 text-xs font-semibold uppercase tracking-[1.5px] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md focus:outline-2 focus:outline-offset-2"
                 style={{
-                  backgroundColor: theme.colors.peach,
+                  backgroundColor: theme.colors.forest,
                   color: theme.colors.white,
                   outlineColor: theme.colors.charcoal,
                 }}
               >
-                Shop Collection
+                Explore Collection
+              </Link>
+
+              <Link
+                href="/#about"
+                className="inline-flex items-center border px-7 py-3.5 text-xs font-semibold uppercase tracking-[1.5px] transition-colors hover:bg-white focus:outline-2 focus:outline-offset-2"
+                style={{
+                  borderColor: theme.colors.terracotta,
+                  color: theme.colors.terracotta,
+                  outlineColor: theme.colors.charcoal,
+                }}
+              >
+                Learn Our Story
               </Link>
             </div>
           </div>
 
-          <div className="relative min-h-[420px] lg:min-h-[560px]">
+          <div
+            className="relative min-h-[380px] overflow-hidden"
+            style={{ backgroundColor: theme.colors.peach }}
+          >
             <img
               src="/images/hero.png"
-              alt="VRHAZ handcrafted Indian products"
-              className="h-full w-full object-cover"
+              alt="Handcrafted MaVidhai collection"
+              className="absolute inset-0 h-full w-full object-cover"
+              fetchPriority="high"
             />
           </div>
         </div>
       </section>
 
-      {/* =========================================================
-          CATEGORIES
-          Matches the categories currently available in /shop
-          ========================================================= */}
+      {/* CATEGORIES */}
       <section
         id="categories"
-        className="border-y px-6 py-16 lg:px-10"
+        className="scroll-mt-24 border-y px-6 py-16 lg:px-10"
         style={{
           backgroundColor: theme.colors.white,
           borderColor: theme.colors.sage,
@@ -127,25 +149,22 @@ export default async function Home() {
           </div>
 
           <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-3">
-            {/* SAREES */}
             <CategoryCard
               title="Sarees"
               description="Timeless Indian clothing for every occasion."
               href="/shop?category=sarees"
-              background={theme.colors.peach}
               image="/sarees/saree1.jpeg"
+              background={theme.colors.peach}
             />
 
-            {/* HOME & LIVING */}
             <CategoryCard
               title="Home & Living"
               description="Thoughtfully crafted pieces for beautiful everyday spaces."
               href="/shop?category=home-and-living"
-              background={theme.colors.sage}
               image="/rope-basket/basket-1.jpeg"
+              background={theme.colors.sage}
             />
 
-            {/* TOYS */}
             <CategoryCard
               title="Toys"
               description="Thoughtful toys inspired by simple, meaningful play."
@@ -156,14 +175,12 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* =========================================================
-          FEATURED PRODUCTS
-          ========================================================= */}
+      {/* FEATURED PRODUCTS */}
       <section
         className="mx-auto max-w-[1450px] px-6 py-16 lg:px-10"
         style={{ backgroundColor: theme.colors.ivory }}
       >
-        <div className="mb-10 flex items-end justify-between">
+        <div className="mb-10 flex items-end justify-between gap-4">
           <div>
             <p
               className="text-xs font-medium uppercase tracking-[3px]"
@@ -182,7 +199,7 @@ export default async function Home() {
 
           <Link
             href="/shop"
-            className="hidden text-sm font-medium transition-colors sm:block focus:outline-2 focus:outline-offset-2"
+            className="hidden text-sm font-medium transition-colors hover:underline focus:outline-2 focus:outline-offset-2 sm:block"
             style={{
               color: theme.colors.terracotta,
               outlineColor: theme.colors.charcoal,
@@ -192,16 +209,42 @@ export default async function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {products.length > 0 ? (
+          <div className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id || product._id || product.slug}
+                product={product}
+              />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="border p-8 text-center"
+            style={{
+              borderColor: theme.colors.sage,
+              backgroundColor: theme.colors.white,
+            }}
+          >
+            <p
+              className="text-sm"
+              style={{ color: theme.colors.charcoal }}
+            >
+              Explore our collection to discover thoughtfully made products.
+            </p>
+
+            <Link
+              href="/shop"
+              className="mt-4 inline-block text-sm font-semibold underline"
+              style={{ color: theme.colors.terracotta }}
+            >
+              Browse the collection
+            </Link>
+          </div>
+        )}
       </section>
 
-      {/* =========================================================
-          CUSTOMER REVIEWS
-          ========================================================= */}
+      {/* CUSTOMER REVIEWS */}
       <section
         className="border-y px-6 py-16 lg:px-10"
         style={{
@@ -229,36 +272,34 @@ export default async function Home() {
               className="mx-auto mt-3 max-w-xl text-sm leading-6"
               style={{ color: theme.colors.charcoal }}
             >
-              Experiences from people who have welcomed VRHAZ into their
+              Experiences from people who have welcomed MaVidhai into their
               everyday lives.
             </p>
           </div>
 
           <div className="grid gap-5 md:grid-cols-3">
             <ReviewCard
-              review="The craftsmanship is beautiful. Everything feels thoughtfully made and the quality is even better in person."
-              name="Ananya R."
-              location="Hyderabad"
+              review="Beautifully crafted and thoughtfully finished. The quality feels special."
+              name="A Happy Customer"
+              location="India"
             />
 
             <ReviewCard
-              review="I loved how easy the whole shopping experience was. The products feel unique without being difficult to use every day."
-              name="Meera S."
-              location="Bengaluru"
+              review="The product feels carefully made and fits naturally into my home."
+              name="A Happy Customer"
+              location="India"
             />
 
             <ReviewCard
-              review="Finally found a place where traditional inspiration and modern design come together so naturally."
-              name="Riya K."
-              location="Mumbai"
+              review="I appreciate the craftsmanship and the attention to detail."
+              name="A Happy Customer"
+              location="India"
             />
           </div>
         </div>
       </section>
 
-      {/* =========================================================
-          ABOUT
-          ========================================================= */}
+      {/* ABOUT */}
       <section
         id="about"
         className="scroll-mt-24 px-6 py-16 lg:px-10"
@@ -361,9 +402,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* =========================================================
-          WHY VRHAZ
-          ========================================================= */}
+      {/* WHY MAVIDHAI */}
       <section
         className="px-6 py-16 lg:px-10"
         style={{ backgroundColor: theme.colors.ivory }}
@@ -374,7 +413,7 @@ export default async function Home() {
               className="text-xs font-medium uppercase tracking-[3px]"
               style={{ color: theme.colors.terracotta }}
             >
-              Why VRHAZ
+              Why MaVidhai
             </p>
 
             <h2
@@ -388,34 +427,32 @@ export default async function Home() {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <FeatureCard
               icon="♡"
-              title="Thoughtfully Made"
-              description="Products chosen with care and purpose."
+              title="Handcrafted"
+              description="Made with care by skilled artisans."
             />
 
             <FeatureCard
               icon="✦"
               title="Heritage Inspired"
-              description="Inspired by Indian culture and craftsmanship."
+              description="Inspired by culture and timeless traditions."
             />
 
             <FeatureCard
               icon="♧"
               title="Conscious Choices"
-              description="Meaningful products for modern living."
+              description="Thoughtful products for modern living."
             />
 
             <FeatureCard
               icon="✧"
               title="Made in India"
-              description="Celebrating local makers and traditions."
+              description="Supporting local makers and communities."
             />
           </div>
         </div>
       </section>
 
-      {/* =========================================================
-          BENEFITS
-          ========================================================= */}
+      {/* BENEFITS */}
       <section
         className="px-6 py-8 lg:px-10"
         style={{ backgroundColor: theme.colors.sage }}
@@ -428,9 +465,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* =========================================================
-          NEWSLETTER
-          ========================================================= */}
+      {/* NEWSLETTER */}
       <section
         className="border-y px-6 py-12 lg:px-10"
         style={{
@@ -444,7 +479,7 @@ export default async function Home() {
               className="text-lg font-semibold"
               style={{ color: theme.colors.charcoal }}
             >
-              Stay connected with VRHAZ
+              Stay connected with MaVidhai
             </p>
 
             <p
@@ -455,13 +490,18 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="flex w-full max-w-md gap-2">
+          <form className="flex w-full max-w-md gap-2">
+            <label htmlFor="newsletter-email" className="sr-only">
+              Email address
+            </label>
+
             <input
+              id="newsletter-email"
               type="email"
               placeholder="Enter your email"
               className="min-w-0 flex-1 rounded-lg border px-4 py-3 text-sm outline-none focus:outline-2 focus:outline-offset-2"
               style={{
-                borderColor: theme.colors.charcoal,
+                borderColor: theme.colors.sage,
                 backgroundColor: theme.colors.white,
                 color: theme.colors.charcoal,
                 outlineColor: theme.colors.charcoal,
@@ -469,7 +509,7 @@ export default async function Home() {
             />
 
             <button
-              type="button"
+              type="submit"
               className="rounded-lg px-5 py-3 text-sm font-medium transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-2 focus:outline-offset-2"
               style={{
                 backgroundColor: theme.colors.forest,
@@ -479,61 +519,65 @@ export default async function Home() {
             >
               Subscribe
             </button>
-          </div>
+          </form>
         </div>
       </section>
     </main>
   );
 }
 
-/* =========================================================
-   CATEGORY CARD
-   ========================================================= */
-
-function CategoryCard({ title, description, href, background, image }) {
+/* CATEGORY CARD */
+function CategoryCard({
+  title,
+  description,
+  href,
+  image,
+  background = theme.colors.peach,
+}) {
   return (
     <Link
       href={href}
-      className="group block overflow-hidden rounded-xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg focus:outline-2 focus:outline-offset-2"
+      className="group block min-w-0 overflow-hidden rounded-xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg focus:outline-2 focus:outline-offset-2"
       style={{
-        borderColor: theme.colors.charcoal,
+        borderColor: theme.colors.sage,
         backgroundColor: theme.colors.white,
         outlineColor: theme.colors.charcoal,
       }}
     >
       <div
-          className="relative aspect-[4/3] overflow-hidden"
-          style={{ backgroundColor: background }}
-        >
-          {image ? (
-            <img
-              src={image}
-              alt={title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              <div className="text-center">
-                <div
-                  className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border text-xl"
-                  style={{
-                    borderColor: theme.colors.charcoal,
-                    color: theme.colors.charcoal,
-                  }}
-                >
-                  ✦
-                </div>
-
-                <p
-                  className="text-[10px] uppercase tracking-[2px]"
-                  style={{ color: theme.colors.charcoal }}
-                >
-                  Coming Soon
-                </p>
+        className="relative aspect-[4/3] overflow-hidden"
+        style={{ backgroundColor: background }}
+      >
+        {image ? (
+          <img
+            src={image}
+            alt={`${title} products`}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full min-h-[180px] items-center justify-center">
+            <div className="text-center">
+              <div
+                className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border text-xl"
+                style={{
+                  borderColor: theme.colors.charcoal,
+                  color: theme.colors.terracotta,
+                }}
+              >
+                ✦
               </div>
+
+              <p
+                className="text-[10px] uppercase tracking-[2px]"
+                style={{ color: theme.colors.charcoal }}
+              >
+                Coming Soon
+              </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
       <div className="p-5">
         <h3
@@ -554,10 +598,7 @@ function CategoryCard({ title, description, href, background, image }) {
   );
 }
 
-/* =========================================================
-   REVIEW CARD
-   ========================================================= */
-
+/* REVIEW CARD */
 function ReviewCard({ review, name, location }) {
   return (
     <div
@@ -572,11 +613,9 @@ function ReviewCard({ review, name, location }) {
         style={{ color: theme.colors.terracotta }}
         aria-label="5 out of 5 stars"
       >
-        <span>★</span>
-        <span>★</span>
-        <span>★</span>
-        <span>★</span>
-        <span>★</span>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <span key={index}>★</span>
+        ))}
       </div>
 
       <p
@@ -612,7 +651,7 @@ function ReviewCard({ review, name, location }) {
             className="text-xs"
             style={{ color: theme.colors.charcoal }}
           >
-            Verified Customer · {location}
+            Customer · {location}
           </p>
         </div>
       </div>
@@ -620,10 +659,7 @@ function ReviewCard({ review, name, location }) {
   );
 }
 
-/* =========================================================
-   FEATURE CARD
-   ========================================================= */
-
+/* FEATURE CARD */
 function FeatureCard({ icon, title, description }) {
   return (
     <div
@@ -636,7 +672,7 @@ function FeatureCard({ icon, title, description }) {
       <div
         className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border text-xl"
         style={{
-          borderColor: theme.colors.charcoal,
+          borderColor: theme.colors.sage,
           color: theme.colors.terracotta,
         }}
       >
@@ -660,10 +696,7 @@ function FeatureCard({ icon, title, description }) {
   );
 }
 
-/* =========================================================
-   BENEFIT
-   ========================================================= */
-
+/* BENEFIT */
 function Benefit({ title }) {
   return (
     <div>
