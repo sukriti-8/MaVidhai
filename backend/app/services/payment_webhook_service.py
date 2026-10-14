@@ -20,10 +20,8 @@ def process_webhook(db: Session, raw_body: bytes, signature: str, event_id: str)
         payload = json.loads(raw_body.decode("utf-8"))
     except json.JSONDecodeError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload")
-        
-    # Delegate parsing to the provider
+    #delegate parsing to the provider
     parsed_event = payment_provider.parse_webhook_event(payload)
-    print(f"DEBUG_PARSED: {parsed_event}")
     
     provider_event_id = parsed_event.get("provider_event_id") or event_id
     provider_order_id = parsed_event.get("provider_order_id")
@@ -67,8 +65,6 @@ def process_webhook(db: Session, raw_body: bytes, signature: str, event_id: str)
                 Payment.provider_payment_id == provider_payment_id,
                 Payment.id != payment.id
             ).first()
-            with open("webhook_debug.txt", "a") as f:
-                f.write(f"provider_payment_id={provider_payment_id}, payment.id={payment.id}, payment.provider_payment_id={payment.provider_payment_id}, conflict={conflict.id if conflict else None}\n")
             if conflict:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment ID mismatch")
             
