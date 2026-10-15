@@ -4,7 +4,8 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from app.database.connection import engine
 import os
 import logging
@@ -16,6 +17,8 @@ from app.middlewares.security_middleware import SecurityHeadersMiddleware
 from app.routes import auth, categories, products, cart, wishlist, orders, payments, translation, whatsapp, admin_categories, admin_products, admin_dashboard, admin_users, admin_orders, admin_payments, admin_inventory, admin_analytics, admin_catalog, admin_audit, ops
 
 logger = logging.getLogger(__name__)
+
+from app.utils.rate_limiter import limiter
 
 
 def validate_production_environment():
@@ -80,6 +83,9 @@ app = FastAPI(
     docs_url=docs_url,
     redoc_url=redoc_url,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 

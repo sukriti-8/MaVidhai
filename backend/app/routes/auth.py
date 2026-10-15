@@ -1,13 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-
 from app.database.connection import get_db
 from app.models.user import User
 from app.schemas.auth import RegisterRequest, UserResponse, LoginRequest, TokenResponse
 from app.utils.security import hash_password, verify_password, create_access_token
 from app.utils.dependencies import get_current_user
-
+from app.utils.rate_limiter import limiter
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 @router.post(
@@ -15,9 +14,10 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def register(request: RegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/hour")
+def register(request: Request, payload: RegisterRequest, db: Session = Depends(get_db)):
     # Normalize email
-    normalized_email = request.email.lower()
+    normalized_email = payload.email.lower()
     
     # Check if email exists
     stmt = select(User).where(User.email == normalized_email)
@@ -30,11 +30,11 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
         )
     
     # Hash password
-    hashed_password = hash_password(request.password)
+    hashed_password = hash_password(payload.password)
     
     # Create user
     new_user = User(
-        full_name=request.full_name,
+        full_name=payload.full_name,
         email=normalized_email,
         password_hash=hashed_password,
     )
@@ -50,8 +50,9 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK,
 )
-def login(request: LoginRequest, db: Session = Depends(get_db)):
-    normalized_email = request.email.lower()
+@limiter.limit("5/minute")
+def login(request: Request, payload: LoginRequest, db: Session = Depends(get_db)):
+    normalized_email = payload.email.lower()
     
     # Check if user exists
     stmt = select(User).where(User.email == normalized_email)
@@ -65,7 +66,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         )
         
     # Verify password
-    if not verify_password(request.password, user.password_hash):
+    if not verify_password(payload.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",

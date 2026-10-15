@@ -1,44 +1,67 @@
-from fastapi import APIRouter, HTTPException, status
+
+from fastapi import APIRouter, HTTPException, Request, status
 
 from app.schemas.translation import TranslationRequest, TranslationResponse
 from app.services import translation_service
+from app.utils.rate_limiter import limiter
 
 router = APIRouter(prefix="/api", tags=["translation"])
 
 
-@router.post("/translation", response_model=TranslationResponse, status_code=status.HTTP_200_OK)
-def translate(request: TranslationRequest):
-    if request.text is not None and len(request.text) > 500:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Text exceeds 500 characters")
+@router.post(
+    "/translation",
+    response_model=TranslationResponse,
+    status_code=status.HTTP_200_OK,
+)
+@limiter.limit("10/minute")
+def translate(request: Request, payload: TranslationRequest):
+    if payload.text is not None and len(payload.text) > 500:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Text exceeds 500 characters",
+        )
 
-    if request.texts is not None:
-        if len(request.texts) > 20:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Maximum 20 strings per request")
-        for item in request.texts:
+    if payload.texts is not None:
+        if len(payload.texts) > 20:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Maximum 20 strings per request",
+            )
+
+        for item in payload.texts:
             if len(item) > 500:
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Text exceeds 500 characters")
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Text exceeds 500 characters",
+                )
 
     try:
-        payload_texts = request.normalized_texts
+        payload_texts = payload.normalized_texts
         translated = translation_service.translate_texts(
             payload_texts,
-            request.resolved_target_language,
-            request.source_language,
+            payload.resolved_target_language,
+            payload.source_language,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
     except RuntimeError as exc:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Google translation failed") from exc
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Google translation failed",
+        ) from exc
 
-    if request.text is not None:
+    if payload.text is not None:
         return {
-            "source_language": request.source_language,
-            "target_language": request.resolved_target_language,
+            "source_language": payload.source_language,
+            "target_language": payload.resolved_target_language,
             "translated_text": translated[0] if translated else "",
         }
 
     return {
-        "source_language": request.source_language,
-        "target_language": request.resolved_target_language,
+        "source_language": payload.source_language,
+        "target_language": payload.resolved_target_language,
         "translations": translated,
     }
