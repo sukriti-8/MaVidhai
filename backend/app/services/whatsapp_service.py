@@ -25,7 +25,7 @@ def log_webhook_event(payload: dict[str, Any]) -> None:
 
             for message in messages:
                 logger.info(
-                    "WhatsApp message received: from=%s type=%s",
-                    message.get("from"),
+                    "WhatsApp message received: type=%s",
                     message.get("type"),
                 )
+

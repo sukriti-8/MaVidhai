@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 import os
 from typing import Any
 
@@ -20,15 +22,7 @@ async def verify_webhook(
     hub_challenge: str | None = Query(None, alias="hub.challenge"),
 ):
     """
-    Meta webhook verification endpoint.
-
-    Meta sends:
-        hub.mode
-        hub.verify_token
-        hub.challenge
-
-    We return the challenge only when the verification
-    token matches our configured token.
+    Verify Meta's webhook subscription request.
     """
 
     expected_token = os.getenv("WHATSAPP_VERIFY_TOKEN")
@@ -36,7 +30,11 @@ async def verify_webhook(
     if (
         hub_mode != "subscribe"
         or not expected_token
-        or hub_verify_token != expected_token
+        or hub_verify_token is None
+        or not hmac.compare_digest(
+            hub_verify_token,
+            expected_token,
+        )
         or hub_challenge is None
     ):
         raise HTTPException(
@@ -53,13 +51,30 @@ async def verify_webhook(
 @router.post("/webhook")
 async def receive_webhook(request: Request):
     """
-    Receive WhatsApp webhook events from Meta.
-
-    P0 behavior:
-    - Parse JSON
-    - Log the event
-    - Return HTTP 200
+    Verify Meta's signature before processing incoming events.
     """
+
+    app_secret = os.getenv("WHATSAPP_APP_SECRET")
+    signature = request.headers.get("X-Hub-Signature-256")
+
+    if not app_secret or not signature:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Webhook signature verification failed",
+        )
+
+    raw_body = await request.body()
+    expected_signature = "sha256=" + hmac.new(
+        app_secret.encode("utf-8"),
+        raw_body,
+        hashlib.sha256,
+    ).hexdigest()
+
+    if not hmac.compare_digest(signature, expected_signature):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Webhook signature verification failed",
+        )
 
     try:
         payload: dict[str, Any] = await request.json()
