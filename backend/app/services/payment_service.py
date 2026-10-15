@@ -23,34 +23,37 @@ def create_payment(db: Session, user: User, order_number: str, background_tasks:
         Order.order_number == order_number,
         Order.user_id == user.id
     ).first()
-    
+
     if not order:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
-        
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found"
+        )
+
     # 2. Verify order status
     if order.status != "pending":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot create payment for order with status: {order.status}"
         )
-        
+
     # 3. Prevent duplicate Payment Links
     existing_payment = db.query(Payment).filter(
         Payment.order_id == order.id,
         Payment.status == "created"
     ).first()
-    
+
     if order.total_amount <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Order amount must be greater than zero"
         )
-    
+
     payment_url = None
-    
+    is_new_payment = False
+
     if existing_payment:
         provider_order_id = existing_payment.provider_order_id
-        # We might not have the URL persisted in DB yet, but we'll adapt later if needed.
     else:
         # 4. Create Payment Link via Provider
         try:
@@ -60,14 +63,14 @@ def create_payment(db: Session, user: User, order_number: str, background_tasks:
                 order_id=order.order_number,
                 customer_phone=order.shipping_phone
             )
-            
+
             provider_order_id = link_data.get("provider_order_id")
             payment_url = link_data.get("payment_url")
-            
+
             # 5. Create Payment record
             payment = Payment(
                 order_id=order.id,
-                provider="provider", # Generic or 'razorpay'
+                provider="provider",
                 provider_order_id=provider_order_id,
                 amount=order.total_amount,
                 currency=order.currency,
@@ -75,7 +78,8 @@ def create_payment(db: Session, user: User, order_number: str, background_tasks:
             )
             db.add(payment)
             db.commit()
-            
+            is_new_payment = True
+
         except Exception as e:
             db.rollback()
             raise HTTPException(
@@ -83,13 +87,32 @@ def create_payment(db: Session, user: User, order_number: str, background_tasks:
                 detail=f"Failed to create payment: {str(e)}"
             )
 
-    wa_number = os.getenv("WHATSAPP_BUSINESS_PHONE", "910000000000") # Default or fallback
-    message_text = f"Hi {order.shipping_full_name},\n\nYour MaVidhai order {order.order_number} has been created.\n\nPlease complete your payment using this link: {payment_url}"
-    
-    whatsapp_deep_link = f"https://wa.me/{wa_number}?text={urllib.parse.quote(message_text)}"
+    wa_number = os.getenv(
+        "WHATSAPP_BUSINESS_PHONE",
+        "910000000000"
+    )
+    message_text = (
+        f"Hi {order.shipping_full_name},\n\n"
+        f"Your MaVidhai order {order.order_number} has been created.\n\n"
+        f"Please complete your payment using this link: {payment_url or ''}"
+    )
 
-    if background_tasks and order.shipping_phone:
-        background_tasks.add_task(_send_whatsapp_bg, order.shipping_phone, message_text)
+    whatsapp_deep_link = (
+        f"https://wa.me/{wa_number}?"
+        f"text={urllib.parse.quote(message_text)}"
+    )
+
+    # Send WhatsApp only when a new payment link was created.
+    if (
+        is_new_payment
+        and background_tasks
+        and order.shipping_phone
+    ):
+        background_tasks.add_task(
+            _send_whatsapp_bg,
+            order.shipping_phone,
+            message_text
+        )
 
     # 6. Return response with the payment URL
     return {
@@ -100,6 +123,7 @@ def create_payment(db: Session, user: User, order_number: str, background_tasks:
         "amount": int(order.total_amount * Decimal("100")),
         "currency": order.currency,
     }
+
 
 def verify_payment(db: Session, user: User, data):
     """

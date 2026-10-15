@@ -1,6 +1,8 @@
-from pydantic import BaseModel, ConfigDict, Field, EmailStr
+import re
+from pydantic import BaseModel, ConfigDict, Field, EmailStr, field_validator
 from typing import List, Optional
 from datetime import datetime
+
 
 class OrderCreate(BaseModel):
     shipping_full_name: str = Field(..., min_length=1, max_length=100)
@@ -13,6 +15,28 @@ class OrderCreate(BaseModel):
     shipping_postal_code: str = Field(..., min_length=1, max_length=20)
     shipping_country: str = Field(..., min_length=1, max_length=100)
 
+    @field_validator("shipping_phone")
+    @classmethod
+    def validate_shipping_phone(cls, value: str) -> str:
+        # Allow spaces, hyphens and parentheses.
+        phone = re.sub(r"[\s()\-]", "", value)
+
+        # Accept 10-digit Indian mobile numbers.
+        if re.fullmatch(r"[6-9]\d{9}", phone):
+            return "+91" + phone
+
+        # Accept Indian mobile numbers with +91.
+        if re.fullmatch(r"\+91[6-9]\d{9}", phone):
+            return phone
+
+        # Accept Indian mobile numbers with 91 but no plus sign.
+        if re.fullmatch(r"91[6-9]\d{9}", phone):
+            return "+" + phone
+
+        raise ValueError(
+            "Enter a valid 10-digit Indian mobile number, optionally with +91."
+        )
+
 
 class OrderItemResponse(BaseModel):
     id: int
@@ -22,7 +46,7 @@ class OrderItemResponse(BaseModel):
     unit_price: float
     quantity: int
     subtotal: float
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -37,12 +61,14 @@ class OrderListItem(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class OrderListResponse(BaseModel):
     items: List[OrderListItem]
     page: int
     limit: int
     total: int
     pages: int
+
 
 class OrderResponse(BaseModel):
     id: int
@@ -54,7 +80,7 @@ class OrderResponse(BaseModel):
     discount_amount: float
     total_amount: float
     currency: str
-    
+
     shipping_full_name: str
     shipping_email: str
     shipping_phone: str
@@ -64,10 +90,10 @@ class OrderResponse(BaseModel):
     shipping_state: str
     shipping_postal_code: str
     shipping_country: str
-    
+
     created_at: datetime
     updated_at: datetime
-    
+
     items: List[OrderItemResponse]
-    
+
     model_config = ConfigDict(from_attributes=True)
