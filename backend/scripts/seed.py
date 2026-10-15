@@ -148,165 +148,70 @@ def seed_database():
         print("MaVidhai Catalog Seed")
         print("========================================")
 
-        # ----------------------------------------------------
-        # 1. REMOVE OLD PRODUCTS
-        # ----------------------------------------------------
-
-        existing_products = db.execute(
-            select(Product)
-        ).scalars().all()
-
-        print(
-            f"\nExisting products found: "
-            f"{len(existing_products)}"
-        )
-
-        for product in existing_products:
-            db.delete(product)
-
-        db.commit()
-
-        print(
-            f"Old products removed: "
-            f"{len(existing_products)}"
-        )
-
-        # ----------------------------------------------------
-        # 2. REMOVE OLD CATEGORIES
-        # ----------------------------------------------------
-
-        existing_categories = db.execute(
-            select(Category)
-        ).scalars().all()
-
-        print(
-            f"Existing categories found: "
-            f"{len(existing_categories)}"
-        )
-
-        for category in existing_categories:
-            db.delete(category)
-
-        db.commit()
-
-        print(
-            f"Old categories removed: "
-            f"{len(existing_categories)}"
-        )
-
-        # ----------------------------------------------------
-        # 3. CREATE THE 3 NEW CATEGORIES
-        # ----------------------------------------------------
-
+        # 1. CREATE OR REUSE THE 3 CATEGORIES
         category_by_name = {}
 
         for category_name in CATEGORIES:
-            category = Category(
-                name=category_name,
-                slug=slugify(category_name),
-            )
+            category_slug = slugify(category_name)
 
-            db.add(category)
-            db.commit()
-            db.refresh(category)
+            category = db.execute(
+                select(Category).where(Category.slug == category_slug)
+            ).scalar_one_or_none()
+
+            if category is None:
+                category = Category(
+                    name=category_name,
+                    slug=category_slug,
+                    is_active=True,
+                )
+                db.add(category)
+                db.flush()
+                print("Created category:", category_name)
+            else:
+                print("Reusing category:", category_name)
 
             category_by_name[category_name] = category
 
-            print(
-                f"Created category: "
-                f"{category_name}"
-            )
-
-        # ----------------------------------------------------
-        # 4. CREATE THE 3 NEW PRODUCTS
-        # ----------------------------------------------------
-
-        products_created = 0
-
+        # 2. CREATE MISSING PRODUCTS; PRESERVE EXISTING PRODUCTS
         for product_data in PRODUCTS:
-
-            category = category_by_name.get(
-                product_data["category"]
-            )
-
-            if not category:
-                print(
-                    f"WARNING: Category "
-                    f"'{product_data['category']}' "
-                    f"not found for "
-                    f"'{product_data['name']}'"
+            existing = db.execute(
+                select(Product).where(
+                    Product.slug == product_data["slug"]
                 )
+            ).scalar_one_or_none()
+
+            if existing is not None:
+                print("Preserving product:", existing.slug)
                 continue
+
+            category = category_by_name[product_data["category"]]
 
             product = Product(
                 category_id=category.id,
-
                 name=product_data["name"],
                 slug=product_data["slug"],
-
                 price=product_data["price"],
                 mrp=product_data.get("mrp"),
-
-                description=product_data.get(
-                    "description"
-                ),
-
-                details=product_data.get(
-                    "details"
-                ),
-
-                material=product_data.get(
-                    "material"
-                ),
-
-                dimensions=product_data.get(
-                    "dimensions"
-                ),
-
-                colour=product_data.get(
-                    "colour"
-                ),
-
-                care=product_data.get(
-                    "care"
-                ),
-
-                badge=product_data.get(
-                    "badge"
-                ),
-
-                availability=product_data.get(
-                    "availability",
-                    True,
-                ),
-
-                stock=product_data.get(
-                    "stock",
-                    0,
-                ),
-
-                image_url=product_data.get(
-                    "image_url"
-                ),
-
-                images=product_data.get(
-                    "images"
-                ),
+                description=product_data.get("description"),
+                details=product_data.get("details"),
+                material=product_data.get("material"),
+                dimensions=product_data.get("dimensions"),
+                colour=product_data.get("colour"),
+                care=product_data.get("care"),
+                badge=product_data.get("badge"),
+                availability=product_data.get("availability", True),
+                is_active=True,
+                show_in_catalogue=True,
+                stock=product_data.get("stock", 20),
+                image_url=product_data.get("image_url"),
+                images=product_data.get("images"),
             )
 
             db.add(product)
-            products_created += 1
+            print("Added product:", product.slug)
 
-            print(
-                f"Created product: "
-                f"{product_data['name']}"
-            )
-
+        # 3. COMMIT AND VERIFY
         db.commit()
-
-        # ----------------------------------------------------
-        # 5. VERIFY DATABASE
-        # ----------------------------------------------------
 
         final_categories = db.execute(
             select(Category)
@@ -316,43 +221,10 @@ def seed_database():
             select(Product)
         ).scalars().all()
 
-        print("\n========================================")
-        print("CATALOG SEED COMPLETED")
-        print("========================================")
+        print("Categories in DB:", len(final_categories))
+        print("Products in DB:", len(final_products))
+        print("Catalogue seed completed.")
 
-        print(
-            f"Categories in DB: "
-            f"{len(final_categories)}"
-        )
-
-        print(
-            f"Products created: "
-            f"{products_created}"
-        )
-
-        print(
-            f"Products in DB: "
-            f"{len(final_products)}"
-        )
-
-        print("\nFINAL CATALOG:")
-
-        for product in final_products:
-            category = db.execute(
-                select(Category).where(
-                    Category.id == product.category_id
-                )
-            ).scalar_one_or_none()
-
-            print(
-                f"- {category.name} "
-                f"-> {product.name} "
-                f"-> ₹{product.price}"
-            )
-
-        print("\nNo old products remain.")
-        print("No extra categories remain.")
-        print("No extra toy products were added.")
 
     except Exception as error:
         db.rollback()
