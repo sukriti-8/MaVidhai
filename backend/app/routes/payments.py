@@ -24,7 +24,7 @@ from app.schemas.payment import (
 )
 from app.services import payment_service, payment_webhook_service
 from app.utils.dependencies import get_current_user
-
+from app.utils.rate_limiter import limiter
 router = APIRouter(prefix="/api/payments", tags=["Payments"])
 
 
@@ -33,8 +33,10 @@ router = APIRouter(prefix="/api/payments", tags=["Payments"])
     response_model=PaymentCreateResponse,
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("5/minute")
 def create_payment(
-    request: PaymentCreateRequest,
+    request: Request,
+    payment_request: PaymentCreateRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -42,10 +44,9 @@ def create_payment(
     return payment_service.create_payment(
         db=db,
         user=current_user,
-        order_number=request.order_number,
+        order_number=payment_request.order_number,
         background_tasks=background_tasks,
     )
-
 
 @router.post(
     "/verify",
