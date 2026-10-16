@@ -17,6 +17,8 @@ class CartProductResponse(BaseModel):
     image_url: str | None = None
     stock: int
     availability: bool
+    is_active: bool
+    show_in_catalogue: bool
     
     class Config:
         from_attributes = True

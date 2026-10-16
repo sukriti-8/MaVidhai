@@ -62,6 +62,7 @@ def get_product(slug: str, db: Session = Depends(get_db)):
         .where(
             Product.slug == slug,
             Product.show_in_catalogue.is_(True),
+            Product.is_active.is_(True),
             Category.is_active.is_(True),
         )
     )

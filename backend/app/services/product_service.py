@@ -18,6 +18,7 @@ def get_products(
     max_price: Decimal | None = None,
     available: bool | None = None,
     low_stock: bool | None = None,
+    include_hidden: bool = False,
     page: int = 1,
     limit: int = 20,
 ) -> Tuple[List[Product], int]:
@@ -33,11 +34,14 @@ def get_products(
         select(Product)
         .join(Category, Product.category_id == Category.id)
         .options(selectinload(Product.category))
-        .where(
-            Product.show_in_catalogue.is_(True),
-            Category.is_active.is_(True),
-        )
+        .where(Category.is_active.is_(True))
     )
+
+    if not include_hidden:
+        stmt = stmt.where(
+            Product.show_in_catalogue.is_(True),
+            Product.is_active.is_(True),
+        )
 
     if search:
         search_term = f"%{search.strip()}%"

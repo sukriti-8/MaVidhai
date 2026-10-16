@@ -9,6 +9,8 @@ from app.services.audit_service import log_admin_action
 import datetime
 import uuid
 
+STOCK_RESERVATION_MINUTES = 15
+
 def generate_order_number() -> str:
     # Example: MVD-20260825-ABCD1234
     date_str = datetime.datetime.utcnow().strftime("%Y%m%d")
@@ -41,6 +43,7 @@ def create_order(db: Session, user: User, order_data: OrderCreate) -> Order:
             
         if (
             not product.is_active
+            or not product.show_in_catalogue
             or not product.availability
             or product.stock <= 0
             or product.price is None
@@ -101,10 +104,26 @@ def create_order(db: Session, user: User, order_data: OrderCreate) -> Order:
     # 4. Create OrderItems
     for item_data in order_items_data:
         db_item = OrderItem(
-            order_id=db_order.id,
+            order=db_order,
             **item_data
         )
         db.add(db_item)
+
+    db.flush()
+
+    # Reserve inventory before returning an order so parallel checkouts cannot
+    # both pay for the final units. Payment links expire at the same deadline.
+    from app.services import inventory_service
+    if not inventory_service.reserve_and_deduct_stock(db, db_order.items, db_order.id):
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Stock changed while placing your order. Please refresh your cart and try again.",
+        )
+    db_order.stock_reserved = True
+    db_order.stock_reserved_until = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        minutes=STOCK_RESERVATION_MINUTES
+    )
         
     # 5. Clear the Cart (delete cart items)
     db.query(CartItem).filter(CartItem.cart_id == cart.id).delete()
@@ -136,6 +155,8 @@ def reconcile_inventory_conflict(db: Session, order_number: str) -> Order:
     
     if success:
         order.status = "confirmed"
+        order.stock_reserved = False
+        order.stock_reserved_until = None
     
     # 8. Commit atomically
     db.commit()
@@ -167,9 +188,13 @@ def admin_update_order_status(db: Session, order_id: int, new_status: str, admin
         if order.payment_status != "captured":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot confirm order without captured payment")
             
-        success = inventory_service.reserve_and_deduct_stock(db, order.items, order.id)
-        if not success:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Insufficient stock to confirm order")
+        if order.stock_reserved:
+            order.stock_reserved = False
+            order.stock_reserved_until = None
+        else:
+            success = inventory_service.reserve_and_deduct_stock(db, order.items, order.id)
+            if not success:
+                raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Insufficient stock to confirm order")
         order.status = "confirmed"
         
     elif new_status == "shipped":
@@ -213,7 +238,9 @@ def cancel_order_internal(db: Session, order: Order, adjustment_type: str = "ORD
     if order.status == "cancelled":
         return # already cancelled
         
-    if order.status in ["confirmed", "shipped", "delivered"]:
+    if order.stock_reserved or order.status in ["confirmed", "shipped", "delivered"]:
         inventory_service.restore_stock(db, order.items, order.id, adjustment_type)
+        order.stock_reserved = False
+        order.stock_reserved_until = None
         
     order.status = "cancelled"

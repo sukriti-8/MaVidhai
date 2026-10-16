@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime, CheckConstraint
+from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime, CheckConstraint, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database.base import Base
@@ -11,6 +11,8 @@ class Order(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     order_number = Column(String, unique=True, index=True, nullable=False)
     status = Column(String, nullable=False, default="pending")
+    stock_reserved = Column(Boolean, nullable=False, default=False, server_default="false")
+    stock_reserved_until = Column(DateTime(timezone=True), nullable=True)
     subtotal = Column(Numeric(10, 2), nullable=False)
     shipping_amount = Column(Numeric(10, 2), nullable=False, default=0)
     discount_amount = Column(Numeric(10, 2), nullable=False, default=0)
