@@ -57,10 +57,10 @@ def create_payment(db: Session, user: User, order_number: str, background_tasks:
     else:
         # 4. Create Payment Link via Provider
         try:
-                reservation_deadline = order.stock_reserved_until
-                if reservation_deadline and reservation_deadline.tzinfo is None:
-                    from datetime import timezone
-                    reservation_deadline = reservation_deadline.replace(tzinfo=timezone.utc)
+            reservation_deadline = order.stock_reserved_until
+            if reservation_deadline and reservation_deadline.tzinfo is None:
+                from datetime import timezone
+                reservation_deadline = reservation_deadline.replace(tzinfo=timezone.utc)
 
             link_data = payment_provider.create_payment_link(
                 amount=float(order.total_amount),
