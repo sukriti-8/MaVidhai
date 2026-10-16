@@ -19,6 +19,7 @@ const EMPTY_FORM = {
   name: "",
   category: "Clothing",
   price: "",
+  mrp: "",
   image: "",
   stock: 20,
   isAvailable: true,
@@ -174,6 +175,7 @@ export default function AdminProductsPage() {
       name: "",
       category: categories[0]?.name || "",
       price: "",
+      mrp: "",
       image: "",
       stock: 20,
       isAvailable: true,
@@ -197,6 +199,8 @@ export default function AdminProductsPage() {
         product.price !== undefined && product.price !== null
           ? product.price
           : "",
+
+      mrp: product.mrp ?? "",
 
       image:
         product.image_url ||
@@ -249,6 +253,7 @@ export default function AdminProductsPage() {
         slug: productSlug,
 
         price: Number(formData.price),
+        mrp: formData.mrp === "" ? null : Number(formData.mrp),
 
         description:
           editingProduct?.description || "",
@@ -281,6 +286,9 @@ export default function AdminProductsPage() {
           editingProduct?.image_url ||
           editingProduct?.image ||
           "",
+        images: formData.image
+          ? [formData.image]
+          : editingProduct?.images || [],
       };
 
       if (!editingProduct) payload.stock = Number(formData.stock);
@@ -709,7 +717,7 @@ export default function AdminProductsPage() {
               </div>
 
               {/* Category + Price */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
 
                 <div>
 
@@ -759,6 +767,26 @@ export default function AdminProductsPage() {
                     }
                     className="w-full rounded-xl border border-[#E8E2D9] px-3.5 py-2 text-sm outline-none focus:border-[#C9A227]"
                     placeholder="999"
+                  />
+
+                </div>
+
+                <div>
+
+                  <label className="mb-1 block text-xs font-semibold text-[#55514B]">
+                    MRP (₹, optional)
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={formData.mrp}
+                    onChange={(event) =>
+                      setFormData({ ...formData, mrp: event.target.value })
+                    }
+                    className="w-full rounded-xl border border-[#E8E2D9] px-3.5 py-2 text-sm outline-none focus:border-[#C9A227]"
+                    placeholder="Optional"
                   />
 
                 </div>

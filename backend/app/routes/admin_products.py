@@ -40,6 +40,7 @@ def get_admin_products(
         max_price=max_price,
         available=available,
         low_stock=low_stock,
+        include_hidden=True,
         page=page,
         limit=limit
     )
@@ -89,6 +90,7 @@ def create_product(
         name=request.name,
         slug=request.slug,
         price=request.price,
+        mrp=request.mrp,
         description=request.description,
         details=request.details,
         material=request.material,
@@ -99,6 +101,9 @@ def create_product(
         availability=request.availability,
         stock=request.stock,
         image_url=request.image_url,
+        images=request.images,
+        is_active=request.is_active,
+        show_in_catalogue=request.show_in_catalogue,
     )
     db.add(product)
     
@@ -185,6 +190,8 @@ def deactivate_product(
         raise HTTPException(status_code=404, detail="Product not found")
         
     product.availability = False
+    product.is_active = False
+    product.show_in_catalogue = False
     
     log_admin_action(
         db=db,

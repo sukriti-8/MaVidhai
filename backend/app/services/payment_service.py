@@ -57,11 +57,21 @@ def create_payment(db: Session, user: User, order_number: str, background_tasks:
     else:
         # 4. Create Payment Link via Provider
         try:
+            reservation_deadline = order.stock_reserved_until
+            if reservation_deadline and reservation_deadline.tzinfo is None:
+                from datetime import timezone
+                reservation_deadline = reservation_deadline.replace(tzinfo=timezone.utc)
+
             link_data = payment_provider.create_payment_link(
                 amount=float(order.total_amount),
                 currency=order.currency,
                 order_id=order.order_number,
-                customer_phone=order.shipping_phone
+                customer_phone=order.shipping_phone,
+                expire_by=(
+                    int(reservation_deadline.timestamp())
+                    if reservation_deadline
+                    else None
+                ),
             )
 
             provider_order_id = link_data.get("provider_order_id")
@@ -82,6 +92,15 @@ def create_payment(db: Session, user: User, order_number: str, background_tasks:
 
         except Exception as e:
             db.rollback()
+            # Do not strand stock if the provider could not create the link.
+            failed_order = db.query(Order).filter(
+                Order.order_number == order_number,
+                Order.user_id == user.id,
+            ).with_for_update().first()
+            if failed_order and failed_order.stock_reserved:
+                from app.services import order_service
+                order_service.cancel_order_internal(db, failed_order, adjustment_type="PAYMENT_LINK_CREATION_FAILED")
+                db.commit()
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail=f"Failed to create payment: {str(e)}"

@@ -13,7 +13,7 @@ class RazorpayProvider(PaymentProvider):
         if os.getenv("MAVIDHAI_TEST") != "1" and self.key_id and self.key_secret:
             self.client = razorpay.Client(auth=(self.key_id, self.key_secret))
 
-    def create_payment_link(self, amount: float, currency: str, order_id: str, customer_phone: str) -> Dict[str, Any]:
+    def create_payment_link(self, amount: float, currency: str, order_id: str, customer_phone: str, expire_by: int | None = None) -> Dict[str, Any]:
         amount_paise = int(amount * 100)
         
         if not self.client:
@@ -30,8 +30,10 @@ class RazorpayProvider(PaymentProvider):
             "description": f"Payment for Order {order_id}",
             "customer": {
                 "contact": customer_phone or ""
-            }
+            },
         }
+        if expire_by is not None:
+            data["expire_by"] = expire_by
         
         # Depending on razorpay python SDK version, payment_link or invoice might be used.
         # Payment Links API is accessible via client.payment_link.create()
@@ -101,6 +103,11 @@ class RazorpayProvider(PaymentProvider):
             result["provider_order_id"] = plink_entity.get("id") # The payment link ID
             result["provider_payment_id"] = plink_entity.get("payment_id") # Might not be directly in payment_link entity
             result["status"] = "captured"
+
+        elif event in ("payment_link.expired", "payment_link.cancelled"):
+            plink_entity = payload.get("payload", {}).get("payment_link", {}).get("entity", {})
+            result["provider_order_id"] = plink_entity.get("id")
+            result["status"] = "expired"
             
         return result
         

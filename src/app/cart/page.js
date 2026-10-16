@@ -31,6 +31,12 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const hasUnavailableItems = cart?.items?.some(({ product }) =>
+    !product.availability ||
+    !product.is_active ||
+    !product.show_in_catalogue ||
+    product.stock <= 0
+  ) ?? false;
 
   const loadCart = useCallback(async () => {
     try {
@@ -66,6 +72,8 @@ export default function CartPage() {
 
     if (
       newQuantity < 1 ||
+      !item.product.is_active ||
+      !item.product.show_in_catalogue ||
       !item.product.availability ||
       item.product.stock <= 0 ||
       newQuantity > item.product.stock
@@ -252,7 +260,16 @@ export default function CartPage() {
                   <div
                     key={item.id}
                     className="grid items-center gap-6 py-8 sm:grid-cols-[3fr_1fr_1fr]"
-                    style={{ borderColor: colors.border }}
+                    style={{
+                      borderColor: colors.border,
+                      opacity:
+                        !item.product.availability ||
+                        !item.product.is_active ||
+                        !item.product.show_in_catalogue ||
+                        item.product.stock <= 0
+                          ? 0.62
+                          : 1,
+                    }}
                   >
                     {/* PRODUCT INFO */}
                     <div className="flex items-center gap-4 sm:gap-6">
@@ -304,9 +321,13 @@ export default function CartPage() {
                         </p>
 
                         {!item.product.availability ||
+                        !item.product.is_active ||
+                        !item.product.show_in_catalogue ||
                         item.product.stock <= 0 ? (
-                          <p className="mt-1 text-xs text-red-500">
-                            Out of Stock
+                          <p className="mt-1 text-xs font-medium text-red-600">
+                            {item.product.stock <= 0
+                              ? "Out of stock — remove this item to continue"
+                              : "No longer available — remove this item to continue"}
                           </p>
                         ) : null}
 
@@ -345,6 +366,8 @@ export default function CartPage() {
                           disabled={
                             item.quantity <= 1 ||
                             updatingId === item.id ||
+                            !item.product.is_active ||
+                            !item.product.show_in_catalogue ||
                             !item.product.availability ||
                             item.product.stock <= 0
                           }
@@ -372,6 +395,8 @@ export default function CartPage() {
                           }
                           disabled={
                             updatingId === item.id ||
+                            !item.product.is_active ||
+                            !item.product.show_in_catalogue ||
                             !item.product.availability ||
                             item.product.stock <= 0 ||
                             item.quantity >= item.product.stock
@@ -454,10 +479,16 @@ export default function CartPage() {
 
             <Link
               href="/checkout"
-              className="mt-8 flex w-full justify-center rounded-lg py-4 text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              aria-disabled={hasUnavailableItems}
+              onClick={(event) => {
+                if (hasUnavailableItems) event.preventDefault();
+              }}
+              className={`mt-8 flex w-full justify-center rounded-lg py-4 text-sm font-medium text-white transition-all ${hasUnavailableItems ? "cursor-not-allowed opacity-50" : "hover:-translate-y-0.5 hover:shadow-lg"}`}
               style={{ backgroundColor: colors.forest }}
             >
-              Proceed to Checkout
+              {hasUnavailableItems
+                ? "Remove unavailable items to continue"
+                : "Proceed to Checkout"}
             </Link>
           </div>
         </div>

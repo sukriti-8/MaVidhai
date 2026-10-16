@@ -10,16 +10,10 @@ def _build_cart_response(cart: Cart) -> CartResponse:
     item_count = 0
     subtotal = 0
     for item in cart.items:
-        if (
-            item.product.price is None
-            or not item.product.is_active
-            or not item.product.availability
-            or item.product.stock <= 0
-        ):
-            raise HTTPException(
-                status_code=409,
-                detail=f"{item.product.name} is no longer available for purchase. Remove it from your cart.",
-            )
+        # Keep unavailable products visible so the customer can remove them.
+        # Checkout independently validates current product state and stock.
+        if item.product.price is None:
+            raise HTTPException(status_code=409, detail=f"{item.product.name} no longer has a valid price.")
 
         item_subtotal = item.product.price * item.quantity
         items_response.append(CartItemResponse(
@@ -54,6 +48,7 @@ def add_item(db: Session, user_id: int, item_in: CartItemCreate) -> CartResponse
         raise HTTPException(status_code=404, detail="Product not found")
     if (
         not product.is_active
+        or not product.show_in_catalogue
         or not product.availability
         or product.stock <= 0
         or product.price is None
@@ -102,6 +97,7 @@ def update_item(db: Session, user_id: int, item_id: int, item_update: CartItemUp
         
     if (
         not product.is_active
+        or not product.show_in_catalogue
         or not product.availability
         or product.stock <= 0
         or product.price is None

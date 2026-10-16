@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from app.models.payment import Payment, PaymentEvent
 from app.models.order import Order
 from app.integrations.razorpay_client import provider as payment_provider
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -89,9 +90,31 @@ def process_webhook(db: Session, raw_body: bytes, signature: str, event_id: str)
             elif payment.status != "captured":
                 payment.status = "captured"
                 payment.provider_payment_id = provider_payment_id
-                
-                success = inventory_service.reserve_and_deduct_stock(db, order.items)
-                order.status = "confirmed" if success else "inventory_conflict"
+                reservation_is_valid = (
+                    order.stock_reserved
+                    and order.stock_reserved_until is not None
+                    and (
+                        order.stock_reserved_until.replace(tzinfo=timezone.utc)
+                        if order.stock_reserved_until.tzinfo is None
+                        else order.stock_reserved_until
+                    ) > datetime.now(timezone.utc)
+                )
+                if reservation_is_valid:
+                    order.stock_reserved = False
+                    order.stock_reserved_until = None
+                    order.status = "confirmed"
+                else:
+                    if order.stock_reserved:
+                        inventory_service.restore_stock(db, order.items, order.id, "EXPIRED_ORDER_RESERVATION")
+                        order.stock_reserved = False
+                        order.stock_reserved_until = None
+                    # A late capture or a legacy order needs explicit stock
+                    # reconciliation rather than silently overselling.
+                    if order.status == "pending":
+                        success = inventory_service.reserve_and_deduct_stock(db, order.items, order.id)
+                        order.status = "confirmed" if success else "inventory_conflict"
+                    else:
+                        order.status = "inventory_conflict"
                 
         elif event_status == "failed":
             if payment.status == "refunded":
@@ -99,7 +122,22 @@ def process_webhook(db: Session, raw_body: bytes, signature: str, event_id: str)
             elif payment.status != "captured":
                 payment.status = "failed"
                 payment.provider_payment_id = provider_payment_id
-            # Order remains pending
+                if order.stock_reserved:
+                    inventory_service.restore_stock(db, order.items, order.id, "FAILED_ORDER_RESERVATION")
+                    order.stock_reserved = False
+                    order.stock_reserved_until = None
+                if order.status == "pending":
+                    order.status = "cancelled"
+
+        elif event_status == "expired":
+            if payment.status != "captured" and payment.status != "refunded":
+                payment.status = "expired"
+                if order.stock_reserved:
+                    inventory_service.restore_stock(db, order.items, order.id, "EXPIRED_ORDER_RESERVATION")
+                    order.stock_reserved = False
+                    order.stock_reserved_until = None
+                if order.status == "pending":
+                    order.status = "cancelled"
                 
         # 12. Commit
         db.commit()
